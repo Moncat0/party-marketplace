@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import SettingsSection from '@/components/settings/SettingsSection'
+import SettingsInput from '@/components/settings/SettingsInput'
+import SettingsButton from '@/components/settings/SettingsButton'
+import { settingsTokens as t } from '@/components/settings/tokens'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -34,76 +38,76 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF8F3] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-
-        {/* Logo */}
+    <main className="min-h-screen bg-white flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-[#1A1A2E]">FESTEN.</h1>
-          <p className="mt-2 text-sm text-[#5F5E5A]">Återställ ditt lösenord</p>
+          <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
+            FESTEN.
+          </Link>
+          <p className="mt-2 text-[14px] leading-[1.43] text-[#6a6a6a]">Återställ ditt lösenord</p>
         </div>
 
         {done ? (
-          <div className="rounded-2xl bg-white p-6 shadow-sm text-center">
-            <p className="text-4xl mb-4">📬</p>
-            <h2 className="text-lg font-bold text-[#1A1A2E] mb-2">Kolla din inkorg!</h2>
-            <p className="text-sm text-[#5F5E5A] mb-6">
-              Vi har skickat en återställningslänk till <span className="font-medium text-[#1A1A2E]">{email}</span>.
-              Länken är giltig i 60 minuter.
+          <SettingsSection title="Kolla din inkorg!">
+            <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mb-6">
+              Vi har skickat en återställningslänk till{' '}
+              <span className="font-medium text-[#222222]">{email}</span>. Länken är giltig i 60
+              minuter.
             </p>
             <Link
-              href="/signup"
-              className="text-sm font-medium text-[#FF6B35] hover:underline"
+              href="/signup?intent=planner"
+              className="text-[14px] font-medium text-[#FF6B35] hover:underline"
             >
               Tillbaka till inloggning
             </Link>
-          </div>
+          </SettingsSection>
         ) : (
           <>
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
-              <p className="text-sm text-[#5F5E5A] mb-5">
+            <SettingsSection title="Skicka återställningslänk">
+              <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mb-5">
                 Ange din e-postadress så skickar vi en länk för att återställa ditt lösenord.
               </p>
-
               {error && (
-                <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                <div
+                  className="mb-4 px-4 py-3 text-[14px]"
+                  style={{
+                    color: t.colors.error,
+                    backgroundColor: '#fff5f3',
+                    borderRadius: t.rounded.sm,
+                    border: `1px solid #f5c6c0`,
+                  }}
+                >
                   {error}
                 </div>
               )}
-
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-[#1A1A2E] mb-1">
-                    E-postadress
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="din@epost.se"
-                    className="w-full rounded-xl border border-[#E8E3DC] bg-white px-4 py-3 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
-                  />
-                </div>
-                <button
+                <SettingsInput
+                  id="email"
+                  label="E-postadress"
+                  type="email"
+                  value={email}
+                  onChange={setEmail}
+                  placeholder="din@epost.se"
+                  autoComplete="email"
+                />
+                <SettingsButton
                   type="submit"
+                  className="w-full"
                   disabled={!email.trim() || loading}
-                  className="w-full rounded-xl bg-[#FF6B35] px-4 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Skickar...' : 'Skicka återställningslänk'}
-                </button>
+                </SettingsButton>
               </form>
-            </div>
+            </SettingsSection>
 
-            <p className="mt-6 text-center text-sm text-[#5F5E5A]">
+            <p className="mt-6 text-center text-[14px] text-[#6a6a6a]">
               Kom du ihåg lösenordet?{' '}
-              <Link href="/signup" className="font-medium text-[#FF6B35] hover:underline">
+              <Link href="/signup?intent=planner" className="font-medium text-[#FF6B35] hover:underline">
                 Logga in
               </Link>
             </p>
           </>
         )}
-
       </div>
     </main>
   )

@@ -55,19 +55,22 @@ export default async function ProviderPage({ params }: { params: { id: string } 
 
   let isSaved = false
   if (user) {
-    const { data: shortlist } = await supabase
+    const { data: lists } = await supabase
       .from('shortlists')
       .select('id')
       .eq('planner_id', user.id)
-      .single()
 
-    if (shortlist) {
+    if (lists?.length) {
       const { data: item } = await supabase
         .from('shortlist_items')
         .select('id')
-        .eq('shortlist_id', shortlist.id)
         .eq('provider_profile_id', params.id)
-        .single()
+        .in(
+          'shortlist_id',
+          lists.map(l => l.id)
+        )
+        .limit(1)
+        .maybeSingle()
       isSaved = !!item
     }
   }

@@ -17,20 +17,9 @@ export default async function HomePage() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Determine correct dashboard link for the logged-in user
-  let dashboardHref = '/planner/dashboard'
-  if (user) {
-    const { data: providerProfile } = await supabase
-      .from('provider_profiles')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-    if (providerProfile) dashboardHref = '/dashboard'
-  }
-
   const { data: profiles } = await supabase
     .from('provider_profiles')
-    .select('id, service_title, city, photos, category_tags, created_at, user_id, users(name, avatar_url)')
+    .select('id, service_title, city, location_id, photos, category_tags, created_at, user_id, price_range_min, users(name, avatar_url)')
     .eq('is_published', true)
     .order('created_at', { ascending: false })
 
@@ -53,5 +42,5 @@ export default async function HomePage() {
       : null,
   }))
 
-  return <HomeBrowse providers={providers} isLoggedIn={!!user} dashboardHref={dashboardHref} />
+  return <HomeBrowse providers={providers} isLoggedIn={!!user} plannerId={user?.id ?? null} />
 }

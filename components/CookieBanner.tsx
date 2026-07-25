@@ -40,7 +40,7 @@ export default function CookieBanner() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-      <div className="mx-auto max-w-sm rounded-2xl bg-[#1A1A2E] p-4 shadow-lg relative">
+      <div className="mx-auto max-w-sm rounded-2xl bg-[#222222] p-4 shadow-lg relative">
         <button
           onClick={handleDecline}
           aria-label="Stäng"

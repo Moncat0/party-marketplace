@@ -5,6 +5,11 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { track } from '@/lib/posthog'
+import {
+  loadQuickReplies,
+  loadSuggestedRepliesEnabled,
+  type QuickReply,
+} from '@/lib/messaging-prefs'
 
 type Quote = {
   id: string
@@ -38,10 +43,16 @@ type Props = {
   isCompleted: boolean
   eventDate: string | null
   eventLocation: string | null
+  /** When true, fill parent pane instead of full-page chrome */
+  embedded?: boolean
+  /** Show back link to inbox (useful when embedded in guest chrome) */
+  showBackLink?: boolean
 }
 
 export default function MessageThread({
   bookingId, currentUserId, messages: initial, otherName, isPlanner, isProvider, isCompleted, eventDate, eventLocation,
+  embedded = false,
+  showBackLink,
 }: Props) {
   const [messages, setMessages] = useState(initial)
   const [content, setContent] = useState('')
@@ -60,6 +71,8 @@ export default function MessageThread({
   const [quoteCancellation, setQuoteCancellation] = useState('Ingen återbetalning')
   const [sendingQuote, setSendingQuote] = useState(false)
   const [respondingToQuote, setRespondingToQuote] = useState<string | null>(null)
+  const [quickReplies, setQuickReplies] = useState<QuickReply[]>([])
+  const [suggestedOn, setSuggestedOn] = useState(false)
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -67,10 +80,27 @@ export default function MessageThread({
 
   const backHref = isPlanner ? '/planner/messages' : '/dashboard/messages'
   const initial1 = otherName.charAt(0).toUpperCase()
+  const showBack = showBackLink ?? !embedded
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const [replies, enabled] = await Promise.all([
+        loadQuickReplies(currentUserId),
+        loadSuggestedRepliesEnabled(currentUserId),
+      ])
+      if (cancelled) return
+      setQuickReplies(replies)
+      setSuggestedOn(enabled)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [currentUserId])
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -198,35 +228,39 @@ export default function MessageThread({
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] flex flex-col">
+    <div className={`${embedded ? 'h-full min-h-0' : 'min-h-screen'} bg-[#F2F2F2] flex flex-col`}>
 
       {/* Top nav bar */}
       <header className="bg-white border-b border-[#EBEBEB] flex-shrink-0 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-6 h-14 flex items-center gap-4">
-          <Link
-            href={backHref}
-            className="flex items-center gap-2 text-sm font-medium text-[#717171] hover:text-[#1A1A2E] transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Alla meddelanden
-          </Link>
-          <span className="text-[#EBEBEB]">/</span>
-          <div className="flex items-center gap-2.5">
+        <div className={`${embedded ? 'px-4' : 'max-w-3xl mx-auto px-6'} h-14 flex items-center gap-4`}>
+          {showBack && (
+            <>
+              <Link
+                href={backHref}
+                className="flex items-center gap-2 text-sm font-medium text-[#6A6A6A] hover:text-[#222222] transition-colors"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Alla meddelanden
+              </Link>
+              <span className="text-[#EBEBEB]">/</span>
+            </>
+          )}
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className="h-7 w-7 rounded-full bg-[#FF6B35]/10 flex items-center justify-center text-xs font-bold text-[#FF6B35] flex-shrink-0">
               {initial1}
             </div>
-            <div>
-              <p className="text-sm font-semibold text-[#1A1A2E] leading-none">{otherName}</p>
-              <p className="text-xs text-[#717171] mt-0.5">{isCompleted ? 'Avslutat event' : 'Aktiv bokning'}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#222222] leading-none truncate">{otherName}</p>
+              <p className="text-xs text-[#6A6A6A] mt-0.5">{isCompleted ? 'Avslutat event' : 'Aktiv bokning'}</p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Messages + input centred */}
-      <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
+      {/* Messages + input */}
+      <div className={`flex-1 flex flex-col min-h-0 w-full ${embedded ? '' : 'max-w-3xl mx-auto'}`}>
 
         {/* Messages scroll area */}
         <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
@@ -235,8 +269,8 @@ export default function MessageThread({
               <div className="h-16 w-16 rounded-full bg-[#FF6B35]/10 flex items-center justify-center text-2xl mx-auto mb-4">
                 👋
               </div>
-              <p className="text-base font-semibold text-[#1A1A2E] mb-1">Ingen har skrivit än</p>
-              <p className="text-sm text-[#717171]">Säg hej till {otherName}!</p>
+              <p className="text-base font-semibold text-[#222222] mb-1">Ingen har skrivit än</p>
+              <p className="text-sm text-[#6A6A6A]">Säg hej till {otherName}!</p>
             </div>
           )}
 
@@ -258,7 +292,7 @@ export default function MessageThread({
                   </p>
                   <div className="w-full max-w-sm bg-white rounded-2xl border border-[#EBEBEB] overflow-hidden shadow-sm">
                     {/* Header */}
-                    <div className="bg-[#1A1A2E] px-5 py-4">
+                    <div className="bg-[#222222] px-5 py-4">
                       <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-1">Offert</p>
                       <p className="text-2xl font-bold text-white">{priceSek} kr</p>
                       {!isPlanner && (
@@ -270,33 +304,33 @@ export default function MessageThread({
                     <div className="px-5 py-4 border-b border-[#EBEBEB] grid grid-cols-2 gap-3">
                       {quote.event_date && (
                         <div>
-                          <p className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-0.5">Datum</p>
-                          <p className="text-sm text-[#1A1A2E]">{new Date(quote.event_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                          <p className="text-xs font-semibold text-[#6A6A6A] uppercase tracking-wide mb-0.5">Datum</p>
+                          <p className="text-sm text-[#222222]">{new Date(quote.event_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                         </div>
                       )}
                       {quote.duration && (
                         <div>
-                          <p className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-0.5">Längd</p>
-                          <p className="text-sm text-[#1A1A2E]">{quote.duration}</p>
+                          <p className="text-xs font-semibold text-[#6A6A6A] uppercase tracking-wide mb-0.5">Längd</p>
+                          <p className="text-sm text-[#222222]">{quote.duration}</p>
                         </div>
                       )}
                       {quote.location && (
                         <div>
-                          <p className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-0.5">Plats</p>
-                          <p className="text-sm text-[#1A1A2E]">{quote.location}</p>
+                          <p className="text-xs font-semibold text-[#6A6A6A] uppercase tracking-wide mb-0.5">Plats</p>
+                          <p className="text-sm text-[#222222]">{quote.location}</p>
                         </div>
                       )}
                       {quote.cancellation_policy && (
                         <div>
-                          <p className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-0.5">Avbokning</p>
-                          <p className="text-sm text-[#1A1A2E]">{quote.cancellation_policy}</p>
+                          <p className="text-xs font-semibold text-[#6A6A6A] uppercase tracking-wide mb-0.5">Avbokning</p>
+                          <p className="text-sm text-[#222222]">{quote.cancellation_policy}</p>
                         </div>
                       )}
                     </div>
                     {quote.description && (
                       <div className="px-5 py-4 border-b border-[#EBEBEB]">
-                        <p className="text-xs font-semibold text-[#717171] uppercase tracking-wide mb-1">Vad ingår</p>
-                        <p className="text-sm text-[#1A1A2E] leading-relaxed">{quote.description}</p>
+                        <p className="text-xs font-semibold text-[#6A6A6A] uppercase tracking-wide mb-1">Vad ingår</p>
+                        <p className="text-sm text-[#222222] leading-relaxed">{quote.description}</p>
                       </div>
                     )}
 
@@ -307,7 +341,7 @@ export default function MessageThread({
                           <button
                             onClick={() => handleQuoteResponse(quote.id, 'declined')}
                             disabled={respondingToQuote === quote.id}
-                            className="flex-1 rounded-xl border border-[#EBEBEB] py-2.5 text-xs font-medium text-[#717171] hover:bg-[#F7F7F7] transition-colors disabled:opacity-40"
+                            className="flex-1 rounded-xl border border-[#EBEBEB] py-2.5 text-xs font-medium text-[#6A6A6A] hover:bg-[#F2F2F2] transition-colors disabled:opacity-40"
                           >
                             Avböj
                           </button>
@@ -321,7 +355,7 @@ export default function MessageThread({
                         </div>
                       )}
                       {quote.status === 'pending' && !isPlanner && (
-                        <p className="text-xs text-[#717171] text-center">Väntar på svar från {otherName}...</p>
+                        <p className="text-xs text-[#6A6A6A] text-center">Väntar på svar från {otherName}...</p>
                       )}
                       {quote.status === 'accepted' && (
                         <div className="flex items-center gap-2">
@@ -331,8 +365,8 @@ export default function MessageThread({
                       )}
                       {quote.status === 'declined' && (
                         <div className="flex items-center gap-2">
-                          <span className="h-2 w-2 rounded-full bg-[#717171]" />
-                          <p className="text-xs text-[#717171]">Offert avböjd</p>
+                          <span className="h-2 w-2 rounded-full bg-[#6A6A6A]" />
+                          <p className="text-xs text-[#6A6A6A]">Offert avböjd</p>
                         </div>
                       )}
                     </div>
@@ -350,7 +384,7 @@ export default function MessageThread({
                 <div className="flex-shrink-0 w-8">
                   {showSender && (
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      isMe ? 'bg-[#1A1A2E] text-white' : 'bg-[#FF6B35]/10 text-[#FF6B35]'
+                      isMe ? 'bg-[#222222] text-white' : 'bg-[#FF6B35]/10 text-[#FF6B35]'
                     }`}>
                       {isMe ? 'Du' : initial1}
                     </div>
@@ -359,7 +393,7 @@ export default function MessageThread({
 
                 <div className={`max-w-[65%] space-y-1 flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                   {showSender && (
-                    <p className="text-xs font-medium text-[#717171] px-1">
+                    <p className="text-xs font-medium text-[#6A6A6A] px-1">
                       {isMe ? 'Du' : otherName}
                     </p>
                   )}
@@ -384,7 +418,7 @@ export default function MessageThread({
                     <div className={`rounded-2xl px-4 py-3 ${
                       isMe
                         ? 'bg-[#FF6B35] text-white rounded-tr-sm'
-                        : 'bg-white text-[#1A1A2E] border border-[#EBEBEB] rounded-tl-sm'
+                        : 'bg-white text-[#222222] border border-[#EBEBEB] rounded-tl-sm'
                     }`}>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                     </div>
@@ -402,8 +436,8 @@ export default function MessageThread({
 
         {/* Completed notice */}
         {isCompleted && (
-          <div className="mx-6 mb-6 rounded-2xl bg-[#F7F7F7] border border-[#EBEBEB] px-5 py-3 text-center">
-            <p className="text-sm text-[#717171]">Det här evenemanget är avslutat. Du kan fortfarande läsa konversationen.</p>
+          <div className="mx-6 mb-6 rounded-2xl bg-[#F2F2F2] border border-[#EBEBEB] px-5 py-3 text-center">
+            <p className="text-sm text-[#6A6A6A]">Det här evenemanget är avslutat. Du kan fortfarande läsa konversationen.</p>
           </div>
         )}
 
@@ -411,78 +445,78 @@ export default function MessageThread({
         {showQuoteForm && !isCompleted && (
           <div className="bg-white border-t border-[#EBEBEB] px-6 py-5 flex-shrink-0 max-h-[70vh] overflow-y-auto">
             <form onSubmit={handleSendQuote}>
-              <p className="text-sm font-bold text-[#1A1A2E] mb-4">Skicka offert</p>
+              <p className="text-sm font-bold text-[#222222] mb-4">Skicka offert</p>
 
               <div className="grid grid-cols-2 gap-3 mb-3">
                 {/* Price */}
                 <div>
-                  <label className="block text-xs font-medium text-[#717171] mb-1">Pris *</label>
+                  <label className="block text-xs font-medium text-[#6A6A6A] mb-1">Pris *</label>
                   <div className="relative">
                     <input
                       type="number" min="1" value={quotePrice}
                       onChange={e => setQuotePrice(e.target.value)}
                       placeholder="3 000"
-                      className="w-full rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-2.5 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] pr-10"
+                      className="w-full rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] px-4 py-2.5 text-sm text-[#222222] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] pr-10"
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#717171]">kr</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#6A6A6A]">kr</span>
                   </div>
                   {quotePrice && Number(quotePrice) > 0 && (
-                    <p className="text-xs text-[#717171] mt-1">Du får: <span className="font-semibold text-[#1D9E75]">{Math.round(Number(quotePrice) * 0.8).toLocaleString('sv-SE')} kr</span></p>
+                    <p className="text-xs text-[#6A6A6A] mt-1">Du får: <span className="font-semibold text-[#1D9E75]">{Math.round(Number(quotePrice) * 0.8).toLocaleString('sv-SE')} kr</span></p>
                   )}
                 </div>
 
                 {/* Duration */}
                 <div>
-                  <label className="block text-xs font-medium text-[#717171] mb-1">Tid/längd</label>
+                  <label className="block text-xs font-medium text-[#6A6A6A] mb-1">Tid/längd</label>
                   <input
                     type="text" value={quoteDuration}
                     onChange={e => setQuoteDuration(e.target.value)}
                     placeholder="T.ex. 2 timmar"
-                    className="w-full rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-2.5 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
+                    className="w-full rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] px-4 py-2.5 text-sm text-[#222222] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
                   />
                 </div>
 
                 {/* Date */}
                 <div>
-                  <label className="block text-xs font-medium text-[#717171] mb-1">Datum</label>
+                  <label className="block text-xs font-medium text-[#6A6A6A] mb-1">Datum</label>
                   <input
                     type="date" value={quoteDate}
                     onChange={e => setQuoteDate(e.target.value)}
-                    className="w-full rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-2.5 text-sm text-[#1A1A2E] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
+                    className="w-full rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] px-4 py-2.5 text-sm text-[#222222] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
                   />
                 </div>
 
                 {/* Location */}
                 <div>
-                  <label className="block text-xs font-medium text-[#717171] mb-1">Plats</label>
+                  <label className="block text-xs font-medium text-[#6A6A6A] mb-1">Plats</label>
                   <input
                     type="text" value={quoteLocation}
                     onChange={e => setQuoteLocation(e.target.value)}
                     placeholder="T.ex. Vasastan, Stockholm"
-                    className="w-full rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-2.5 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
+                    className="w-full rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] px-4 py-2.5 text-sm text-[#222222] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
                   />
                 </div>
               </div>
 
               {/* What's included */}
               <div className="mb-3">
-                <label className="block text-xs font-medium text-[#717171] mb-1">Vad ingår</label>
+                <label className="block text-xs font-medium text-[#6A6A6A] mb-1">Vad ingår</label>
                 <textarea
                   value={quoteDescription}
                   onChange={e => setQuoteDescription(e.target.value)}
                   placeholder="T.ex. 2 timmars uppträdande, eget ljud och ljus, pauser inkluderade..."
                   rows={2}
-                  className="w-full rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-2.5 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] resize-none"
+                  className="w-full rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] px-4 py-2.5 text-sm text-[#222222] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] resize-none"
                 />
               </div>
 
               {/* Cancellation policy */}
               <div className="mb-4">
-                <label className="block text-xs font-medium text-[#717171] mb-1">Avbokningsvillkor</label>
+                <label className="block text-xs font-medium text-[#6A6A6A] mb-1">Avbokningsvillkor</label>
                 <select
                   value={quoteCancellation}
                   onChange={e => setQuoteCancellation(e.target.value)}
-                  className="w-full rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-2.5 text-sm text-[#1A1A2E] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
+                  className="w-full rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] px-4 py-2.5 text-sm text-[#222222] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]"
                 >
                   <option>Ingen återbetalning</option>
                   <option>50% återbetalning vid avbokning 7+ dagar innan</option>
@@ -501,7 +535,7 @@ export default function MessageThread({
                 <button
                   type="button"
                   onClick={() => { setShowQuoteForm(false); setQuotePrice(''); setQuoteDescription('') }}
-                  className="text-xs text-[#717171] hover:text-[#1A1A2E] transition-colors"
+                  className="text-xs text-[#6A6A6A] hover:text-[#222222] transition-colors"
                 >
                   Avbryt
                 </button>
@@ -513,13 +547,27 @@ export default function MessageThread({
         {/* Input */}
         {!isCompleted && !showQuoteForm && (
           <div className="bg-white border-t border-[#EBEBEB] px-6 py-4 flex-shrink-0">
+            {suggestedOn && quickReplies.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-3 -mx-1 px-1 scrollbar-none">
+                {quickReplies.map(r => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setContent(r.body)}
+                    className="flex-shrink-0 h-9 px-3.5 rounded-full border border-[#dddddd] bg-white text-[13px] font-medium text-[#222222] hover:bg-[#f2f2f2] transition-colors"
+                  >
+                    {r.title}
+                  </button>
+                ))}
+              </div>
+            )}
             {imagePreview && (
               <div className="flex items-start gap-3 mb-3">
                 <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
                   <Image src={imagePreview} alt="Preview" fill className="object-cover" sizes="56px" />
                 </div>
                 <button type="button" onClick={clearImage}
-                  className="text-xs text-[#717171] hover:text-red-500 transition-colors mt-1">
+                  className="text-xs text-[#6A6A6A] hover:text-red-500 transition-colors mt-1">
                   ✕ Ta bort
                 </button>
               </div>
@@ -530,7 +578,7 @@ export default function MessageThread({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-shrink-0 h-10 w-10 rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] flex items-center justify-center text-[#717171] hover:bg-[#EBEBEB] transition-colors"
+                className="flex-shrink-0 h-10 w-10 rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] flex items-center justify-center text-[#6A6A6A] hover:bg-[#EBEBEB] transition-colors"
                 title="Bifoga bild"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -549,7 +597,7 @@ export default function MessageThread({
                 }}
                 placeholder={`Skicka ett meddelande till ${otherName}…`}
                 rows={1}
-                className="flex-1 rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] px-4 py-2.5 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] resize-none transition-colors"
+                className="flex-1 rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] px-4 py-2.5 text-sm text-[#222222] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] resize-none transition-colors"
                 style={{ maxHeight: '120px' }}
                 onInput={e => {
                   const t = e.target as HTMLTextAreaElement
@@ -563,7 +611,7 @@ export default function MessageThread({
                 <button
                   type="button"
                   onClick={() => setShowQuoteForm(true)}
-                  className="flex-shrink-0 h-10 px-4 rounded-xl border border-[#EBEBEB] bg-[#F7F7F7] text-xs font-semibold text-[#1A1A2E] hover:bg-[#EBEBEB] transition-colors whitespace-nowrap"
+                  className="flex-shrink-0 h-10 px-4 rounded-xl border border-[#EBEBEB] bg-[#F2F2F2] text-xs font-semibold text-[#222222] hover:bg-[#EBEBEB] transition-colors whitespace-nowrap"
                 >
                   + Offert
                 </button>

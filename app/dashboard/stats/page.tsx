@@ -1,21 +1,22 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
 
 export const metadata = { title: 'Min statistik' }
 
 export default async function StatsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/signup')
+  if (!user) redirect('/signup?intent=planner')
 
   const { data: profile } = await supabase
     .from('provider_profiles')
     .select('id, service_title, created_at')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!profile) redirect('/planner/dashboard')
+  if (!profile) return await redirectWithoutProviderProfile(supabase, user.id)
 
   // Booking stats
   const { data: bookings } = await supabase
@@ -68,14 +69,14 @@ export default async function StatsPage() {
   ]
 
   return (
-    <main className="min-h-screen bg-[#FFF8F3] px-4 py-10">
+    <main className="min-h-screen bg-[#FFFFFF] px-4 py-10">
       <div className="mx-auto max-w-sm">
 
         {/* Header */}
         <div className="mb-6">
-          <Link href="/dashboard" className="text-sm text-[#5F5E5A] hover:text-[#1A1A2E]">← Tillbaka</Link>
-          <h1 className="mt-1 text-2xl font-bold text-[#1A1A2E]">Min statistik</h1>
-          <p className="text-sm text-[#5F5E5A]">{profile.service_title}</p>
+          <Link href="/dashboard" className="text-sm text-[#6A6A6A] hover:text-[#222222]">← Tillbaka</Link>
+          <h1 className="mt-1 text-2xl font-bold text-[#222222]">Min statistik</h1>
+          <p className="text-sm text-[#6A6A6A]">{profile.service_title}</p>
         </div>
 
         {/* Stat cards */}
@@ -83,8 +84,8 @@ export default async function StatsPage() {
           {statCards.map(card => (
             <div key={card.label} className="rounded-2xl bg-white p-4 shadow-sm">
               <p className="text-xl mb-1">{card.emoji}</p>
-              <p className="text-2xl font-bold text-[#1A1A2E]">{card.value}</p>
-              <p className="text-xs text-[#5F5E5A] mt-0.5">{card.label}</p>
+              <p className="text-2xl font-bold text-[#222222]">{card.value}</p>
+              <p className="text-xs text-[#6A6A6A] mt-0.5">{card.label}</p>
               {card.sub && (
                 <p className="text-xs text-[#1D9E75] font-medium mt-1">{card.sub}</p>
               )}
@@ -94,8 +95,8 @@ export default async function StatsPage() {
 
         {/* Tip */}
         {total === 0 && (
-          <div className="rounded-2xl bg-[#FFF8F3] border border-[#E8E3DC] p-4 text-center">
-            <p className="text-sm text-[#5F5E5A]">
+          <div className="rounded-2xl bg-[#FFFFFF] border border-[#DDDDDD] p-4 text-center">
+            <p className="text-sm text-[#6A6A6A]">
               Inga förfrågningar ännu. Se till att din profil är publicerad och komplett — det ökar chansen att bli hittad! 🚀
             </p>
             <Link
@@ -111,11 +112,11 @@ export default async function StatsPage() {
         {reviewCount > 0 && (
           <Link
             href="/dashboard/reviews"
-            className="flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-sm hover:bg-[#F0EDE8] transition-colors"
+            className="flex items-center justify-between rounded-2xl bg-white px-5 py-4 shadow-sm hover:bg-[#F2F2F2] transition-colors"
           >
             <div className="flex items-center gap-3">
               <span className="text-lg">⭐</span>
-              <span className="text-sm font-medium text-[#1A1A2E]">Visa alla recensioner</span>
+              <span className="text-sm font-medium text-[#222222]">Visa alla recensioner</span>
             </div>
             <span className="text-[#FF6B35]">→</span>
           </Link>

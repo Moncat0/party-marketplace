@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import SettingsSection from '@/components/settings/SettingsSection'
+import SettingsInput from '@/components/settings/SettingsInput'
+import SettingsButton from '@/components/settings/SettingsButton'
+import { settingsTokens as t } from '@/components/settings/tokens'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -35,33 +39,36 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF8F3] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-
-        {/* Logo */}
+    <main className="min-h-screen bg-white flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-[#1A1A2E]">FESTEN.</h1>
-          <p className="mt-2 text-sm text-[#5F5E5A]">Välj ett nytt lösenord</p>
+          <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
+            FESTEN.
+          </Link>
+          <p className="mt-2 text-[14px] leading-[1.43] text-[#6a6a6a]">Välj ett nytt lösenord</p>
         </div>
 
         {done ? (
-          <div className="rounded-2xl bg-white p-6 shadow-sm text-center">
-            <p className="text-4xl mb-4">✅</p>
-            <h2 className="text-lg font-bold text-[#1A1A2E] mb-2">Lösenord uppdaterat!</h2>
-            <p className="text-sm text-[#5F5E5A] mb-6">
+          <SettingsSection title="Lösenord uppdaterat!">
+            <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mb-6">
               Ditt lösenord är nu ändrat. Du kan logga in med det nya lösenordet.
             </p>
-            <Link
-              href="/"
-              className="inline-block w-full rounded-xl bg-[#FF6B35] px-4 py-3 text-center text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
-            >
-              Gå till startsidan
+            <Link href="/" className="block">
+              <SettingsButton className="w-full">Gå till startsidan</SettingsButton>
             </Link>
-          </div>
+          </SettingsSection>
         ) : (
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
+          <SettingsSection title="Nytt lösenord">
             {error && (
-              <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <div
+                className="mb-4 px-4 py-3 text-[14px]"
+                style={{
+                  color: t.colors.error,
+                  backgroundColor: '#fff5f3',
+                  borderRadius: t.rounded.sm,
+                  border: `1px solid #f5c6c0`,
+                }}
+              >
                 {error}{' '}
                 {error.includes('gått ut') && (
                   <Link href="/forgot-password" className="font-medium underline">
@@ -72,43 +79,34 @@ export default function ResetPasswordPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#1A1A2E] mb-1">
-                  Nytt lösenord
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Minst 8 tecken"
-                  className="w-full rounded-xl border border-[#E8E3DC] bg-white px-4 py-3 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#1A1A2E] mb-1">
-                  Bekräfta lösenord
-                </label>
-                <input
-                  type="password"
-                  required
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  placeholder="Upprepa lösenordet"
-                  className="w-full rounded-xl border border-[#E8E3DC] bg-white px-4 py-3 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent"
-                />
-              </div>
-              <button
+              <SettingsInput
+                id="password"
+                label="Nytt lösenord"
+                type="password"
+                value={password}
+                onChange={setPassword}
+                placeholder="Minst 8 tecken"
+                autoComplete="new-password"
+              />
+              <SettingsInput
+                id="confirm"
+                label="Bekräfta lösenord"
+                type="password"
+                value={confirm}
+                onChange={setConfirm}
+                placeholder="Upprepa lösenordet"
+                autoComplete="new-password"
+              />
+              <SettingsButton
                 type="submit"
+                className="w-full"
                 disabled={!password || !confirm || loading}
-                className="w-full rounded-xl bg-[#FF6B35] px-4 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors disabled:opacity-50"
               >
                 {loading ? 'Sparar...' : 'Spara nytt lösenord'}
-              </button>
+              </SettingsButton>
             </form>
-          </div>
+          </SettingsSection>
         )}
-
       </div>
     </main>
   )

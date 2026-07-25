@@ -49,6 +49,7 @@ create table provider_profiles (
   service_description       text,
   category_tags             text[] default '{}',
   city                      text default 'Stockholm',
+  location_id               text not null default 'stockholm',
   price_range_min           integer,
   price_range_max           integer,
   photos                    text[] default '{}',
@@ -99,7 +100,10 @@ create table messages (
 create table shortlists (
   id          uuid primary key default gen_random_uuid(),
   planner_id  uuid not null references users (id) on delete cascade,
+  name        text not null default 'Favoriter',
   share_token text unique not null default encode(gen_random_bytes(16), 'hex'),
+  event_date  date,
+  guest_count integer,
   created_at  timestamptz not null default now()
 );
 
@@ -111,6 +115,7 @@ create table shortlist_items (
   id                  uuid primary key default gen_random_uuid(),
   shortlist_id        uuid not null references shortlists (id) on delete cascade,
   provider_profile_id uuid not null references provider_profiles (id) on delete cascade,
+  note                text,
   added_at            timestamptz not null default now(),
   unique (shortlist_id, provider_profile_id)
 );
@@ -153,6 +158,7 @@ create table tracking_events (
 -- ─────────────────────────────────────────
 create index on provider_profiles (is_published);
 create index on provider_profiles (city);
+create index on provider_profiles (location_id);
 create index on provider_profiles (user_id);
 create index on booking_requests (planner_id);
 create index on booking_requests (provider_profile_id);
@@ -279,6 +285,11 @@ create policy "Planners can delete their own shortlists"
   on shortlists for delete
   using (auth.uid() = planner_id);
 
+create policy "Planners can update their own shortlists"
+  on shortlists for update
+  using (auth.uid() = planner_id)
+  with check (auth.uid() = planner_id);
+
 -- SHORTLIST ITEMS policies
 create policy "Shortlist items are publicly readable"
   on shortlist_items for select using (true);
@@ -299,6 +310,19 @@ create policy "Planners can remove from their shortlist"
     )
   );
 
+create policy "Planners can update their shortlist items"
+  on shortlist_items for update
+  using (
+    auth.uid() = (
+      select planner_id from shortlists where id = shortlist_id
+    )
+  )
+  with check (
+    auth.uid() = (
+      select planner_id from shortlists where id = shortlist_id
+    )
+  );
+
 -- REVIEWS policies
 -- Reviews are public (they show on provider profiles).
 -- Only the reviewer can create their own review.
@@ -314,3 +338,41 @@ create policy "Users can submit their own reviews"
 create policy "Users can insert tracking events"
   on tracking_events for insert
   with check (user_id is null or auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────
+-- MESSAGING EXTRAS (quick replies, archives)
+-- ─────────────────────────────────────────────
+
+create table if not exists quick_replies (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references users (id) on delete cascade,
+  title       text not null,
+  body        text not null,
+  sort_order  integer not null default 0,
+  created_at  timestamptz not null default now()
+);
+
+create table if not exists message_thread_archives (
+  user_id             uuid not null references users (id) on delete cascade,
+  booking_request_id  uuid not null references booking_requests (id) on delete cascade,
+  archived_at         timestamptz not null default now(),
+  primary key (user_id, booking_request_id)
+);
+
+alter table users add column if not exists suggested_replies_enabled boolean not null default true;
+
+create index if not exists quick_replies_user_id_idx on quick_replies (user_id);
+create index if not exists message_thread_archives_user_id_idx on message_thread_archives (user_id);
+
+alter table quick_replies enable row level security;
+alter table message_thread_archives enable row level security;
+
+create policy "Users manage own quick replies"
+  on quick_replies for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Users manage own archives"
+  on message_thread_archives for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);

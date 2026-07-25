@@ -1,20 +1,21 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import DashboardShell from '@/components/DashboardShell'
+import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ReviewsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/signup')
+  if (!user) redirect('/signup?intent=planner')
 
   const [{ data: userData }, { data: profile }] = await Promise.all([
     supabase.from('users').select('name').eq('id', user.id).single(),
-    supabase.from('provider_profiles').select('id, service_title').eq('user_id', user.id).single(),
+    supabase.from('provider_profiles').select('id, service_title').eq('user_id', user.id).maybeSingle(),
   ])
 
-  if (!profile) redirect('/planner/dashboard')
+  if (!profile) return await redirectWithoutProviderProfile(supabase, user.id)
 
   const [{ data: reviews }, { count: pendingRequests }, { data: bookingIds }] = await Promise.all([
     supabase.from('reviews').select('id, rating, comment, created_at, users!reviewer_id(name)').eq('provider_profile_id', profile.id).order('created_at', { ascending: false }),
@@ -49,15 +50,15 @@ export default async function ReviewsPage() {
     >
       <div className="max-w-3xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#1A1A2E]">Recensioner</h1>
+          <h1 className="text-2xl font-bold text-[#222222]">Recensioner</h1>
           {reviews && reviews.length > 0 && (
-            <p className="text-sm text-[#717171] mt-1">{reviews.length} {reviews.length === 1 ? 'recension' : 'recensioner'}</p>
+            <p className="text-sm text-[#6A6A6A] mt-1">{reviews.length} {reviews.length === 1 ? 'recension' : 'recensioner'}</p>
           )}
         </div>
 
         {/* Average rating banner */}
         {avgRating !== null && (
-          <div className="mb-6 bg-[#1A1A2E] rounded-2xl px-8 py-6 flex items-center gap-8">
+          <div className="mb-6 bg-[#222222] rounded-2xl px-8 py-6 flex items-center gap-8">
             <div className="text-center">
               <p className="text-5xl font-bold text-white">{avgRating.toFixed(1)}</p>
               <div className="flex gap-1 justify-center mt-1">
@@ -78,8 +79,8 @@ export default async function ReviewsPage() {
         {!reviews || reviews.length === 0 ? (
           <div className="bg-white rounded-2xl border border-[#EBEBEB] py-20 text-center">
             <p className="text-4xl mb-3">⭐</p>
-            <p className="text-base font-semibold text-[#1A1A2E] mb-2">Inga recensioner ännu</p>
-            <p className="text-sm text-[#717171]">Recensioner visas här när kunder har betygsatt dig.</p>
+            <p className="text-base font-semibold text-[#222222] mb-2">Inga recensioner ännu</p>
+            <p className="text-sm text-[#6A6A6A]">Recensioner visas här när kunder har betygsatt dig.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4">
@@ -87,8 +88,8 @@ export default async function ReviewsPage() {
               <div key={review.id} className="bg-white rounded-2xl border border-[#EBEBEB] p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-sm font-semibold text-[#1A1A2E]">{(review.users as any)?.name ?? 'Anonym'}</p>
-                    <p className="text-xs text-[#717171] mt-0.5">
+                    <p className="text-sm font-semibold text-[#222222]">{(review.users as any)?.name ?? 'Anonym'}</p>
+                    <p className="text-xs text-[#6A6A6A] mt-0.5">
                       {new Date(review.created_at).toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
@@ -101,7 +102,7 @@ export default async function ReviewsPage() {
                   </div>
                 </div>
                 {review.comment && (
-                  <p className="text-sm text-[#717171] leading-relaxed border-l-2 border-[#EBEBEB] pl-3">{review.comment}</p>
+                  <p className="text-sm text-[#6A6A6A] leading-relaxed border-l-2 border-[#EBEBEB] pl-3">{review.comment}</p>
                 )}
               </div>
             ))}

@@ -26,7 +26,7 @@ const jetbrains = JetBrains_Mono({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export const viewport: Viewport = {
-  themeColor: '#1A1A2E',
+  themeColor: '#FF6B35',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -73,7 +73,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sv">
-      <body className={`${jakarta.variable} ${hanken.variable} ${jetbrains.variable} font-body antialiased bg-[#FFF8F3] text-[#1A1A2E]`}>
+      <body className={`${jakarta.variable} ${hanken.variable} ${jetbrains.variable} font-body antialiased bg-white text-[#222222]`}>
         <PostHogProvider>
           <SiteNav />
           {children}

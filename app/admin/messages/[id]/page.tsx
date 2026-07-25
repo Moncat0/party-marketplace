@@ -28,28 +28,28 @@ export default async function AdminConversationPage({ params }: { params: { id: 
   return (
     <div>
       <div className="mb-6">
-        <Link href="/admin/messages" className="text-sm text-[#5F5E5A] hover:text-[#1A1A2E]">← Tillbaka</Link>
-        <h1 className="mt-2 text-xl font-bold text-[#1A1A2E]">
+        <Link href="/admin/messages" className="text-sm text-[#6A6A6A] hover:text-[#222222]">← Tillbaka</Link>
+        <h1 className="mt-2 text-xl font-bold text-[#222222]">
           {planner?.name ?? planner?.email} → {profile?.users?.name ?? profile?.service_title}
         </h1>
         <div className="flex items-center gap-3 mt-1">
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-            booking.status === 'completed' ? 'bg-[#1A1A2E]/10 text-[#1A1A2E]' : 'bg-[#1D9E75]/10 text-[#1D9E75]'
+            booking.status === 'completed' ? 'bg-[#222222]/10 text-[#222222]' : 'bg-[#1D9E75]/10 text-[#1D9E75]'
           }`}>
             {booking.status === 'completed' ? 'Avslutad' : 'Aktiv'}
           </span>
           {booking.event_date && (
-            <span className="text-xs text-[#5F5E5A]">
+            <span className="text-xs text-[#6A6A6A]">
               📅 {new Date(booking.event_date).toLocaleDateString('sv-SE', { dateStyle: 'long' })}
             </span>
           )}
-          <span className="text-xs text-[#5F5E5A]">{messages?.length ?? 0} meddelanden</span>
+          <span className="text-xs text-[#6A6A6A]">{messages?.length ?? 0} meddelanden</span>
         </div>
       </div>
 
       <div className="space-y-2">
         {!messages?.length ? (
-          <p className="text-sm text-[#5F5E5A] py-8 text-center">Inga meddelanden i den här konversationen.</p>
+          <p className="text-sm text-[#6A6A6A] py-8 text-center">Inga meddelanden i den här konversationen.</p>
         ) : (
           messages.map(msg => {
             const sender = (Array.isArray(msg.users) ? msg.users[0] : msg.users) as { name: string | null; email: string } | null
@@ -58,13 +58,13 @@ export default async function AdminConversationPage({ params }: { params: { id: 
             return (
               <div key={msg.id} className={`flex gap-3 ${isPlanner ? 'flex-row' : 'flex-row-reverse'}`}>
                 <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                  isPlanner ? 'bg-[#FF6B35]/10 text-[#FF6B35]' : 'bg-[#1A1A2E]/10 text-[#1A1A2E]'
+                  isPlanner ? 'bg-[#FF6B35]/10 text-[#FF6B35]' : 'bg-[#222222]/10 text-[#222222]'
                 }`}>
                   {(sender?.name ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className={`flex-1 ${isPlanner ? '' : 'flex flex-col items-end'}`}>
-                  <p className="text-xs text-[#5F5E5A] mb-1">
-                    <span className="font-medium text-[#1A1A2E]">{sender?.name ?? sender?.email ?? 'Okänd'}</span>
+                  <p className="text-xs text-[#6A6A6A] mb-1">
+                    <span className="font-medium text-[#222222]">{sender?.name ?? sender?.email ?? 'Okänd'}</span>
                     {' · '}{new Date(msg.created_at).toLocaleString('sv-SE', { dateStyle: 'short', timeStyle: 'short' })}
                   </p>
                   {msg.image_url && (
@@ -76,7 +76,7 @@ export default async function AdminConversationPage({ params }: { params: { id: 
                   )}
                   {msg.content && (
                     <div className={`inline-block rounded-2xl px-4 py-2.5 max-w-md ${
-                      isPlanner ? 'bg-white shadow-sm text-[#1A1A2E]' : 'bg-[#1A1A2E] text-white'
+                      isPlanner ? 'bg-white shadow-sm text-[#222222]' : 'bg-[#222222] text-white'
                     }`}>
                       <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                     </div>

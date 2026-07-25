@@ -2,20 +2,21 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import DashboardShell from '@/components/DashboardShell'
 import EditProfileForm from './EditProfileForm'
+import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
 
 export const dynamic = 'force-dynamic'
 
 export default async function EditProfilePage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/signup')
+  if (!user) redirect('/signup?intent=planner')
 
   const [{ data: userData }, { data: profile }] = await Promise.all([
     supabase.from('users').select('name').eq('id', user.id).single(),
-    supabase.from('provider_profiles').select('*').eq('user_id', user.id).single(),
+    supabase.from('provider_profiles').select('*').eq('user_id', user.id).maybeSingle(),
   ])
 
-  if (!profile) redirect('/onboarding')
+  if (!profile) return await redirectWithoutProviderProfile(supabase, user.id)
 
   const [{ count: pendingRequests }, { data: bookingIds }] = await Promise.all([
     supabase.from('booking_requests').select('*', { count: 'exact', head: true }).eq('provider_profile_id', profile.id).eq('status', 'pending'),

@@ -66,7 +66,7 @@ export async function sendProviderInvite(
       <p><strong>${inviterName}</strong> tänkte på dig och vill att du skapar en profil på FESTEN. — ett nytt sätt att bli hittad av arrangörer i Stockholm.</p>
       ${message ? `<p>"${message}"</p>` : ''}
       <p>Det är helt gratis och tar bara några minuter.</p>
-      <p><a href="${siteUrl()}/onboarding">Skapa din profil →</a></p>
+      <p><a href="${siteUrl()}/signup?intent=provider&next=/onboarding">Skapa din profil →</a></p>
       <p>/ FESTEN.</p>
     `,
   })

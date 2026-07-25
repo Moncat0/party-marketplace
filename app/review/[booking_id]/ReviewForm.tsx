@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import SettingsSection from '@/components/settings/SettingsSection'
+import SettingsButton from '@/components/settings/SettingsButton'
+import { settingsTokens as t } from '@/components/settings/tokens'
 
 type Props = {
   bookingId: string
@@ -35,34 +38,35 @@ export default function ReviewForm({ bookingId, revieweeId, revieweeName, alread
 
   if (done) {
     return (
-      <main className="min-h-screen bg-[#FFF8F3] flex items-center justify-center px-4">
-        <div className="max-w-sm w-full text-center py-16">
-          <p className="text-4xl mb-4">🎉</p>
-          <h1 className="text-2xl font-bold text-[#1A1A2E] mb-2">Tack för ditt omdöme!</h1>
-          <p className="text-sm text-[#5F5E5A] mb-8">Det hjälper andra att hitta rätt talang.</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="rounded-xl bg-[#FF6B35] px-6 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
-          >
-            Tillbaka till dashboarden
-          </button>
+      <main className="min-h-screen bg-white flex items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <SettingsSection title="Tack för ditt omdöme!">
+            <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mb-6">
+              Det hjälper andra att hitta rätt talang.
+            </p>
+            <SettingsButton className="w-full" onClick={() => router.push('/dashboard')}>
+              Tillbaka till dashboarden
+            </SettingsButton>
+          </SettingsSection>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF8F3] px-4 py-10">
-      <div className="mx-auto max-w-sm">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[#1A1A2E] mb-1">Lämna ett omdöme</h1>
-          <p className="text-sm text-[#5F5E5A]">Hur var din upplevelse med {revieweeName}?</p>
-        </div>
+    <main className="min-h-screen bg-white px-4 py-10">
+      <div className="mx-auto max-w-md space-y-6">
+        <header>
+          <h1 className="text-[22px] font-medium leading-[1.18] tracking-[-0.44px] text-[#222222]">
+            Lämna ett omdöme
+          </h1>
+          <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mt-2">
+            Hur var din upplevelse med {revieweeName}?
+          </p>
+        </header>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Star rating */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <p className="text-sm font-medium text-[#1A1A2E] mb-4">Betyg</p>
+          <SettingsSection title="Betyg">
             <div className="flex gap-2 justify-center">
               {[1, 2, 3, 4, 5].map(star => (
                 <button
@@ -72,41 +76,67 @@ export default function ReviewForm({ bookingId, revieweeId, revieweeName, alread
                   onMouseEnter={() => setHovered(star)}
                   onMouseLeave={() => setHovered(0)}
                   className="text-4xl transition-transform hover:scale-110"
+                  style={{ transitionDuration: t.motion.fast }}
+                  aria-label={`${star} stjärnor`}
                 >
-                  <span className={(hovered || rating) >= star ? 'text-[#FF6B35]' : 'text-[#E8E3DC]'}>★</span>
+                  <span
+                    style={{
+                      color: (hovered || rating) >= star ? t.colors.primary : t.colors.hairline,
+                    }}
+                  >
+                    ★
+                  </span>
                 </button>
               ))}
             </div>
             {rating > 0 && (
-              <p className="text-center text-sm text-[#5F5E5A] mt-3">
-                {rating === 1 ? 'Dålig' : rating === 2 ? 'Okej' : rating === 3 ? 'Bra' : rating === 4 ? 'Mycket bra' : 'Fantastisk!'}
+              <p className="text-center text-[14px] text-[#6a6a6a] mt-3">
+                {rating === 1
+                  ? 'Dålig'
+                  : rating === 2
+                    ? 'Okej'
+                    : rating === 3
+                      ? 'Bra'
+                      : rating === 4
+                        ? 'Mycket bra'
+                        : 'Fantastisk!'}
               </p>
             )}
-          </div>
+          </SettingsSection>
 
-          {/* Comment */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
-            <label className="text-sm font-medium text-[#1A1A2E] block mb-2">
-              Kommentar <span className="text-[#5F5E5A] font-normal">(valfritt)</span>
-            </label>
+          <SettingsSection title="Kommentar (valfritt)">
             <textarea
               value={comment}
               onChange={e => setComment(e.target.value)}
               placeholder={`Berätta om din upplevelse med ${revieweeName}...`}
               rows={4}
               maxLength={500}
-              className="w-full rounded-xl border border-[#E8E3DC] bg-[#FFF8F3] px-4 py-3 text-sm text-[#1A1A2E] placeholder-[#A0A0A0] focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent resize-none"
+              className="w-full bg-white text-[#222222] text-[16px] leading-[1.5] placeholder:text-[#929292] focus:outline-none resize-none"
+              style={{
+                minHeight: 120,
+                padding: '14px 12px',
+                borderRadius: t.rounded.sm,
+                border: `1px solid ${t.colors.hairline}`,
+              }}
+              onFocus={e => {
+                e.currentTarget.style.border = `2px solid ${t.colors.ink}`
+                e.currentTarget.style.padding = '13px 11px'
+              }}
+              onBlur={e => {
+                e.currentTarget.style.border = `1px solid ${t.colors.hairline}`
+                e.currentTarget.style.padding = '14px 12px'
+              }}
             />
-            <p className="text-xs text-[#5F5E5A] mt-1 text-right">{comment.length}/500</p>
-          </div>
+            <p className="text-[13px] text-[#929292] mt-1.5 text-right">{comment.length}/500</p>
+          </SettingsSection>
 
-          <button
+          <SettingsButton
             type="submit"
+            className="w-full"
             disabled={!rating || submitting}
-            className="w-full rounded-xl bg-[#FF6B35] py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors disabled:opacity-40"
           >
             {submitting ? 'Skickar...' : 'Skicka omdöme'}
-          </button>
+          </SettingsButton>
         </form>
       </div>
     </main>

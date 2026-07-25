@@ -2,11 +2,12 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import DashboardShell from '@/components/DashboardShell'
+import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/signup')
+  if (!user) redirect('/signup?intent=planner')
 
   const { data: userData } = await supabase
     .from('users')
@@ -18,9 +19,9 @@ export default async function DashboardPage() {
     .from('provider_profiles')
     .select('id, service_title, is_published, stripe_onboarded')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!profile) redirect('/planner/dashboard')
+  if (!profile) return await redirectWithoutProviderProfile(supabase, user.id)
 
   const { count: pendingRequests } = await supabase
     .from('booking_requests')
@@ -94,35 +95,35 @@ export default async function DashboardPage() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white rounded-2xl p-6 border border-[#EBEBEB]">
-          <p className="text-3xl font-bold text-[#1A1A2E]">{totalRequests ?? 0}</p>
-          <p className="text-sm text-[#717171] mt-1">Totala förfrågningar</p>
+          <p className="text-3xl font-bold text-[#222222]">{totalRequests ?? 0}</p>
+          <p className="text-sm text-[#6A6A6A] mt-1">Totala förfrågningar</p>
         </div>
         <div className="bg-white rounded-2xl p-6 border border-[#EBEBEB]">
           <p className="text-3xl font-bold text-[#FF6B35]">{pendingRequests ?? 0}</p>
-          <p className="text-sm text-[#717171] mt-1">Inväntar svar</p>
+          <p className="text-sm text-[#6A6A6A] mt-1">Inväntar svar</p>
         </div>
         <div className="bg-white rounded-2xl p-6 border border-[#EBEBEB]">
-          <p className="text-3xl font-bold text-[#1A1A2E]">{unreadMessages ?? 0}</p>
-          <p className="text-sm text-[#717171] mt-1">Olästa meddelanden</p>
+          <p className="text-3xl font-bold text-[#222222]">{unreadMessages ?? 0}</p>
+          <p className="text-sm text-[#6A6A6A] mt-1">Olästa meddelanden</p>
         </div>
       </div>
 
       {/* Stripe Connect banner */}
       {!profile.stripe_onboarded && (
-        <div className="mb-6 rounded-2xl px-6 py-4 flex items-center justify-between border bg-[#1A1A2E]/5 border-[#1A1A2E]/10">
+        <div className="mb-6 rounded-2xl px-6 py-4 flex items-center justify-between border bg-[#222222]/5 border-[#222222]/10">
           <div className="flex items-center gap-3">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1A2E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
               <line x1="1" y1="10" x2="23" y2="10"/>
             </svg>
             <div>
-              <p className="font-semibold text-[#1A1A2E] text-sm">Anslut ditt bankkonto</p>
-              <p className="text-xs text-[#717171]">För att ta emot betalningar via FESTEN. behöver du ansluta Stripe.</p>
+              <p className="font-semibold text-[#222222] text-sm">Anslut ditt bankkonto</p>
+              <p className="text-xs text-[#6A6A6A]">För att ta emot betalningar via FESTEN. behöver du ansluta Stripe.</p>
             </div>
           </div>
           <a
             href="/api/stripe/connect"
-            className="flex-shrink-0 rounded-xl bg-[#1A1A2E] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2d2d4e] transition-colors"
+            className="flex-shrink-0 rounded-xl bg-[#222222] px-4 py-2 text-sm font-semibold text-white hover:bg-[#111111] transition-colors"
           >
             Anslut Stripe →
           </a>
@@ -138,10 +139,10 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-3">
           <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${profile.is_published ? 'bg-[#1D9E75]' : 'bg-[#FF6B35]'}`} />
           <div>
-            <p className="font-semibold text-[#1A1A2E] text-sm">
+            <p className="font-semibold text-[#222222] text-sm">
               {profile.is_published ? 'Din profil är publicerad' : 'Din profil är inte publicerad ännu'}
             </p>
-            <p className="text-xs text-[#717171]">
+            <p className="text-xs text-[#6A6A6A]">
               {profile.service_title ?? 'Talangprofil'}
             </p>
           </div>
@@ -150,14 +151,14 @@ export default async function DashboardPage() {
           {profile.is_published && (
             <Link
               href={`/providers/${profile.id}`}
-              className="rounded-xl border border-[#EBEBEB] bg-white px-4 py-2 text-sm font-medium text-[#1A1A2E] hover:bg-[#F7F7F7] transition-colors"
+              className="rounded-xl border border-[#EBEBEB] bg-white px-4 py-2 text-sm font-medium text-[#222222] hover:bg-[#F2F2F2] transition-colors"
             >
               Visa profil →
             </Link>
           )}
           <Link
             href="/dashboard/profile"
-            className="rounded-xl bg-[#1A1A2E] px-4 py-2 text-sm font-medium text-white hover:bg-[#2d2d4e] transition-colors"
+            className="rounded-xl bg-[#222222] px-4 py-2 text-sm font-medium text-white hover:bg-[#111111] transition-colors"
           >
             Redigera
           </Link>
@@ -173,8 +174,8 @@ export default async function DashboardPage() {
               <span className="rounded-full bg-[#FF6B35] px-2.5 py-0.5 text-xs font-semibold text-white">{pendingRequests} nya</span>
             )}
           </div>
-          <p className="font-semibold text-[#1A1A2E]">Förfrågningar</p>
-          <p className="text-sm text-[#717171] mt-0.5">Acceptera eller neka bokningar</p>
+          <p className="font-semibold text-[#222222]">Förfrågningar</p>
+          <p className="text-sm text-[#6A6A6A] mt-0.5">Acceptera eller neka bokningar</p>
         </Link>
 
         <Link href="/dashboard/messages" className="group bg-white rounded-2xl p-6 border border-[#EBEBEB] hover:border-[#FF6B35]/30 hover:shadow-sm transition-all">
@@ -184,17 +185,17 @@ export default async function DashboardPage() {
               <span className="rounded-full bg-[#FF6B35] px-2.5 py-0.5 text-xs font-semibold text-white">{unreadMessages} nya</span>
             )}
           </div>
-          <p className="font-semibold text-[#1A1A2E]">Meddelanden</p>
-          <p className="text-sm text-[#717171] mt-0.5">Konversationer med planerare</p>
+          <p className="font-semibold text-[#222222]">Meddelanden</p>
+          <p className="text-sm text-[#6A6A6A] mt-0.5">Konversationer med planerare</p>
         </Link>
 
         <Link href="/dashboard/reviews" className="group bg-white rounded-2xl p-6 border border-[#EBEBEB] hover:border-[#FF6B35]/30 hover:shadow-sm transition-all">
           <div className="mb-3 text-2xl">⭐</div>
-          <p className="font-semibold text-[#1A1A2E]">Recensioner</p>
-          <p className="text-sm text-[#717171] mt-0.5">Vad säger dina kunder?</p>
+          <p className="font-semibold text-[#222222]">Recensioner</p>
+          <p className="text-sm text-[#6A6A6A] mt-0.5">Vad säger dina kunder?</p>
         </Link>
 
-        <Link href="/dashboard/profile" className="group bg-[#1A1A2E] rounded-2xl p-6 border border-transparent hover:bg-[#2d2d4e] transition-all">
+        <Link href="/dashboard/profile" className="group bg-[#222222] rounded-2xl p-6 border border-transparent hover:bg-[#111111] transition-all">
           <div className="mb-3 text-2xl">✏️</div>
           <p className="font-semibold text-white">Redigera profil</p>
           <p className="text-sm text-white/60 mt-0.5">Uppdatera bilder och beskrivning</p>

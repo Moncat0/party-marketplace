@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Hitta och boka lokala talanger till ditt kalas i Stockholm.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#FFF8F3',
-    theme_color: '#1A1A2E',
+    background_color: '#ffffff',
+    theme_color: '#FF6B35',
     orientation: 'portrait',
     icons: [
       {

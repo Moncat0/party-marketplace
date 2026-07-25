@@ -29,12 +29,12 @@ export default async function AdminMessagesPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#1A1A2E]">Konversationer</h1>
-        <p className="text-sm text-[#5F5E5A] mt-1">{bookingsWithMessages.length} aktiva konversationer</p>
+        <h1 className="text-2xl font-bold text-[#222222]">Konversationer</h1>
+        <p className="text-sm text-[#6A6A6A] mt-1">{bookingsWithMessages.length} aktiva konversationer</p>
       </div>
 
       {bookingsWithMessages.length === 0 ? (
-        <p className="text-sm text-[#5F5E5A]">Inga konversationer än.</p>
+        <p className="text-sm text-[#6A6A6A]">Inga konversationer än.</p>
       ) : (
         <div className="space-y-4">
           {bookingsWithMessages.map(booking => {
@@ -46,28 +46,28 @@ export default async function AdminMessagesPage() {
               <Link
                 key={booking.id}
                 href={`/admin/messages/${booking.id}`}
-                className="block rounded-2xl bg-white p-4 shadow-sm hover:bg-[#F0EDE8] transition-colors"
+                className="block rounded-2xl bg-white p-4 shadow-sm hover:bg-[#F2F2F2] transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                        booking.status === 'completed' ? 'bg-[#1A1A2E]/10 text-[#1A1A2E]' : 'bg-[#1D9E75]/10 text-[#1D9E75]'
+                        booking.status === 'completed' ? 'bg-[#222222]/10 text-[#222222]' : 'bg-[#1D9E75]/10 text-[#1D9E75]'
                       }`}>
                         {booking.status === 'completed' ? 'Avslutad' : 'Aktiv'}
                       </span>
                       {booking.event_date && (
-                        <span className="text-xs text-[#5F5E5A]">
+                        <span className="text-xs text-[#6A6A6A]">
                           📅 {new Date(booking.event_date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm font-semibold text-[#1A1A2E]">
+                    <p className="text-sm font-semibold text-[#222222]">
                       {planner?.name ?? planner?.email ?? 'Okänd planerare'}
-                      <span className="font-normal text-[#5F5E5A]"> → </span>
+                      <span className="font-normal text-[#6A6A6A]"> → </span>
                       {profile?.users?.name ?? profile?.service_title ?? 'Okänd talang'}
                     </p>
-                    <p className="text-xs text-[#5F5E5A] mt-0.5">
+                    <p className="text-xs text-[#6A6A6A] mt-0.5">
                       {planner?.email} · {profile?.users?.email}
                     </p>
                   </div>

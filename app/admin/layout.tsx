@@ -11,9 +11,9 @@ const navLinks = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#FFF8F3]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       {/* Top bar */}
-      <header className="bg-[#1A1A2E] px-4 py-3 flex items-center justify-between">
+      <header className="bg-[#222222] px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-white font-bold text-lg">FESTEN.</span>
           <span className="text-white/40 text-sm">Admin</span>
@@ -24,13 +24,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </header>
 
       {/* Nav */}
-      <nav className="bg-white border-b border-[#E8E3DC] px-4 overflow-x-auto">
+      <nav className="bg-white border-b border-[#DDDDDD] px-4 overflow-x-auto">
         <div className="flex gap-1 py-2">
           {navLinks.map(link => (
             <Link
               key={link.href}
               href={link.href}
-              className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-[#5F5E5A] hover:bg-[#F0EDE8] hover:text-[#1A1A2E] transition-colors"
+              className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium text-[#6A6A6A] hover:bg-[#F2F2F2] hover:text-[#222222] transition-colors"
             >
               {link.label}
             </Link>

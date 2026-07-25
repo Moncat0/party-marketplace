@@ -50,7 +50,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-[#1A1A2E] mb-6">Översikt</h1>
+      <h1 className="text-xl font-bold text-[#222222] mb-6">Översikt</h1>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
@@ -58,28 +58,28 @@ export default async function AdminOverviewPage() {
           <Link
             key={card.label}
             href={card.href}
-            className="rounded-2xl bg-white p-4 shadow-sm hover:bg-[#F0EDE8] transition-colors"
+            className="rounded-2xl bg-white p-4 shadow-sm hover:bg-[#F2F2F2] transition-colors"
           >
             <p className="text-2xl mb-1">{card.emoji}</p>
-            <p className="text-2xl font-bold text-[#1A1A2E]">{card.value}</p>
-            <p className="text-xs text-[#5F5E5A]">{card.label}</p>
+            <p className="text-2xl font-bold text-[#222222]">{card.value}</p>
+            <p className="text-xs text-[#6A6A6A]">{card.label}</p>
           </Link>
         ))}
       </div>
 
       {/* Recent bookings */}
-      <h2 className="text-sm font-semibold text-[#1A1A2E] mb-3">Senaste bokningar</h2>
+      <h2 className="text-sm font-semibold text-[#222222] mb-3">Senaste bokningar</h2>
       {recentBookings.length === 0 ? (
-        <p className="text-sm text-[#5F5E5A]">Inga bokningar ännu.</p>
+        <p className="text-sm text-[#6A6A6A]">Inga bokningar ännu.</p>
       ) : (
         <div className="space-y-2">
           {recentBookings.map((b: any) => (
             <div key={b.id} className="rounded-xl bg-white p-3 shadow-sm flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-medium text-[#1A1A2E] truncate">
+                <p className="text-sm font-medium text-[#222222] truncate">
                   {(b.users as any)?.name ?? 'Okänd'} → {(b.provider_profiles as any)?.service_title ?? 'Okänd'}
                 </p>
-                <p className="text-xs text-[#5F5E5A]">
+                <p className="text-xs text-[#6A6A6A]">
                   {b.event_type ?? '—'} · {new Date(b.created_at).toLocaleDateString('sv-SE')}
                 </p>
               </div>

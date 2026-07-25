@@ -1,16 +1,31 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
+import {
+  INTENT_COOKIE,
+  parseAuthIntent,
+  resolvePostAuthDestination,
+  type AuthIntent,
+} from '@/lib/auth-intent'
+import { ensureAppUser } from '@/lib/ensure-user'
+
+function safeNext(raw: string | null): string | null {
+  if (!raw) return null
+  if (!raw.startsWith('/') || raw.startsWith('//')) return null
+  return raw
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const nextParam = safeNext(searchParams.get('next'))
+  const intentFromQuery = parseAuthIntent(searchParams.get('intent'))
 
   if (code) {
     const cookieStore = await cookies()
-    const allCookies = cookieStore.getAll()
-    console.log('[auth/callback] cookies present:', allCookies.map(c => c.name))
+    const intentFromCookie = parseAuthIntent(cookieStore.get(INTENT_COOKIE)?.value)
+    const intent: AuthIntent | null = intentFromQuery ?? intentFromCookie
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -31,40 +46,48 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (error) {
       console.error('[auth/callback] exchangeCodeForSession failed:', error.message, error)
+      return NextResponse.redirect(`${origin}/signup?error=auth`)
     }
 
-    if (!error) {
-      // Get the logged-in user
-      const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
-      if (user) {
-        // Check if this user already has a record in our users table
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('id')
-          .eq('id', user.id)
-          .single()
+    let hasProviderProfile = false
+    let isPublished = false
 
-        // If not, create one now
-        if (!existingUser) {
-          const signupSource = cookieStore.get('signup_source')?.value ?? 'organic'
-          const referrerId = cookieStore.get('referrer_id')?.value ?? null
+    if (user) {
+      const signupSource = cookieStore.get('signup_source')?.value ?? 'organic'
+      const referrerId = cookieStore.get('referrer_id')?.value ?? null
 
-          await supabase.from('users').insert({
-            id: user.id,
-            email: user.email,
-            name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-            avatar_url: user.user_metadata?.avatar_url ?? null,
-            user_type: 'planner',
-            auth_provider: user.app_metadata?.provider ?? 'email',
-            signup_source: signupSource,
-            referrer_id: referrerId,
-          })
-        }
+      const { error: ensureError } = await ensureAppUser(supabase, user, {
+        intent,
+        signupSource,
+        referrerId,
+      })
+      if (ensureError) {
+        console.error('[auth/callback] ensureAppUser failed:', ensureError)
       }
 
-      return NextResponse.redirect(`${origin}${next}`)
+      const { data: profile } = await supabase
+        .from('provider_profiles')
+        .select('id, is_published')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      hasProviderProfile = !!profile
+      isPublished = !!profile?.is_published
     }
+
+    const destination = resolvePostAuthDestination({
+      intent,
+      next: nextParam,
+      hasProviderProfile,
+      isPublished,
+    })
+
+    const response = NextResponse.redirect(`${origin}${destination}`)
+    // Clear intent cookie after use
+    response.cookies.set(INTENT_COOKIE, '', { path: '/', maxAge: 0 })
+    return response
   }
 
   return NextResponse.redirect(`${origin}/signup?error=auth`)
