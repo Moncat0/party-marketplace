@@ -60,7 +60,7 @@ export default function WishlistSettingsModal({
 
   async function handleShare() {
     track('shortlist_shared', { shortlist_id: shortlistId, item_count: itemCount })
-    if (navigator.share) {
+    if (typeof navigator.share === 'function') {
       try {
         await navigator.share({ title: `${name} på FESTEN.`, url: shareUrl })
         onClose()

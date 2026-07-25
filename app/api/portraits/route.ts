@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 import { trackServer } from '@/lib/track-server'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -12,6 +10,13 @@ export async function POST(request: NextRequest) {
 
   const { profile_id, service_title, category_tags } = await request.json()
   if (!profile_id) return NextResponse.json({ error: 'Missing profile_id' }, { status: 400 })
+
+  if (!process.env.OPENAI_API_KEY) {
+    return NextResponse.json({ error: 'Portrait generation is not configured' }, { status: 503 })
+  }
+
+  // Lazy init so `next build` does not require OPENAI_API_KEY at import time
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
   // Verify this profile belongs to the user
   const { data: profile } = await supabase
@@ -35,7 +40,7 @@ export async function POST(request: NextRequest) {
       quality: 'standard',
     })
 
-    const imageUrl = image.data[0]?.url
+    const imageUrl = image.data?.[0]?.url
     if (!imageUrl) throw new Error('No image URL returned')
 
     // Download the image and upload to Supabase Storage

@@ -54,7 +54,7 @@ export default function ShortlistView({
   async function handleShare() {
     const url = `${window.location.origin}/shortlist/${shareToken}`
     track('shortlist_shared', { shortlist_id: shortlistId, item_count: items.length })
-    if (navigator.share) {
+    if (typeof navigator.share === 'function') {
       try {
         await navigator.share({ title: `${name} på FESTEN.`, url })
         return

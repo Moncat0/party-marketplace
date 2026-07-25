@@ -13,7 +13,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 
   if (!profile) return {}
 
-  const user = profile.users as { name: string | null } | null
+  const usersArr = profile.users as unknown as { name: string | null }[] | null
+  const user = usersArr?.[0] ?? null
   const title = profile.service_title ?? user?.name ?? 'Talang'
   const description = profile.service_description?.slice(0, 160) ?? `Boka ${title} i ${profile.city ?? 'Stockholm'} via FESTEN.`
   const image = profile.photos?.[0]
@@ -49,6 +50,15 @@ export default async function ProviderPage({ params }: { params: { id: string } 
     .eq('reviewee_id', profile.user_id)
     .order('created_at', { ascending: false })
 
+  const normalizedProfile = {
+    ...profile,
+    users: Array.isArray(profile.users) ? (profile.users[0] ?? null) : profile.users,
+  }
+  const normalizedReviews = (reviews ?? []).map(r => ({
+    ...r,
+    users: Array.isArray(r.users) ? (r.users[0] ?? null) : r.users,
+  }))
+
   const avgRating = reviews && reviews.length > 0
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : null
@@ -77,8 +87,8 @@ export default async function ProviderPage({ params }: { params: { id: string } 
 
   return (
     <ProviderProfile
-      profile={profile}
-      reviews={reviews ?? []}
+      profile={normalizedProfile}
+      reviews={normalizedReviews}
       avgRating={avgRating}
       reviewCount={reviews?.length ?? 0}
       currentUserId={user?.id ?? null}

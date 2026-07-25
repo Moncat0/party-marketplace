@@ -143,7 +143,7 @@ export default function ProviderProfile({
 
   async function handleShare() {
     const url = window.location.href
-    if (navigator.share) {
+    if (typeof navigator.share === 'function') {
       await navigator.share({ title: profile.service_title ?? 'FESTEN.', url })
     } else {
       await navigator.clipboard.writeText(url)

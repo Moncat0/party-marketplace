@@ -36,6 +36,7 @@ export default async function HomePage() {
 
   const providers = (profiles ?? []).map(p => ({
     ...p,
+    users: Array.isArray(p.users) ? (p.users[0] ?? null) : p.users,
     reviewCount: reviewMap[p.user_id]?.count ?? 0,
     avgRating: reviewMap[p.user_id]
       ? reviewMap[p.user_id].total / reviewMap[p.user_id].count
