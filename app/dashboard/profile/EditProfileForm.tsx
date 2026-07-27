@@ -8,6 +8,7 @@ import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsInput from '@/components/settings/SettingsInput'
 import SettingsButton from '@/components/settings/SettingsButton'
 import LocationSelect from '@/components/ui/LocationSelect'
+import OccasionMultiSelect from '@/components/ui/OccasionMultiSelect'
 import { Button } from '@/components/ui/button'
 import { settingsTokens as t } from '@/components/settings/tokens'
 import {
@@ -16,6 +17,7 @@ import {
   resolveCategorySlug,
   type CategorySlug,
 } from '@/lib/categories'
+import { normalizeOccasions, type OccasionSlug } from '@/lib/occasions'
 import { cn } from '@/lib/utils'
 import {
   DEFAULT_LOCATION_ID,
@@ -29,6 +31,7 @@ type Service = {
   description: string | null
   category_slug?: string | null
   category_tags: string[] | null
+  occasions?: string[] | null
   city: string | null
   location_id?: string | null
   price_range_min: number | null
@@ -48,6 +51,7 @@ export default function EditProfileForm({ service, userId }: { service: Service;
       category_slug: service.category_slug,
       category_tags: service.category_tags,
     }) as CategorySlug | null,
+    occasions: normalizeOccasions(service.occasions) as OccasionSlug[],
     location_id: service.location_id ?? locationIdFromCity(service.city) ?? DEFAULT_LOCATION_ID,
     price_range_min: service.price_range_min?.toString() ?? '',
     price_range_max: service.price_range_max?.toString() ?? '',
@@ -95,6 +99,10 @@ export default function EditProfileForm({ service, userId }: { service: Service;
       setError('Välj en kategori för din tjänst.')
       return
     }
+    if (form.occasions.length < 1) {
+      setError('Välj minst ett tillfälle.')
+      return
+    }
     setSaving(true)
     setError(null)
     const { error: updateError } = await supabase
@@ -104,6 +112,7 @@ export default function EditProfileForm({ service, userId }: { service: Service;
         description: form.service_description || null,
         category_slug: form.category_slug,
         category_tags: categoryTagsFromSlug(form.category_slug),
+        occasions: form.occasions,
         city: getLocationLabel(form.location_id),
         location_id: form.location_id,
         price_range_min: form.price_range_min ? Number(form.price_range_min) : null,
@@ -201,7 +210,7 @@ export default function EditProfileForm({ service, userId }: { service: Service;
             </p>
           </SettingsSection>
 
-          <SettingsSection title="Kategori" description="Samma kategorier som planerare filtrerar på.">
+          <SettingsSection title="Kategori" description="Typ av tjänst — t.ex. DJ eller fotograf.">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {CATEGORIES.map(cat => {
                 const active = form.category_slug === cat.slug
@@ -228,6 +237,16 @@ export default function EditProfileForm({ service, userId }: { service: Service;
                 )
               })}
             </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title="Tillfällen"
+            description="Vilka fester passar din tjänst? Planerare ser detta på din sida."
+          >
+            <OccasionMultiSelect
+              value={form.occasions}
+              onChange={occasions => setForm(prev => ({ ...prev, occasions }))}
+            />
           </SettingsSection>
 
           <SettingsSection title="Prisintervall (SEK)">

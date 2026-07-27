@@ -10,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from('services')
     .select('id, created_at')
     .eq('is_published', true)
+    .eq('is_disabled', false)
 
   const providerUrls: MetadataRoute.Sitemap = (services ?? []).map(s => ({
     url: `${siteUrl}/tjanster/${s.id}`,

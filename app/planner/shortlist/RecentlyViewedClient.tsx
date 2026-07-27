@@ -45,6 +45,7 @@ export default function RecentlyViewedClient() {
           recent.map(r => r.id)
         )
         .eq('is_published', true)
+    .eq('is_disabled', false)
 
       const byId = new Map((data ?? []).map(p => [p.id, p]))
       const ordered: Card[] = []

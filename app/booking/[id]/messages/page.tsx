@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import MessageThread from './MessageThread'
 import GuestAppChrome from '@/components/GuestAppChrome'
 import { fetchMessagesWithReadReceiptPrivacy } from '@/lib/messages-privacy'
+import { markThreadRead } from '@/lib/message-access'
 
 export default async function MessagesPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -42,12 +43,7 @@ export default async function MessagesPage({ params }: { params: { id: string } 
     redirect(isPlanner ? '/planner/dashboard' : '/dashboard')
   }
 
-  await supabase
-    .from('messages')
-    .update({ read_at: new Date().toISOString() })
-    .eq('booking_request_id', params.id)
-    .is('read_at', null)
-    .neq('sender_id', user.id)
+  await markThreadRead(supabase, params.id, user.id)
 
   const otherUserId = isPlanner ? profile!.user_id : planner!.id
   const messages = await fetchMessagesWithReadReceiptPrivacy(

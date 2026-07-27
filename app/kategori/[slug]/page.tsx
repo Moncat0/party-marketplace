@@ -43,6 +43,7 @@ export default async function CategoryPage({ params }: Props) {
     `
     )
     .eq('is_published', true)
+    .eq('is_disabled', false)
     .eq('location_id', 'stockholm')
     .eq('category_slug', category.slug)
     .order('created_at', { ascending: false })

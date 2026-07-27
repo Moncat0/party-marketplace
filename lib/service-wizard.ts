@@ -5,11 +5,13 @@ import {
   type CategorySlug,
 } from '@/lib/categories'
 import { DEFAULT_LOCATION_ID } from '@/lib/locations'
+import { normalizeOccasions, type OccasionSlug } from '@/lib/occasions'
 
 export const SERVICE_WIZARD_STEPS = [
   'intro1',
   'title',
   'category',
+  'occasions',
   'location',
   'intro2',
   'description',
@@ -24,6 +26,7 @@ export type ServiceWizardStep = (typeof SERVICE_WIZARD_STEPS)[number]
 export type ServiceWizardDraft = {
   title: string
   categorySlug: CategorySlug | null
+  occasions: OccasionSlug[]
   locationId: string
   description: string
   photos: string[]
@@ -34,6 +37,7 @@ export type ServiceWizardDraft = {
 export const EMPTY_WIZARD_DRAFT: ServiceWizardDraft = {
   title: '',
   categorySlug: null,
+  occasions: [],
   locationId: DEFAULT_LOCATION_ID,
   description: '',
   photos: [],
@@ -43,7 +47,7 @@ export const EMPTY_WIZARD_DRAFT: ServiceWizardDraft = {
 
 /** Three Airbnb-style phases for the footer progress bar. */
 export const WIZARD_PHASES: ServiceWizardStep[][] = [
-  ['intro1', 'title', 'category', 'location'],
+  ['intro1', 'title', 'category', 'occasions', 'location'],
   ['intro2', 'description', 'photos'],
   ['intro3', 'price', 'publish'],
 ]
@@ -87,6 +91,8 @@ export function isStepValid(step: ServiceWizardStep, draft: ServiceWizardDraft):
       return draft.title.trim().length > 0 && draft.title.trim().length <= 50
     case 'category':
       return !!draft.categorySlug && CATEGORIES.some(c => c.slug === draft.categorySlug)
+    case 'occasions':
+      return draft.occasions.length >= 1
     case 'location':
       return draft.locationId === DEFAULT_LOCATION_ID
     case 'description':
@@ -112,6 +118,7 @@ export function isStepValid(step: ServiceWizardStep, draft: ServiceWizardDraft):
 export function resumeStep(draft: ServiceWizardDraft): ServiceWizardStep {
   if (!draft.title.trim()) return 'intro1'
   if (!draft.categorySlug) return 'category'
+  if (draft.occasions.length < 1) return 'occasions'
   if (!draft.locationId) return 'location'
   if (!draft.description.trim()) return 'intro2'
   if (draft.photos.length < 1) return 'photos'
@@ -132,6 +139,7 @@ export function draftFromService(service: {
   description: string | null
   category_slug?: string | null
   category_tags: string[] | null
+  occasions?: string[] | null
   location_id?: string | null
   photos: string[] | null
   price_range_min: number | null
@@ -144,6 +152,7 @@ export function draftFromService(service: {
       category_slug: service.category_slug,
       category_tags: service.category_tags,
     }),
+    occasions: normalizeOccasions(service.occasions),
     locationId: service.location_id ?? DEFAULT_LOCATION_ID,
     description: service.description ?? '',
     photos: service.photos ?? [],

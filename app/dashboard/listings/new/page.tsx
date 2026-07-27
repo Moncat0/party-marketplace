@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import ServiceWizardHub from '@/components/service-wizard/ServiceWizardHub'
-import { getServiceForUser } from '@/lib/services'
+import { getServicesForUser } from '@/lib/services'
 import { ensureUserIsProvider } from '@/lib/service-wizard-server'
 
 export const dynamic = 'force-dynamic'
@@ -16,8 +16,8 @@ export default async function NewServiceHubPage() {
 
   await ensureUserIsProvider(supabase, user.id)
 
-  const result = await getServiceForUser(supabase, user.id)
-  const service = result?.service ?? null
+  const result = await getServicesForUser(supabase, user.id)
+  const services = result?.services ?? []
 
   const { data: profile } = await supabase
     .from('users')
@@ -34,16 +34,12 @@ export default async function NewServiceHubPage() {
       mode="dashboard"
       basePath="/dashboard/listings/new"
       firstName={firstName}
-      service={
-        service
-          ? {
-              id: service.id,
-              title: service.title,
-              is_published: service.is_published,
-              created_at: service.created_at,
-            }
-          : null
-      }
+      services={services.map(s => ({
+        id: s.id,
+        title: s.title,
+        is_published: s.is_published,
+        created_at: s.created_at,
+      }))}
     />
   )
 }

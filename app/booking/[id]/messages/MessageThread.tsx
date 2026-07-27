@@ -86,6 +86,11 @@ export default function MessageThread({
   showBackLink,
 }: Props) {
   const [messages, setMessages] = useState(initial)
+
+  useEffect(() => {
+    setMessages(initial)
+  }, [initial])
+
   const [content, setContent] = useState('')
   const [sending, setSending] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -109,8 +114,9 @@ export default function MessageThread({
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const supabase = createClient()
+  const supabase = useRef(createClient()).current
   const router = useRouter()
+  const refreshInboxRef = useRef(false)
 
   const backHref = isPlanner ? '/planner/messages' : '/dashboard/messages'
   const initial1 = otherName.charAt(0).toUpperCase()
@@ -139,16 +145,53 @@ export default function MessageThread({
     }
   }, [currentUserId])
 
+  async function refreshMessages(opts?: { markRead?: boolean }) {
+    const qs = new URLSearchParams({ booking_request_id: bookingId })
+    if (opts?.markRead) qs.set('mark_read', '1')
+    const res = await fetch(`/api/messages?${qs.toString()}`)
+    if (!res.ok) return
+    const data = await res.json()
+    setMessages(data.messages)
+    if (opts?.markRead && !refreshInboxRef.current) {
+      refreshInboxRef.current = true
+      router.refresh()
+      // Allow another refresh later if more messages arrive while open
+      window.setTimeout(() => {
+        refreshInboxRef.current = false
+      }, 2000)
+    }
+  }
+
+  // Realtime + slow polling fallback
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const res = await fetch(`/api/messages?booking_request_id=${bookingId}`)
-      if (res.ok) {
-        const data = await res.json()
-        setMessages(data.messages)
-      }
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [bookingId])
+    void refreshMessages({ markRead: true })
+
+    const channel = supabase
+      .channel(`messages:${bookingId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `booking_request_id=eq.${bookingId}`,
+        },
+        () => {
+          void refreshMessages({ markRead: true })
+        }
+      )
+      .subscribe()
+
+    const interval = window.setInterval(() => {
+      void refreshMessages({ markRead: true })
+    }, 30000)
+
+    return () => {
+      window.clearInterval(interval)
+      void supabase.removeChannel(channel)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- thread identity only
+  }, [bookingId, currentUserId])
 
   function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]

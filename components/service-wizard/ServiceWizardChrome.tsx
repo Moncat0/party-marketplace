@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { siteChromePad, siteHeaderHeight, siteLogoClass } from '@/components/siteChrome'
+import { siteChromePad } from '@/components/siteChrome'
+import WizardNavHeader from '@/components/service-wizard/WizardNavHeader'
 
 type Props = {
   children: React.ReactNode
@@ -20,6 +20,8 @@ type Props = {
   /** Hub has no footer */
   hideFooter?: boolean
   contentClassName?: string
+  /** Override Avsluta destination when not using onSaveExit */
+  exitHref?: string
 }
 
 export default function ServiceWizardChrome({
@@ -35,41 +37,17 @@ export default function ServiceWizardChrome({
   savingExit = false,
   hideFooter = false,
   contentClassName,
+  exitHref = '/dashboard/listings',
 }: Props) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <header
-        className={cn(
-          siteChromePad,
-          'flex flex-shrink-0 items-center justify-between',
-          siteHeaderHeight
-        )}
-      >
-        <Link href="/" className={siteLogoClass}>
-          FESTEN.
-        </Link>
-        <div className="flex items-center gap-2">
-          <Button asChild variant="outline" size="sm" className="h-10 rounded-full border-[#222222] px-4 text-[14px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]">
-            <Link href="/hjalp">Frågor?</Link>
-          </Button>
-          {onSaveExit ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={savingExit}
-              onClick={onSaveExit}
-              className="h-10 rounded-full border-[#222222] px-4 text-[14px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]"
-            >
-              {savingExit ? 'Sparar...' : 'Spara & avsluta'}
-            </Button>
-          ) : (
-            <Button asChild variant="outline" size="sm" className="h-10 rounded-full border-[#222222] px-4 text-[14px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]">
-              <Link href="/dashboard/listings">Avsluta</Link>
-            </Button>
-          )}
-        </div>
-      </header>
+      <WizardNavHeader
+        exitHref={exitHref}
+        exitLabel={onSaveExit ? 'Spara & avsluta' : 'Avsluta'}
+        onExit={onSaveExit}
+        exitDisabled={savingExit}
+        className="border-b-0"
+      />
 
       <main
         className={cn(
@@ -93,12 +71,7 @@ export default function ServiceWizardChrome({
               </div>
             ))}
           </div>
-          <div
-            className={cn(
-              siteChromePad,
-              'flex items-center justify-between py-4'
-            )}
-          >
+          <div className={cn(siteChromePad, 'flex items-center justify-between py-4')}>
             {showBack ? (
               <button
                 type="button"

@@ -2,11 +2,10 @@
 
 import type { FormEvent } from 'react'
 import DatePickerField from '@/components/ui/DatePickerField'
-import SelectField from '@/components/ui/SelectField'
+import OccasionMultiSelect from '@/components/ui/OccasionMultiSelect'
 import { Button } from '@/components/ui/button'
 import type { BookingFormData } from '@/lib/booking-draft'
-
-import { EVENT_TYPES } from '@/lib/event-types'
+import type { OccasionSlug } from '@/lib/occasions'
 
 type Props = {
   priceLabel: string | null
@@ -19,9 +18,11 @@ type Props = {
   error: string | null
   loggedIn: boolean
   onRequireLogin: () => void
+  /** Occasions this service supports — when set, only those are offered. */
+  serviceOccasions?: string[] | null
 }
 
-/** Sticky booking widget — Airbnb Reserve card chrome, custom date + select. */
+/** Sticky booking widget — Airbnb Reserve card chrome, custom date + occasion chips. */
 export default function ListingReservation({
   priceLabel,
   reviewCount,
@@ -33,7 +34,13 @@ export default function ListingReservation({
   error,
   loggedIn,
   onRequireLogin,
+  serviceOccasions,
 }: Props) {
+  const optionSlugs =
+    serviceOccasions && serviceOccasions.length > 0
+      ? (serviceOccasions as OccasionSlug[])
+      : undefined
+
   return (
     <div
       className="bg-white p-6"
@@ -85,14 +92,17 @@ export default function ListingReservation({
               placeholder="yyyy-mm-dd"
             />
           </div>
-          <div className="border-b border-[#b0b0b0]">
-            <SelectField
-              label="Typ av event"
-              value={bookingData.event_type}
-              onChange={event_type => onChange({ ...bookingData, event_type })}
-              options={[...EVENT_TYPES]}
-              placeholder="Välj typ..."
+          <div className="border-b border-[#b0b0b0] px-3 py-2.5">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#222222]">
+              Tillfälle
+            </p>
+            <OccasionMultiSelect
+              value={bookingData.occasions}
+              options={optionSlugs}
+              size="sm"
+              onChange={occasions => onChange({ ...bookingData, occasions })}
             />
+            <p className="mt-2 text-[12px] text-[#6a6a6a]">Välj ett eller flera.</p>
           </div>
           <div className="grid grid-cols-2">
             <div className="px-3 py-2.5 border-r border-[#b0b0b0]">

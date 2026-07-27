@@ -23,6 +23,7 @@ export default async function HomePage() {
       'id, title, city, location_id, photos, category_slug, category_tags, created_at, price_range_min, provider_profiles(user_id, users(name, avatar_url)), reviews(rating)'
     )
     .eq('is_published', true)
+    .eq('is_disabled', false)
     .order('created_at', { ascending: false })
 
   const providers = (services ?? []).map(s => {

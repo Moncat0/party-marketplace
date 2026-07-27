@@ -1,8 +1,11 @@
 /** Persist booking-request form across auth redirects (OAuth / full page reload). */
 
+import { normalizeOccasions } from '@/lib/occasions'
+
 export type BookingFormData = {
   event_date: string
-  event_type: string
+  /** Selected occasions (multi). */
+  occasions: string[]
   event_location: string
   guest_count: string
   description: string
@@ -23,7 +26,7 @@ export const AUTO_SUBMIT_WINDOW_MS = 1000 * 60 * 15
 
 export const EMPTY_BOOKING_FORM: BookingFormData = {
   event_date: '',
-  event_type: '',
+  occasions: [],
   event_location: '',
   guest_count: '',
   description: '',
@@ -31,6 +34,22 @@ export const EMPTY_BOOKING_FORM: BookingFormData = {
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof sessionStorage !== 'undefined'
+}
+
+function normalizeFormData(
+  raw: Partial<BookingFormData> & { event_type?: string }
+): BookingFormData {
+  const fromLegacy =
+    !raw.occasions?.length && typeof raw.event_type === 'string' && raw.event_type
+      ? [raw.event_type]
+      : raw.occasions
+  return {
+    event_date: raw.event_date ?? '',
+    occasions: normalizeOccasions(fromLegacy),
+    event_location: raw.event_location ?? '',
+    guest_count: raw.guest_count ?? '',
+    description: raw.description ?? '',
+  }
 }
 
 export function saveBookingDraft(
@@ -42,7 +61,7 @@ export function saveBookingDraft(
   const prev = loadBookingDraft(serviceId)
   const draft: BookingDraft = {
     serviceId,
-    data,
+    data: normalizeFormData(data),
     pendingSubmit: opts?.pendingSubmit ?? prev?.pendingSubmit ?? false,
     savedAt: Date.now(),
   }
@@ -58,13 +77,18 @@ export function loadBookingDraft(serviceId: string): BookingDraft | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    const parsed = JSON.parse(raw) as BookingDraft
+    const parsed = JSON.parse(raw) as BookingDraft & {
+      data?: BookingFormData & { event_type?: string }
+    }
     if (!parsed || parsed.serviceId !== serviceId || !parsed.data) return null
     if (Date.now() - (parsed.savedAt ?? 0) > MAX_AGE_MS) {
       clearBookingDraft()
       return null
     }
-    return parsed
+    return {
+      ...parsed,
+      data: normalizeFormData(parsed.data),
+    }
   } catch {
     return null
   }

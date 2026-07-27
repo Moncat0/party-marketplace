@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Skapa din tjänst' }
 
 type Props = {
-  searchParams: { resume?: string; fresh?: string }
+  searchParams: { resume?: string; fresh?: string; id?: string }
 }
 
 export default async function OnboardingFlowPage({ searchParams }: Props) {
@@ -24,6 +24,7 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
   const service = await loadWizardFlowService(supabase, user.id, {
     resume: searchParams.resume === '1',
     fresh: searchParams.fresh === '1',
+    serviceId: searchParams.id ?? null,
     paths,
   })
 
@@ -41,6 +42,7 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
         description: service.description,
         category_slug: service.category_slug,
         category_tags: service.category_tags,
+        occasions: service.occasions ?? [],
         location_id: service.location_id,
         photos: service.photos ?? [],
         price_range_min: service.price_range_min,

@@ -5,13 +5,14 @@ import Link from 'next/link'
 import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsButton from '@/components/settings/SettingsButton'
 import { settingsTokens as t } from '@/components/settings/tokens'
-import { formatEventType } from '@/lib/event-types'
+import { bookingOccasionLabel } from '@/lib/booking-labels'
 
 type Request = {
   id: string
   status: string
   event_date: string | null
   event_type: string | null
+  occasions?: string[] | null
   event_location: string | null
   guest_count: number | null
   description: string | null
@@ -190,10 +191,8 @@ function RequestRow({
                 })}
               </p>
             )}
-            {req.event_type && (
-              <p className="text-[12px] text-[#6a6a6a]">
-                {formatEventType(req.event_type) ?? req.event_type}
-              </p>
+            {bookingOccasionLabel(req) && (
+              <p className="text-[12px] text-[#6a6a6a]">{bookingOccasionLabel(req)}</p>
             )}
             {req.guest_count && (
               <p className="text-[12px] text-[#6a6a6a]">{req.guest_count} gäster</p>

@@ -22,24 +22,55 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const usersArr = provider?.users as unknown as { name: string | null }[] | { name: string | null } | null
   const user = Array.isArray(usersArr) ? usersArr[0] ?? null : usersArr
   const title = service.title ?? user?.name ?? 'Talang'
-  const description = service.description?.slice(0, 160) ?? `Boka ${title} i ${service.city ?? 'Stockholm'} via FESTEN.`
+  const description =
+    service.description?.slice(0, 160) ??
+    `Boka ${title} i ${service.city ?? 'Stockholm'} via FESTEN.`
   const image = service.photos?.[0]
+  const ogTitle = `${title} | FESTEN.`
 
   return {
     title,
     description,
     openGraph: {
-      title: `${title} | FESTEN.`,
+      title: ogTitle,
       description,
-      images: image ? [{ url: image, width: 1200, height: 630, alt: title }] : [],
+      type: 'website',
+      locale: 'sv_SE',
+      siteName: 'FESTEN.',
+      images: image
+        ? [{ url: image, width: 1200, height: 630, alt: title }]
+        : [{ url: '/og-default.png', width: 1200, height: 630, alt: 'FESTEN.' }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ogTitle,
+      description,
+      images: image ? [image] : ['/og-default.png'],
     },
   }
 }
 
-export default async function ServicePage({ params }: { params: { id: string } }) {
+export default async function ServicePage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams?: { return?: string }
+}) {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  const returnRaw = searchParams?.return ?? null
+  const returnPath =
+    returnRaw &&
+    returnRaw.startsWith('/') &&
+    !returnRaw.startsWith('//') &&
+    (returnRaw.startsWith('/onboarding/flow') ||
+      returnRaw.startsWith('/dashboard/listings/new/flow') ||
+      returnRaw === '/dashboard/listings')
+      ? returnRaw
+      : null
 
   const { data: service } = await supabase
     .from('services')
@@ -47,7 +78,6 @@ export default async function ServicePage({ params }: { params: { id: string } }
       '*, provider_profiles(id, user_id, bio, created_at, users(name, avatar_url))'
     )
     .eq('id', params.id)
-    .eq('is_published', true)
     .single()
 
   if (!service) notFound()
@@ -55,6 +85,17 @@ export default async function ServicePage({ params }: { params: { id: string } }
   const provider = Array.isArray(service.provider_profiles)
     ? service.provider_profiles[0]
     : service.provider_profiles
+
+  const isLive = service.is_published === true && service.is_disabled !== true
+  const isOwner = !!user && !!provider?.user_id && user.id === provider.user_id
+
+  if (!isLive && !isOwner) notFound()
+
+  const previewMode: 'live' | 'draft' | 'paused' = isLive
+    ? 'live'
+    : service.is_disabled
+      ? 'paused'
+      : 'draft'
 
   const { data: reviews } = await supabase
     .from('reviews')
@@ -84,6 +125,7 @@ export default async function ServicePage({ params }: { params: { id: string } }
     description: service.description,
     category_slug: categorySlug,
     category_tags: service.category_tags ?? [],
+    occasions: Array.isArray(service.occasions) ? service.occasions : [],
     city: service.city,
     price_range_min: service.price_range_min,
     price_range_max: service.price_range_max,
@@ -171,6 +213,7 @@ export default async function ServicePage({ params }: { params: { id: string } }
       'id, title, city, photos, category_slug, category_tags, price_range_min, provider_profiles(users(name, avatar_url))'
     )
     .eq('is_published', true)
+    .eq('is_disabled', false)
     .neq('id', service.id)
     .limit(14)
 
@@ -190,6 +233,7 @@ export default async function ServicePage({ params }: { params: { id: string } }
         'id, title, city, photos, category_slug, category_tags, price_range_min, provider_profiles(users(name, avatar_url))'
       )
       .eq('is_published', true)
+    .eq('is_disabled', false)
       .neq('id', service.id)
       .eq('category_slug', categorySlug)
       .limit(14)
@@ -253,7 +297,9 @@ export default async function ServicePage({ params }: { params: { id: string } }
       reviewCount={reviews?.length ?? 0}
       currentUserId={user?.id ?? null}
       isSaved={isSaved}
-      similarServices={similarServices}
+      similarServices={previewMode === 'live' ? similarServices : []}
+      previewMode={previewMode}
+      previewReturnPath={returnPath}
     />
   )
 }

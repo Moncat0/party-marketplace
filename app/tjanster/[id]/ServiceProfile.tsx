@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, type FormEvent, type MouseEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { track } from '@/lib/posthog'
 import { createClient } from '@/lib/supabase'
 import MarketplaceHeader from '@/components/MarketplaceHeader'
@@ -15,10 +16,12 @@ import ListingReviews, { type ListingReview } from '@/components/listings/Listin
 import ListingCard, { type ListingCardData } from '@/components/listings/ListingCard'
 import ListingRow from '@/components/listings/ListingRow'
 import SiteFooter from '@/components/shared/SiteFooter'
+import WizardNavHeader from '@/components/service-wizard/WizardNavHeader'
 import WishlistSaveModal from '@/components/wishlist/WishlistSaveModal'
 import { useProviderWishlistSaved } from '@/lib/wishlist-saved-state'
 import { Button } from '@/components/ui/button'
 import { openAuth } from '@/lib/open-auth'
+import { shareServiceListing } from '@/lib/service-share'
 import {
   needsDisplayName,
   needsPhone,
@@ -50,6 +53,7 @@ type Profile = {
   description: string | null
   category_slug: string | null
   category_tags: string[]
+  occasions: string[]
   city: string | null
   price_range_min: number | null
   price_range_max: number | null
@@ -59,6 +63,8 @@ type Profile = {
   memberSince: string | null
 }
 
+type PreviewMode = 'live' | 'draft' | 'paused'
+
 type Props = {
   profile: Profile
   reviews: ListingReview[]
@@ -67,6 +73,10 @@ type Props = {
   currentUserId: string | null
   isSaved: boolean
   similarServices: ListingCardData[]
+  /** Owner-only non-live views of the public page */
+  previewMode?: PreviewMode
+  /** Safe path back to wizard / listings when previewing */
+  previewReturnPath?: string | null
 }
 
 /**
@@ -81,7 +91,16 @@ export default function ServiceProfile({
   currentUserId,
   isSaved,
   similarServices,
+  previewMode = 'live',
+  previewReturnPath = null,
 }: Props) {
+  const isPreview = previewMode !== 'live'
+  const fromWizard = !!previewReturnPath?.includes('/flow')
+  const backHref = previewReturnPath ?? '/dashboard/listings'
+  const backLabel = fromWizard ? 'Tillbaka till publicering' : 'Tillbaka till tjänster'
+  const wizardExitHref = previewReturnPath?.startsWith('/onboarding')
+    ? '/dashboard'
+    : '/dashboard/listings'
   const router = useRouter()
   const { saved, markSaved, markUnsaved } = useProviderWishlistSaved(
     profile.id,
@@ -191,6 +210,11 @@ export default function ServiceProfile({
   }
 
   async function submitBooking(plannerId: string, data: BookingFormData) {
+    if (plannerId === profile.user_id) {
+      setBookingError('Du kan inte skicka en förfrågan till dig själv.')
+      setSubmitting(false)
+      return
+    }
     setSubmitting(true)
     setBookingError(null)
     const supabase = createClient()
@@ -198,7 +222,8 @@ export default function ServiceProfile({
       planner_id: plannerId,
       service_id: profile.id,
       event_date: data.event_date || null,
-      event_type: data.event_type || null,
+      occasions: data.occasions,
+      event_type: data.occasions[0] ?? null,
       event_location: data.event_location || null,
       guest_count: data.guest_count ? Number(data.guest_count) : null,
       description: data.description || null,
@@ -213,7 +238,8 @@ export default function ServiceProfile({
     clearBookingDraft()
     track('booking_request_sent', {
       provider_id: profile.id,
-      event_type: data.event_type,
+      occasions: data.occasions,
+      event_type: data.occasions[0] ?? null,
       event_date: data.event_date,
       guest_count: data.guest_count,
     })
@@ -263,6 +289,10 @@ export default function ServiceProfile({
       requireLogin('request')
       return
     }
+    if (bookingData.occasions.length < 1) {
+      setBookingError('Välj minst ett tillfälle.')
+      return
+    }
     await prepareAndSubmitBooking(currentUserId, bookingData)
   }
 
@@ -291,21 +321,28 @@ export default function ServiceProfile({
   }
 
   async function handleShare() {
-    const url = window.location.href
-    if (typeof navigator.share === 'function') {
-      await navigator.share({ title: profile.title ?? 'FESTEN.', url })
-    } else {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+    try {
+      const result = await shareServiceListing({
+        id: profile.id,
+        title: profile.title,
+        city: profile.city,
+        category_slug: profile.category_slug,
+        category_tags: profile.category_tags,
+        origin: window.location.origin,
+      })
+      if (!result.shared) return
+      track('provider_shared', {
+        provider_id: profile.id,
+        method: result.method,
+        source: 'service_profile',
+      })
+      if (result.method === 'copy') {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
+    } catch {
+      // ignore share failures
     }
-    track('provider_shared', {
-      provider_id: profile.id,
-      method:
-        typeof navigator !== 'undefined' && typeof navigator.share === 'function'
-          ? 'native'
-          : 'copy',
-    })
   }
 
   const priceLabel =
@@ -321,7 +358,29 @@ export default function ServiceProfile({
 
   return (
     <main className="min-h-screen bg-white">
-      <MarketplaceHeader currentMode="planner" />
+      {fromWizard ? (
+        <WizardNavHeader exitHref={wizardExitHref} exitLabel="Avsluta" />
+      ) : (
+        <MarketplaceHeader currentMode="planner" />
+      )}
+
+      {isPreview ? (
+        <div className="border-b border-[#ebebeb] bg-[#f7f7f7]">
+          <div className="mx-auto flex max-w-screen-lg flex-col gap-2 px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-[14px] font-medium text-[#222222]">
+              {previewMode === 'paused'
+                ? 'Förhandsgranskning — pausad. Syns inte i sök eller på startsidan.'
+                : 'Förhandsgranskning — utkast. Syns inte för planerare ännu.'}
+            </p>
+            <Link
+              href={backHref}
+              className="text-[14px] font-semibold text-[#222222] underline underline-offset-2"
+            >
+              {backLabel}
+            </Link>
+          </div>
+        </div>
+      ) : null}
 
       <Container>
         <div className="max-w-screen-lg mx-auto py-6">
@@ -331,9 +390,11 @@ export default function ServiceProfile({
               photos={photos}
               saved={saved}
               copied={copied}
-              onSave={handleSave}
+              onSave={isPreview ? () => undefined : handleSave}
               onShare={handleShare}
               onShowAll={() => setShowAllPhotos(true)}
+              hideSave={isPreview}
+              hideShare={fromWizard}
             />
 
             {/* Sticky booking only spans this grid — stops before Meet / Reviews */}
@@ -342,6 +403,7 @@ export default function ServiceProfile({
                 hostName={profile.users?.name ?? null}
                 hostAvatar={profile.users?.avatar_url ?? null}
                 categorySlug={profile.category_slug}
+                occasions={profile.occasions}
                 description={profile.description}
                 city={profile.city}
                 serviceTitle={profile.title}
@@ -351,18 +413,34 @@ export default function ServiceProfile({
 
               <div id="forfragan" className="order-first mb-10 md:order-last md:col-span-3 scroll-mt-28">
                 <div className="sticky top-24 md:top-28">
-                  <ListingReservation
-                    priceLabel={priceLabel}
-                    reviewCount={reviewCount}
-                    avgRating={avgRating}
-                    bookingData={bookingData}
-                    onChange={setBookingData}
-                    onSubmit={handleBookingSubmit}
-                    submitting={submitting}
-                    error={bookingError}
-                    loggedIn={!!currentUserId}
-                    onRequireLogin={() => requireLogin('request')}
-                  />
+                  {isPreview ? (
+                    <div className="rounded-2xl border border-[#dddddd] bg-[#f7f7f7] p-6">
+                      <p className="text-[16px] font-semibold text-[#222222]">
+                        Bokning är avstängd i förhandsgranskning
+                      </p>
+                      <p className="mt-2 text-[14px] leading-relaxed text-[#6a6a6a]">
+                        Så här ser sidan ut för planerare. Publicera (och aktivera) tjänsten för att
+                        ta emot förfrågningar.
+                      </p>
+                      <Button asChild variant="dark" className="mt-4 rounded-xl">
+                        <Link href={backHref}>{backLabel}</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <ListingReservation
+                      priceLabel={priceLabel}
+                      reviewCount={reviewCount}
+                      avgRating={avgRating}
+                      bookingData={bookingData}
+                      onChange={setBookingData}
+                      onSubmit={handleBookingSubmit}
+                      submitting={submitting}
+                      error={bookingError}
+                      loggedIn={!!currentUserId}
+                      onRequireLogin={() => requireLogin('request')}
+                      serviceOccasions={profile.occasions}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -375,7 +453,7 @@ export default function ServiceProfile({
               memberSince={profile.memberSince}
               reviewCount={reviewCount}
               avgRating={avgRating}
-              onContact={scrollToBooking}
+              onContact={isPreview ? undefined : scrollToBooking}
             />
 
             <ListingReviews
@@ -387,7 +465,7 @@ export default function ServiceProfile({
         </div>
       </Container>
 
-      {similarServices.length > 0 && (
+      {similarServices.length > 0 && !fromWizard ? (
         <div className="border-t border-[#ebebeb] pt-10 pb-4 mt-2">
           <ListingRow title="Fler tjänster i närheten">
             {similarServices.map(s => (
@@ -401,9 +479,9 @@ export default function ServiceProfile({
             ))}
           </ListingRow>
         </div>
-      )}
+      ) : null}
 
-      <SiteFooter isLoggedIn={!!currentUserId} />
+      {!fromWizard ? <SiteFooter isLoggedIn={!!currentUserId} /> : null}
 
       {showAllPhotos && (
         <div className="fixed inset-0 z-50 bg-black/90 overflow-y-auto p-6">

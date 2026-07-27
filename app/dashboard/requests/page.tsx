@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import ProviderHostShell from '@/components/dashboard/ProviderHostShell'
 import RequestsList from './RequestsList'
 import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
-import { getServiceForUser } from '@/lib/services'
+import { getServicesForUser } from '@/lib/services'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Förfrågningar' }
@@ -15,16 +15,16 @@ export default async function RequestsPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup?intent=planner')
 
-  const result = await getServiceForUser(supabase, user.id)
+  const result = await getServicesForUser(supabase, user.id)
   if (!result) return await redirectWithoutProviderProfile(supabase, user.id)
 
-  const serviceId = result.service?.id ?? null
+  const serviceIds = result.services.map(s => s.id)
 
-  const { data: requests } = serviceId
+  const { data: requests } = serviceIds.length
     ? await supabase
         .from('booking_requests')
         .select('*, users!planner_id(id, name, email)')
-        .eq('service_id', serviceId)
+        .in('service_id', serviceIds)
         .order('created_at', { ascending: false })
     : { data: [] }
 

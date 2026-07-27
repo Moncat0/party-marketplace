@@ -7,13 +7,14 @@ import PayButton from '@/components/PayButton'
 import { Button } from '@/components/ui/button'
 import SettingsButton from '@/components/settings/SettingsButton'
 import { settingsTokens as t } from '@/components/settings/tokens'
-import { formatEventType } from '@/lib/event-types'
+import { bookingOccasionLabel } from '@/lib/booking-labels'
 
 export type TripBooking = {
   id: string
   status: string
   event_date: string | null
   event_type: string | null
+  occasions?: string[] | null
   price_ore: number | null
   payment_status: string | null
   services: {
@@ -209,8 +210,8 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
               })}
             </span>
           )}
-          {booking.event_type && (
-            <span>{formatEventType(booking.event_type) ?? booking.event_type}</span>
+          {bookingOccasionLabel(booking) && (
+            <span>{bookingOccasionLabel(booking)}</span>
           )}
           {booking.payment_status === 'paid' && (
             <span style={{ color: t.colors.success }}>Betald ✓</span>

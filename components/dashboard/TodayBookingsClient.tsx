@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { settingsTokens as t } from '@/components/settings/tokens'
-import { formatEventType } from '@/lib/event-types'
+import { bookingOccasionLabel } from '@/lib/booking-labels'
 
 export type HostBooking = {
   id: string
   event_date: string | null
   event_type: string | null
+  occasions?: string[] | null
   event_location: string | null
   guest_count: number | null
   planner_name: string | null
@@ -100,8 +101,8 @@ export default function TodayBookingsClient({
                 <div className="min-w-0">
                   <p className="font-semibold text-[#222222]">
                     {b.planner_name ?? 'Arrangör'}
-                    {b.event_type
-                      ? ` · ${formatEventType(b.event_type) ?? b.event_type}`
+                    {bookingOccasionLabel(b)
+                      ? ` · ${bookingOccasionLabel(b)}`
                       : ''}
                   </p>
                   <p className="mt-1 text-[14px] text-[#6a6a6a]">

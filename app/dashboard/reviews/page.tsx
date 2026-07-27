@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import ProviderHostShell from '@/components/dashboard/ProviderHostShell'
 import { settingsTokens as t } from '@/components/settings/tokens'
 import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
-import { getServiceForUser } from '@/lib/services'
+import { getServicesForUser } from '@/lib/services'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Recensioner' }
@@ -15,16 +15,16 @@ export default async function ReviewsPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup?intent=planner')
 
-  const result = await getServiceForUser(supabase, user.id)
+  const result = await getServicesForUser(supabase, user.id)
   if (!result) return await redirectWithoutProviderProfile(supabase, user.id)
 
-  const serviceId = result.service?.id ?? null
+  const serviceIds = result.services.map(s => s.id)
 
-  const { data: reviews } = serviceId
+  const { data: reviews } = serviceIds.length
     ? await supabase
         .from('reviews')
         .select('id, rating, comment, created_at, users!reviewer_id(name)')
-        .eq('service_id', serviceId)
+        .in('service_id', serviceIds)
         .order('created_at', { ascending: false })
     : { data: [] }
 

@@ -3,11 +3,13 @@
 import Image from 'next/image'
 import ListingCategory from './ListingCategory'
 import { formatCategoryFromSlug } from '@/lib/categories'
+import { formatOccasion } from '@/lib/occasions'
 
 type Props = {
   hostName: string | null
   hostAvatar: string | null
   categorySlug: string | null
+  occasions?: string[] | null
   description: string | null
   city: string | null
   serviceTitle: string | null
@@ -20,6 +22,7 @@ export default function ListingInfo({
   hostName,
   hostAvatar,
   categorySlug,
+  occasions,
   description,
   city,
   serviceTitle,
@@ -28,6 +31,9 @@ export default function ListingInfo({
 }: Props) {
   const initial = (hostName ?? '?').charAt(0).toUpperCase()
   const categoryLabel = formatCategoryFromSlug(categorySlug)
+  const occasionLabels = (occasions ?? [])
+    .map(v => formatOccasion(v))
+    .filter(Boolean) as string[]
 
   return (
     <div className="col-span-4 flex flex-col gap-8">
@@ -70,7 +76,26 @@ export default function ListingInfo({
       {categoryLabel && (
         <>
           <div className="flex flex-col gap-6">
-            <ListingCategory label={categoryLabel} description={`Kategori · ${categoryLabel}`} />
+            <ListingCategory label={categoryLabel} description={`Tjänst · ${categoryLabel}`} />
+          </div>
+          <hr className="border-[#ebebeb]" />
+        </>
+      )}
+
+      {occasionLabels.length > 0 && (
+        <>
+          <div>
+            <h3 className="mb-3 text-[18px] font-semibold text-[#222222]">Passar för</h3>
+            <div className="flex flex-wrap gap-2">
+              {occasionLabels.map(label => (
+                <span
+                  key={label}
+                  className="rounded-full border border-[#dddddd] bg-[#f7f7f7] px-3 py-1.5 text-[13px] font-medium text-[#222222]"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
           <hr className="border-[#ebebeb]" />
         </>

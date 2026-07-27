@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
+import { isMessagingAllowedStatus } from '@/lib/message-access'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -19,6 +20,13 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  if (!isMessagingAllowedStatus(booking.status)) {
+    return NextResponse.json(
+      { error: 'Offert kan endast skickas för accepterade bokningar.' },
+      { status: 409 }
+    )
+  }
 
   const serviceRaw = booking.services as unknown
   const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {

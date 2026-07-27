@@ -16,7 +16,7 @@ export default async function PlannerBookingsPage() {
   const { data: bookings } = await supabase
     .from('booking_requests')
     .select(
-      'id, status, event_date, event_type, price_ore, payment_status, services!service_id(id, title, photos, provider_profiles(stripe_onboarded, users(name)))'
+      'id, status, event_date, event_type, occasions, price_ore, payment_status, services!service_id(id, title, photos, provider_profiles(stripe_onboarded, users(name)))'
     )
     .eq('planner_id', user.id)
     .order('created_at', { ascending: false })
@@ -50,6 +50,7 @@ export default async function PlannerBookingsPage() {
       status: b.status,
       event_date: b.event_date,
       event_type: b.event_type,
+      occasions: b.occasions,
       price_ore: b.price_ore,
       payment_status: b.payment_status,
       services: serviceRaw

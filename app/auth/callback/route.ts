@@ -7,7 +7,7 @@ import {
   resolvePostAuthDestination,
   type AuthIntent,
 } from '@/lib/auth-intent'
-import { ensureAppUser } from '@/lib/ensure-user'
+import { ensureAppUser, intentFromUserMetadata } from '@/lib/ensure-user'
 import { needsDisplayName } from '@/lib/profile-completeness'
 
 function safeNext(raw: string | null): string | null {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   if (code) {
     const cookieStore = await cookies()
     const intentFromCookie = parseAuthIntent(cookieStore.get(INTENT_COOKIE)?.value)
-    const intent: AuthIntent | null = intentFromQuery ?? intentFromCookie
+    let intent: AuthIntent | null = intentFromQuery ?? intentFromCookie
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,6 +51,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: { user } } = await supabase.auth.getUser()
+    if (!intent && user) {
+      intent = intentFromUserMetadata(user)
+    }
 
     let hasProviderProfile = false
     let isPublished = false

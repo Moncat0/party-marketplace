@@ -8,8 +8,13 @@ import { type InboxThread } from '@/components/MessagesInbox'
 import MessageThread from '@/app/booking/[id]/messages/MessageThread'
 import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
 import { fetchMessagesWithReadReceiptPrivacy } from '@/lib/messages-privacy'
-import { getServiceForUser } from '@/lib/services'
-import { formatEventType } from '@/lib/event-types'
+import { getServicesForUser } from '@/lib/services'
+import { bookingOccasionLabel } from '@/lib/booking-labels'
+import { markThreadRead } from '@/lib/message-access'
+import {
+  formatInboxLastText,
+  loadInboxMessageMeta,
+} from '@/lib/message-inbox'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Meddelanden' }
@@ -25,82 +30,66 @@ export default async function ProviderMessagesPage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup?intent=planner')
 
-  const result = await getServiceForUser(supabase, user.id)
+  const result = await getServicesForUser(supabase, user.id)
   if (!result) return await redirectWithoutProviderProfile(supabase, user.id)
 
-  const serviceId = result.service?.id ?? null
+  const serviceIds = result.services.map(s => s.id)
+  const serviceById = new Map(result.services.map(s => [s.id, s]))
 
-  const { data: bookings } = serviceId
+  const activeId = searchParams.c ?? null
+  if (activeId) {
+    await markThreadRead(supabase, activeId, user.id)
+  }
+
+  const { data: bookings } = serviceIds.length
     ? await supabase
         .from('booking_requests')
         .select(
-          'id, event_date, event_type, status, event_location, guest_count, description, planner_id, created_at, users!planner_id(name, avatar_url)'
+          'id, event_date, event_type, occasions, status, event_location, guest_count, description, planner_id, created_at, service_id, users!planner_id(name, avatar_url)'
         )
-        .eq('service_id', serviceId)
+        .in('service_id', serviceIds)
         .in('status', ['accepted', 'completed'])
         .order('created_at', { ascending: false })
     : { data: [] }
 
-  const threadsRaw = await Promise.all(
-    (bookings ?? []).map(async booking => {
-      const { data: lastMsg } = await supabase
-        .from('messages')
-        .select('content, image_url, created_at, sender_id')
-        .eq('booking_request_id', booking.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+  const bookingIds = (bookings ?? []).map(b => b.id)
+  const metaByBooking = await loadInboxMessageMeta(supabase, bookingIds, user.id)
 
-      const { count: unread } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('booking_request_id', booking.id)
-        .is('read_at', null)
-        .neq('sender_id', user.id)
+  const threadsRaw = (bookings ?? []).map(booking => {
+    const meta = metaByBooking.get(booking.id)
+    const planner = (
+      Array.isArray(booking.users) ? booking.users[0] : booking.users
+    ) as { name: string | null; avatar_url: string | null } | null
+    const name = planner?.name ?? 'Arrangör'
 
-      const planner = (
-        Array.isArray(booking.users) ? booking.users[0] : booking.users
-      ) as { name: string | null; avatar_url: string | null } | null
-      const name = planner?.name ?? 'Arrangör'
-      const lastText = lastMsg
-        ? lastMsg.sender_id === user.id
-          ? `Du: ${lastMsg.content ?? '📷 Bild'}`
-          : lastMsg.content ?? '📷 Bild'
-        : 'Ingen konversation än'
-
-      const thread: InboxThread = {
-        id: booking.id,
-        name,
-        subtitle: formatEventType(booking.event_type),
-        lastText,
-        lastAt: lastMsg?.created_at ?? null,
-        unread: unread ?? 0,
-      }
-      return { thread, booking, planner }
-    })
-  )
+    const thread: InboxThread = {
+      id: booking.id,
+      name,
+      subtitle: bookingOccasionLabel(booking),
+      lastText: formatInboxLastText(meta?.lastMsg ?? null, user.id),
+      lastAt: meta?.lastMsg?.created_at ?? null,
+      unread: meta?.unread ?? 0,
+    }
+    return { thread, booking, planner }
+  })
 
   const threads = threadsRaw.map(t => t.thread)
-  const activeId = searchParams.c ?? null
   const active = activeId ? threadsRaw.find(t => t.thread.id === activeId) : null
 
   let embeddedThread: ReactNode = null
   let details: ReactNode = null
 
   if (active) {
-    await supabase
-      .from('messages')
-      .update({ read_at: new Date().toISOString() })
-      .eq('booking_request_id', active.booking.id)
-      .is('read_at', null)
-      .neq('sender_id', user.id)
-
     const messages = await fetchMessagesWithReadReceiptPrivacy(
       supabase,
       active.booking.id,
       user.id,
       active.booking.planner_id
     )
+
+    const bookingService = active.booking.service_id
+      ? serviceById.get(active.booking.service_id)
+      : null
 
     embeddedThread = (
       <MessageThread
@@ -116,8 +105,8 @@ export default async function ProviderMessagesPage({
         guestCount={active.booking.guest_count ?? null}
         eventType={active.booking.event_type ?? null}
         inquiryAt={active.booking.created_at ?? null}
-        serviceId={serviceId}
-        serviceTitle={result.service?.title ?? null}
+        serviceId={bookingService?.id ?? active.booking.service_id ?? null}
+        serviceTitle={bookingService?.title ?? null}
         embedded
       />
     )
@@ -130,6 +119,7 @@ export default async function ProviderMessagesPage({
           status: active.booking.status,
           event_date: active.booking.event_date,
           event_type: active.booking.event_type,
+          occasions: active.booking.occasions,
           event_location: active.booking.event_location,
           guest_count: active.booking.guest_count,
           description: active.booking.description,

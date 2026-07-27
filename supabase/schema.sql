@@ -111,30 +111,33 @@ create table provider_profiles (
 -- ─────────────────────────────────────────
 -- SERVICES
 -- The bookable listing for a provider — what planners see when they browse.
--- One-to-one with provider_profiles (one service per provider at launch).
+-- One provider may have up to 2 services (soft limit enforced in app).
 -- ─────────────────────────────────────────
 create table services (
   id                  uuid primary key default gen_random_uuid(),
-  provider_profile_id uuid not null references provider_profiles (id) on delete cascade unique,
+  provider_profile_id uuid not null references provider_profiles (id) on delete cascade,
   title               text,
   description         text,
-  -- Canonical browse category (dj, fotograf, musik, …). Orthogonal to booking event_type.
+  -- Canonical browse category (talent type). Orthogonal to occasions.
   category_slug       text
-                        check (
+                          check (
                           category_slug is null
                           or category_slug in (
                             'dj', 'fotograf', 'musik', 'makeup',
-                            'underhallning', 'catering', 'barnkalas', 'brollop'
+                            'underhallning', 'catering'
                           )
-                        ),
+                          ),
   -- Legacy / specialty tags — kept in sync with category_slug[0] on write.
   category_tags       text[] default '{}',
+  -- Party occasions this service fits (multi). See lib/occasions.ts.
+  occasions           text[] not null default '{}',
   city                text default 'Stockholm',
   location_id         text not null default 'stockholm',
   price_range_min     integer,
   price_range_max     integer,
   photos              text[] default '{}',
   is_published        boolean not null default false,
+  is_disabled         boolean not null default false,
   view_count          integer not null default 0,
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
@@ -154,7 +157,13 @@ create table booking_requests (
   event_location              text,
   guest_count                 integer,
   event_type                  text
-                                check (event_type in ('birthday', 'wedding', 'corporate', 'kids', 'other')),
+                                check (event_type in (
+                                  'birthday', 'kids', 'wedding', 'corporate', 'graduation',
+                                  'crayfish', 'midsommar', 'christmas', 'hen_stag',
+                                  'anniversary', 'housewarming', 'other'
+                                )),
+  -- Multi-select occasions on the förfrågan (mirrors / supersedes event_type).
+  occasions                   text[] not null default '{}',
   description                 text,
   status                      text not null default 'pending'
                                 check (status in ('pending', 'accepted', 'declined', 'completed')),
@@ -296,6 +305,7 @@ create index on provider_profiles (city);
 create index on provider_profiles (location_id);
 create index on services (provider_profile_id);
 create index on services (is_published);
+create index on services (is_disabled);
 create index on services (city);
 create index on services (location_id);
 create index on booking_requests (planner_id);
@@ -370,7 +380,7 @@ create policy "Providers can update their own profile"
 create policy "Published services are publicly readable"
   on services for select
   using (
-    is_published = true
+    (is_published = true and is_disabled = false)
     or auth.uid() = (select user_id from provider_profiles where id = provider_profile_id)
   );
 
@@ -382,6 +392,12 @@ create policy "Providers can insert their own services"
 
 create policy "Providers can update their own services"
   on services for update
+  using (
+    auth.uid() = (select user_id from provider_profiles where id = provider_profile_id)
+  );
+
+create policy "Providers can delete their own services"
+  on services for delete
   using (
     auth.uid() = (select user_id from provider_profiles where id = provider_profile_id)
   );
@@ -482,7 +498,19 @@ create policy "Booking participants can mark messages read"
       join provider_profiles pp on pp.id = s.provider_profile_id
       where br.id = booking_request_id
     )
+  )
+  with check (
+    auth.uid() = (select planner_id from booking_requests where id = booking_request_id)
+    or auth.uid() = (
+      select pp.user_id from booking_requests br
+      join services s on s.id = br.service_id
+      join provider_profiles pp on pp.id = s.provider_profile_id
+      where br.id = booking_request_id
+    )
   );
+
+-- Authenticated clients may only update read_at (mark as read).
+-- grant update (read_at) on messages to authenticated;
 
 -- SHORTLISTS policies
 -- Anyone can view a shortlist (needed for the shared link feature).

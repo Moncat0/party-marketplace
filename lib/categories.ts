@@ -12,6 +12,7 @@ export type Category = {
   tags: string[]
 }
 
+/** Talent / service type only — occasions (bröllop, barnkalas, …) live in lib/occasions. */
 export const CATEGORY_SLUGS = [
   'dj',
   'fotograf',
@@ -19,8 +20,6 @@ export const CATEGORY_SLUGS = [
   'makeup',
   'underhallning',
   'catering',
-  'barnkalas',
-  'brollop',
 ] as const
 
 export type CategorySlug = (typeof CATEGORY_SLUGS)[number]
@@ -71,21 +70,13 @@ export const CATEGORIES: Category[] = [
     description: 'Privatkockar och cateringtjänster för ditt event i Stockholm.',
     tags: ['catering', 'kock', 'mat', 'Catering', 'Kock', 'Catering & Kock'],
   },
-  {
-    slug: 'barnkalas',
-    label: 'Barnkalas',
-    emoji: '🎈',
-    description: 'Allt du behöver för ett oförglömligt barnkalas.',
-    tags: ['barnkalas', 'barn', 'barnunderhållning', 'Barnkalas', 'Ballongkonstnär'],
-  },
-  {
-    slug: 'brollop',
-    label: 'Bröllop',
-    emoji: '💍',
-    description: 'Talanger och tjänster specialiserade på bröllop i Stockholm.',
-    tags: ['bröllop', 'Bröllop', 'wedding'],
-  },
 ]
+
+/** Map retired occasion-as-category slugs → closest talent category. */
+const LEGACY_CATEGORY_SLUG_MAP: Record<string, CategorySlug> = {
+  barnkalas: 'underhallning',
+  brollop: 'fotograf',
+}
 
 export function isCategorySlug(value: string | null | undefined): value is CategorySlug {
   return !!value && (CATEGORY_SLUGS as readonly string[]).includes(value)
@@ -93,7 +84,8 @@ export function isCategorySlug(value: string | null | undefined): value is Categ
 
 export function getCategoryBySlug(slug: string | null | undefined): Category | undefined {
   if (!slug) return undefined
-  return CATEGORIES.find(c => c.slug === slug)
+  const canonical = LEGACY_CATEGORY_SLUG_MAP[slug] ?? slug
+  return CATEGORIES.find(c => c.slug === canonical)
 }
 
 /** Card / chip label for a canonical slug. */
@@ -115,6 +107,12 @@ export function categorySlugFromTags(tags: string[] | null | undefined): Categor
     if (lower.includes(cat.label.toLowerCase())) return cat.slug as CategorySlug
     if (cat.tags.some(t => lower.includes(t.toLowerCase()))) return cat.slug as CategorySlug
   }
+  // Retired occasion categories stored as tags
+  for (const [legacy, next] of Object.entries(LEGACY_CATEGORY_SLUG_MAP)) {
+    if (lower.includes(legacy) || lower.includes(legacy === 'brollop' ? 'bröllop' : legacy)) {
+      return next
+    }
+  }
   return null
 }
 
@@ -123,6 +121,9 @@ export function resolveCategorySlug(opts: {
   category_slug?: string | null
   category_tags?: string[] | null
 }): CategorySlug | null {
+  if (opts.category_slug && LEGACY_CATEGORY_SLUG_MAP[opts.category_slug]) {
+    return LEGACY_CATEGORY_SLUG_MAP[opts.category_slug]
+  }
   if (isCategorySlug(opts.category_slug)) return opts.category_slug
   return categorySlugFromTags(opts.category_tags)
 }

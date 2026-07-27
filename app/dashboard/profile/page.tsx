@@ -3,12 +3,20 @@ import { redirect } from 'next/navigation'
 import ProviderHostShell from '@/components/dashboard/ProviderHostShell'
 import EditProfileForm from './EditProfileForm'
 import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
-import { ensureProviderAndService, getServiceForProvider } from '@/lib/services'
+import {
+  ensureProviderAndService,
+  getServiceByIdForProvider,
+  getServicesForProvider,
+} from '@/lib/services'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Redigera tjänst' }
 
-export default async function EditProfilePage() {
+type Props = {
+  searchParams: { service?: string }
+}
+
+export default async function EditProfilePage({ searchParams }: Props) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -23,11 +31,20 @@ export default async function EditProfilePage() {
 
   if (!existingProvider) return await redirectWithoutProviderProfile(supabase, user.id)
 
-  let service = await getServiceForProvider(supabase, existingProvider.id)
+  let service = searchParams.service
+    ? await getServiceByIdForProvider(supabase, existingProvider.id, searchParams.service)
+    : null
+
+  if (!service) {
+    const services = await getServicesForProvider(supabase, existingProvider.id)
+    service = services[0] ?? null
+  }
+
   if (!service) {
     const result = await ensureProviderAndService(supabase, user.id)
     if (result.error) return await redirectWithoutProviderProfile(supabase, user.id)
-    service = await getServiceForProvider(supabase, result.providerId)
+    const services = await getServicesForProvider(supabase, result.providerId)
+    service = services[0] ?? null
   }
 
   if (!service) return await redirectWithoutProviderProfile(supabase, user.id)

@@ -420,21 +420,6 @@ function ServiceIcon({ kind }: { kind: string }) {
           <path d="M12 7V4" />
         </svg>
       )
-    case 'barnkalas':
-      return (
-        <svg {...props}>
-          <path d="M12 3c-2.5 2.5-4 5-4 7.5a4 4 0 0 0 8 0C16 8 14.5 5.5 12 3z" />
-          <path d="M12 15v6" />
-          <path d="M9 21h6" />
-        </svg>
-      )
-    case 'brollop':
-      return (
-        <svg {...props}>
-          <circle cx="9" cy="12" r="4" />
-          <circle cx="15" cy="12" r="4" />
-        </svg>
-      )
     default:
       return (
         <svg {...props}>

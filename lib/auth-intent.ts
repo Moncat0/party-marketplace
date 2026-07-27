@@ -5,7 +5,8 @@ import { welcomeUrl } from '@/lib/profile-completeness'
 export type AuthIntent = 'planner' | 'provider'
 
 export const INTENT_COOKIE = 'festen_intent'
-export const INTENT_COOKIE_MAX_AGE = 60 * 10 // 10 minutes
+/** Long enough for email confirmation clicks (was 10 minutes — too short). */
+export const INTENT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
 export function parseAuthIntent(value: string | null | undefined): AuthIntent | null {
   if (value === 'planner' || value === 'provider') return value

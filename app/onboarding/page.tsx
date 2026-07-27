@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import ServiceWizardHub from '@/components/service-wizard/ServiceWizardHub'
-import { ensureProviderAndService, getServiceForUser } from '@/lib/services'
+import { ensureProviderAndService, getServicesForUser } from '@/lib/services'
 import {
   ensureUserIsProvider,
   ONBOARDING_WIZARD_PATHS,
@@ -32,15 +32,16 @@ export default async function OnboardingPage() {
     redirect('/planner/dashboard')
   }
 
-  const result = await getServiceForUser(supabase, user.id)
-  const service = result?.service ?? null
+  const result = await getServicesForUser(supabase, user.id)
+  const services = result?.services ?? []
+  const primary = services[0] ?? null
 
-  if (service?.is_published) {
+  if (primary?.is_published) {
     redirect(ONBOARDING_WIZARD_PATHS.afterPublish)
   }
 
   // First-time: skip hub, start wizard immediately
-  if (!serviceHasProgress(service)) {
+  if (!serviceHasProgress(primary)) {
     redirect(ONBOARDING_WIZARD_PATHS.flow)
   }
 
@@ -59,16 +60,12 @@ export default async function OnboardingPage() {
       mode="onboarding"
       basePath="/onboarding"
       firstName={firstName}
-      service={
-        service
-          ? {
-              id: service.id,
-              title: service.title,
-              is_published: service.is_published,
-              created_at: service.created_at,
-            }
-          : null
-      }
+      services={services.map(s => ({
+        id: s.id,
+        title: s.title,
+        is_published: s.is_published,
+        created_at: s.created_at,
+      }))}
     />
   )
 }

@@ -10,7 +10,7 @@ import {
   clearIntentCookie,
   type AuthIntent,
 } from '@/lib/auth-intent'
-import { ensureAppUser } from '@/lib/ensure-user'
+import { ensureAppUser, AUTH_INTENT_METADATA_KEY } from '@/lib/ensure-user'
 import { needsDisplayName } from '@/lib/profile-completeness'
 import {
   formatLastLogin,
@@ -158,11 +158,17 @@ export default function AuthPanel({
     }
   }
 
-  function goToPassword(prefillEmail?: string, from: AuthView = 'fresh') {
+  function goToPassword(
+    prefillEmail?: string,
+    from: AuthView = 'fresh',
+    preferredMode?: 'login' | 'signup'
+  ) {
     resetMessages()
     if (prefillEmail) setEmail(prefillEmail)
     setPassword('')
-    setMode('login')
+    // Remembered account → log in. New email ("Inte du?" / Fortsätt) → sign up,
+    // so first-time providers aren't stuck on a failing login.
+    setMode(preferredMode ?? (from === 'welcome' ? 'login' : 'signup'))
     setPasswordReturnView(from)
     setView('password')
   }
@@ -175,8 +181,10 @@ export default function AuthPanel({
       setError('Ange en giltig e-postadress.')
       return
     }
-    setEmail(value.toLowerCase())
-    goToPassword(value.toLowerCase(), 'fresh')
+    const normalized = value.toLowerCase()
+    setEmail(normalized)
+    const isRemembered = accounts.some(a => a.email.toLowerCase() === normalized)
+    goToPassword(normalized, 'fresh', isRemembered ? 'login' : 'signup')
   }
 
   async function handlePasswordAuth(e: React.FormEvent) {
@@ -192,7 +200,11 @@ export default function AuthPanel({
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: { emailRedirectTo: callbackUrl() },
+        options: {
+          emailRedirectTo: callbackUrl(),
+          // Survives email confirmation even if the intent cookie expires
+          data: { [AUTH_INTENT_METADATA_KEY]: intent },
+        },
       })
       if (signUpError) {
         setError('Det gick inte att skapa kontot. Kontrollera din e-post och ditt lösenord.')
@@ -230,6 +242,8 @@ export default function AuthPanel({
         return
       }
 
+      // Keep intent cookie for when they confirm / log in later
+      setIntentCookie(intent)
       setMessage('Vi har skickat en bekräftelse till din e-post. Kolla inkorgen!')
       setLoading(false)
       return
@@ -240,7 +254,9 @@ export default function AuthPanel({
       password,
     })
     if (signInError) {
-      setError('Fel e-post eller lösenord. Försök igen.')
+      setError(
+        'Fel e-post eller lösenord. Om du är ny på FESTEN., välj Registrera dig nedan.'
+      )
       setLoading(false)
       return
     }
@@ -358,12 +374,13 @@ export default function AuthPanel({
               onClick={() => {
                 setEmail('')
                 setPassword('')
+                setMode('signup')
                 resetMessages()
                 setView('fresh')
               }}
               className="text-[15px] font-semibold text-foreground underline-offset-2 hover:underline"
             >
-              Inte du?
+              Inte du? Skapa konto eller använd annan e-post
             </button>
           </div>
         </div>
@@ -374,10 +391,17 @@ export default function AuthPanel({
           <div className="mb-6 text-center">
             <p className="text-[28px] font-bold tracking-tight text-primary">FESTEN.</p>
             <h2 className="mt-3 text-[26px] font-semibold tracking-tight text-foreground">
-              Logga in eller skapa konto
+              {effectiveIntent() === 'provider'
+                ? 'Skapa konto eller logga in'
+                : 'Logga in eller skapa konto'}
             </h2>
             {intentHint && (
               <p className="mt-2 text-[13px] text-muted-foreground">{intentHint}</p>
+            )}
+            {effectiveIntent() === 'provider' && (
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                Nytt konto? Ange din e-post så hjälper vi dig komma igång.
+              </p>
             )}
           </div>
 
@@ -432,6 +456,9 @@ export default function AuthPanel({
             {mode === 'signup' ? 'Skapa konto' : 'Logga in'}
           </h2>
           <p className="mt-2 text-[15px] text-muted-foreground">{email}</p>
+          {mode === 'signup' && intentHint ? (
+            <p className="mt-1 text-[13px] text-muted-foreground">{intentHint}</p>
+          ) : null}
 
           <form onSubmit={handlePasswordAuth} className="mt-6 flex flex-col gap-4">
             <div>

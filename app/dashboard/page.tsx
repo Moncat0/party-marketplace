@@ -9,7 +9,7 @@ import {
   OverviewStatGrid,
 } from '@/components/dashboard/OverviewUI'
 import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
-import { getServiceForUser } from '@/lib/services'
+import { getServicesForUser, isServicePubliclyListed } from '@/lib/services'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Översikt' }
@@ -27,11 +27,13 @@ export default async function DashboardOverviewPage() {
     .eq('id', user.id)
     .single()
 
-  const result = await getServiceForUser(supabase, user.id)
+  const result = await getServicesForUser(supabase, user.id)
   if (!result) return await redirectWithoutProviderProfile(supabase, user.id)
 
-  const { provider, service } = result
-  const serviceId = service?.id ?? null
+  const { provider, services, service } = result
+  const serviceIds = services.map(s => s.id)
+  const publishedCount = services.filter(isServicePubliclyListed).length
+  const hasAnyPublished = services.some(s => s.is_published)
 
   const todayIso = new Date().toISOString().slice(0, 10)
 
@@ -41,22 +43,22 @@ export default async function DashboardOverviewPage() {
     { count: unreadMessages },
     { count: todayCount },
     { count: upcomingCount },
-  ] = serviceId
+  ] = serviceIds.length
     ? await Promise.all([
         supabase
           .from('booking_requests')
           .select('*', { count: 'exact', head: true })
-          .eq('service_id', serviceId)
+          .in('service_id', serviceIds)
           .eq('status', 'pending'),
         supabase
           .from('booking_requests')
           .select('*', { count: 'exact', head: true })
-          .eq('service_id', serviceId),
+          .in('service_id', serviceIds),
         (async () => {
           const { data: bookingIds } = await supabase
             .from('booking_requests')
             .select('id')
-            .eq('service_id', serviceId)
+            .in('service_id', serviceIds)
           const ids = (bookingIds ?? []).map(r => r.id)
           if (!ids.length) return { count: 0 }
           return supabase
@@ -69,13 +71,13 @@ export default async function DashboardOverviewPage() {
         supabase
           .from('booking_requests')
           .select('*', { count: 'exact', head: true })
-          .eq('service_id', serviceId)
+          .in('service_id', serviceIds)
           .eq('status', 'accepted')
           .eq('event_date', todayIso),
         supabase
           .from('booking_requests')
           .select('*', { count: 'exact', head: true })
-          .eq('service_id', serviceId)
+          .in('service_id', serviceIds)
           .eq('status', 'accepted')
           .gt('event_date', todayIso),
       ])
@@ -106,19 +108,39 @@ export default async function DashboardOverviewPage() {
       )}
 
       <OverviewBanner
-        variant={service?.is_published ? 'success' : 'primary'}
+        variant={publishedCount > 0 ? 'success' : 'primary'}
         title={
-          service?.is_published
-            ? 'Din tjänst är publicerad'
-            : 'Din tjänst är inte publicerad ännu'
+          publishedCount > 0
+            ? publishedCount === 1
+              ? 'Din tjänst är publicerad'
+              : `${publishedCount} tjänster publicerade`
+            : hasAnyPublished
+              ? 'Dina tjänster är pausade'
+              : 'Du har ingen publicerad tjänst ännu'
         }
-        description={service?.title ?? 'Slutför profilen för att synas för planerare'}
+        description={
+          publishedCount > 0
+            ? service?.title ?? 'Dina tjänster syns för planerare'
+            : hasAnyPublished
+              ? 'Aktivera en pausad tjänst under Tjänster för att synas i sök'
+              : service?.title ??
+                (services.length > 0
+                  ? 'Slutför eller publicera en tjänst för att synas'
+                  : 'Skapa din första tjänst för att synas för planerare')
+        }
       >
         <OverviewBannerButton href="/dashboard/listings" variant="outline">
-          Visa tjänst
+          Visa tjänster
         </OverviewBannerButton>
-        <OverviewBannerButton href="/dashboard/profile" variant="dark">
-          {service?.is_published ? 'Redigera' : 'Slutför tjänst'}
+        <OverviewBannerButton
+          href={
+            service
+              ? `/dashboard/profile?service=${service.id}`
+              : '/dashboard/listings/new'
+          }
+          variant="dark"
+        >
+          {publishedCount > 0 ? 'Redigera' : 'Skapa tjänst'}
         </OverviewBannerButton>
       </OverviewBanner>
 

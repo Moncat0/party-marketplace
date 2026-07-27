@@ -12,6 +12,9 @@ type Props = {
   onSave: (e: MouseEvent) => void
   onShare: () => void
   onShowAll?: () => void
+  /** Hide save for owner preview of draft/paused listings */
+  hideSave?: boolean
+  hideShare?: boolean
 }
 
 /**
@@ -26,6 +29,8 @@ export default function ListingHead({
   onSave,
   onShare,
   onShowAll,
+  hideSave = false,
+  hideShare = false,
 }: Props) {
   const hasPhotos = photos.length > 0
   const showMosaic = photos.length >= 2
@@ -37,7 +42,9 @@ export default function ListingHead({
         <h1 className="min-w-0 text-[26px] font-semibold leading-[1.15] tracking-[-0.02em] text-foreground">
           {title}
         </h1>
+        {!(hideSave && hideShare) ? (
         <div className="-mr-2 flex flex-shrink-0 items-center gap-0">
+          {!hideShare ? (
           <Button
             type="button"
             variant="ghost"
@@ -55,28 +62,32 @@ export default function ListingHead({
             </svg>
             {copied ? 'Kopierad' : 'Dela'}
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onSave}
-            className="h-auto gap-2 rounded-lg px-3 py-2 text-[14px] font-semibold text-foreground underline underline-offset-2 hover:bg-accent"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 32 32"
-              fill={saved ? 'hsl(var(--primary))' : 'none'}
-              stroke={saved ? 'hsl(var(--primary))' : 'currentColor'}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
+          ) : null}
+          {!hideSave ? (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onSave}
+              className="h-auto gap-2 rounded-lg px-3 py-2 text-[14px] font-semibold text-foreground underline underline-offset-2 hover:bg-accent"
             >
-              <path d="M16 28s-12-7.5-12-15a6.5 6.5 0 0 1 12-3.5A6.5 6.5 0 0 1 28 13c0 7.5-12 15-12 15z" />
-            </svg>
-            {saved ? 'Sparad' : 'Spara'}
-          </Button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 32 32"
+                fill={saved ? 'hsl(var(--primary))' : 'none'}
+                stroke={saved ? 'hsl(var(--primary))' : 'currentColor'}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M16 28s-12-7.5-12-15a6.5 6.5 0 0 1 12-3.5A6.5 6.5 0 0 1 28 13c0 7.5-12 15-12 15z" />
+              </svg>
+              {saved ? 'Sparad' : 'Spara'}
+            </Button>
+          ) : null}
         </div>
+        ) : null}
       </div>
 
       {/* Photo mosaic — large left + 2×2 right, white gaps, each tile rounded */}

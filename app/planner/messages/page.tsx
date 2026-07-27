@@ -7,7 +7,12 @@ import ConversationDetails from '@/components/messages/ConversationDetails'
 import { type InboxThread } from '@/components/MessagesInbox'
 import MessageThread from '@/app/booking/[id]/messages/MessageThread'
 import { fetchMessagesWithReadReceiptPrivacy } from '@/lib/messages-privacy'
-import { formatEventType } from '@/lib/event-types'
+import { bookingOccasionLabel } from '@/lib/booking-labels'
+import { markThreadRead } from '@/lib/message-access'
+import {
+  formatInboxLastText,
+  loadInboxMessageMeta,
+} from '@/lib/message-inbox'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Meddelanden' }
@@ -23,10 +28,15 @@ export default async function PlannerMessagesPage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup')
 
+  const activeId = searchParams.c ?? null
+  if (activeId) {
+    await markThreadRead(supabase, activeId, user.id)
+  }
+
   const { data: bookings } = await supabase
     .from('booking_requests')
     .select(
-      `id, event_date, event_type, status, event_location, guest_count, description,
+      `id, event_date, event_type, occasions, status, event_location, guest_count, description,
        price_ore, payment_status, created_at,
        services!service_id(
          id, title, photos,
@@ -37,78 +47,59 @@ export default async function PlannerMessagesPage({
     .in('status', ['accepted', 'completed'])
     .order('created_at', { ascending: false })
 
-  const threadsRaw = await Promise.all(
-    (bookings ?? []).map(async booking => {
-      const { data: lastMsg } = await supabase
-        .from('messages')
-        .select('content, image_url, created_at, sender_id')
-        .eq('booking_request_id', booking.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
+  const bookingIds = (bookings ?? []).map(b => b.id)
+  const metaByBooking = await loadInboxMessageMeta(supabase, bookingIds, user.id)
 
-      const { count: unread } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('booking_request_id', booking.id)
-        .is('read_at', null)
-        .neq('sender_id', user.id)
+  const threadsRaw = (bookings ?? []).map(booking => {
+    const meta = metaByBooking.get(booking.id)
+    const service = (
+      Array.isArray(booking.services) ? booking.services[0] : booking.services
+    ) as unknown as {
+      id: string
+      title: string | null
+      photos: string[] | null
+      provider_profiles:
+        | {
+            user_id: string
+            stripe_onboarded?: boolean | null
+            users: { name: string | null } | { name: string | null }[] | null
+          }
+        | {
+            user_id: string
+            stripe_onboarded?: boolean | null
+            users: { name: string | null } | { name: string | null }[] | null
+          }[]
+        | null
+    } | null
 
-      const service = (
-        Array.isArray(booking.services) ? booking.services[0] : booking.services
-      ) as unknown as {
-        id: string
-        title: string | null
-        photos: string[] | null
-        provider_profiles:
-          | {
-              user_id: string
-              stripe_onboarded?: boolean | null
-              users: { name: string | null } | { name: string | null }[] | null
-            }
-          | {
-              user_id: string
-              stripe_onboarded?: boolean | null
-              users: { name: string | null } | { name: string | null }[] | null
-            }[]
-          | null
-      } | null
+    const profile = service?.provider_profiles
+      ? Array.isArray(service.provider_profiles)
+        ? service.provider_profiles[0]
+        : service.provider_profiles
+      : null
 
-      const profile = service?.provider_profiles
-        ? Array.isArray(service.provider_profiles)
-          ? service.provider_profiles[0]
-          : service.provider_profiles
-        : null
+    const userRow = profile?.users
+      ? Array.isArray(profile.users)
+        ? profile.users[0]
+        : profile.users
+      : null
+    const name = userRow?.name ?? service?.title ?? 'Talang'
 
-      const userRow = profile?.users
-        ? Array.isArray(profile.users)
-          ? profile.users[0]
-          : profile.users
-        : null
-      const name = userRow?.name ?? service?.title ?? 'Talang'
-      const lastText = lastMsg
-        ? lastMsg.sender_id === user.id
-          ? `Du: ${lastMsg.content ?? '📷 Bild'}`
-          : lastMsg.content ?? '📷 Bild'
-        : 'Ingen konversation än'
-
-      const thread: InboxThread = {
-        id: booking.id,
-        name,
-        subtitle:
-          service?.title && userRow?.name
-            ? service.title
-            : formatEventType(booking.event_type),
-        lastText,
-        lastAt: lastMsg?.created_at ?? null,
-        unread: unread ?? 0,
-      }
-      return { thread, booking, profile, service }
-    })
-  )
+    const thread: InboxThread = {
+      id: booking.id,
+      name,
+      subtitle:
+        service?.title && userRow?.name
+          ? service.title
+          : bookingOccasionLabel(booking),
+      lastText: formatInboxLastText(meta?.lastMsg ?? null, user.id),
+      lastAt: meta?.lastMsg?.created_at ?? null,
+      unread: meta?.unread ?? 0,
+    }
+    return { thread, booking, profile, service }
+  })
 
   const threads = threadsRaw.map(t => t.thread)
-  const activeId = searchParams.c ?? null
   const active = activeId ? threadsRaw.find(t => t.thread.id === activeId) : null
 
   let embeddedThread: ReactNode = null
@@ -116,13 +107,6 @@ export default async function PlannerMessagesPage({
 
   if (active) {
     const otherUserId = active.profile?.user_id
-    await supabase
-      .from('messages')
-      .update({ read_at: new Date().toISOString() })
-      .eq('booking_request_id', active.booking.id)
-      .is('read_at', null)
-      .neq('sender_id', user.id)
-
     const messages = otherUserId
       ? await fetchMessagesWithReadReceiptPrivacy(
           supabase,
@@ -160,6 +144,7 @@ export default async function PlannerMessagesPage({
           status: active.booking.status,
           event_date: active.booking.event_date,
           event_type: active.booking.event_type,
+          occasions: active.booking.occasions,
           event_location: active.booking.event_location,
           guest_count: active.booking.guest_count,
           description: active.booking.description,

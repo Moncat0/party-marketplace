@@ -1,6 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
-import { ensureProviderAndService, getServiceForProvider, type ServiceRow } from '@/lib/services'
+import {
+  canCreateAnotherService,
+  createServiceForProvider,
+  ensureProviderAndService,
+  getServiceByIdForProvider,
+  getServicesForProvider,
+  type ServiceRow,
+} from '@/lib/services'
 import { DEFAULT_LOCATION_ID, getLocationLabel } from '@/lib/locations'
 
 export type WizardPaths = {
@@ -37,7 +44,7 @@ export function serviceHasProgress(service: ServiceRow | null): boolean {
   )
 }
 
-/** Promote planner → both, otherwise provider. */
+/** Promote account to provider side without wiping demand history. */
 export async function ensureUserIsProvider(
   supabase: SupabaseClient,
   userId: string
@@ -48,12 +55,24 @@ export async function ensureUserIsProvider(
     .eq('id', userId)
     .maybeSingle()
 
-  const next =
-    data?.user_type === 'planner' || data?.user_type === 'both' ? 'both' : 'provider'
+  const current = data?.user_type as 'planner' | 'provider' | 'both' | null | undefined
 
-  if (data?.user_type !== next) {
-    await supabase.from('users').update({ user_type: next }).eq('id', userId)
+  if (current === 'provider' || current === 'both') return
+
+  if (!current) {
+    await supabase.from('users').update({ user_type: 'provider' }).eq('id', userId)
+    return
   }
+
+  // current === planner
+  // Genuine planner offering a service → both. Accidental planner (no bookings) → provider.
+  const { count } = await supabase
+    .from('booking_requests')
+    .select('*', { count: 'exact', head: true })
+    .eq('planner_id', userId)
+
+  const next = (count ?? 0) > 0 ? 'both' : 'provider'
+  await supabase.from('users').update({ user_type: next }).eq('id', userId)
 }
 
 export async function clearServiceDraft(
@@ -73,13 +92,14 @@ export async function clearServiceDraft(
       price_range_max: null,
       photos: [],
       is_published: false,
+      is_disabled: false,
     })
     .eq('id', serviceId)
 }
 
 /**
- * Load (and optionally reset) the draft service for the wizard flow page.
- * Redirects on auth/setup failures.
+ * Load (and optionally reset / create) the draft service for the wizard flow page.
+ * Redirects on auth/setup failures or when the 2-service limit is reached.
  */
 export async function loadWizardFlowService(
   supabase: SupabaseClient,
@@ -88,6 +108,7 @@ export async function loadWizardFlowService(
     resume: boolean
     fresh: boolean
     paths: WizardPaths
+    serviceId?: string | null
   }
 ): Promise<ServiceRow> {
   await ensureUserIsProvider(supabase, userId)
@@ -97,17 +118,51 @@ export async function loadWizardFlowService(
     redirect(opts.paths.afterSave)
   }
 
-  let service = await getServiceForProvider(supabase, ensured.providerId)
-  if (!service) redirect(opts.paths.afterSave)
+  const services = await getServicesForProvider(supabase, ensured.providerId)
+  if (services.length === 0) redirect(opts.paths.afterSave)
 
-  if (service.is_published && !opts.resume) {
-    redirect(opts.paths.afterPublish)
+  // Resume a specific draft (or the first incomplete one)
+  if (opts.resume) {
+    const target = opts.serviceId
+      ? await getServiceByIdForProvider(supabase, ensured.providerId, opts.serviceId)
+      : services.find(s => !s.is_published) ?? services[0]
+    if (!target) redirect(opts.paths.hub)
+    return target
   }
 
-  if (opts.fresh && !service.is_published) {
-    await clearServiceDraft(supabase, service.id)
-    redirect(opts.paths.flow)
+  // Start a new listing
+  if (opts.fresh) {
+    const blankDraft = services.find(s => !s.is_published && !serviceHasProgress(s))
+    if (blankDraft) {
+      await clearServiceDraft(supabase, blankDraft.id)
+      redirect(`${opts.paths.flow}?id=${blankDraft.id}`)
+    }
+
+    if (!canCreateAnotherService(services.length)) {
+      redirect(opts.paths.afterSave)
+    }
+
+    const created = await createServiceForProvider(supabase, ensured.providerId)
+    if (created.error || !created.service) {
+      redirect(opts.paths.afterSave)
+    }
+    redirect(`${opts.paths.flow}?id=${created.service.id}`)
   }
 
-  return service
+  // Default: open explicit id, or first unpublished, or block if all published without id
+  if (opts.serviceId) {
+    const target = await getServiceByIdForProvider(
+      supabase,
+      ensured.providerId,
+      opts.serviceId
+    )
+    if (!target) redirect(opts.paths.hub)
+    return target
+  }
+
+  const draft = services.find(s => !s.is_published)
+  if (draft) return draft
+
+  // All published and no id — don't overwrite; send to hub / listings
+  redirect(opts.paths.hub)
 }

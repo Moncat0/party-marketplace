@@ -8,7 +8,11 @@ import { track } from '@/lib/posthog'
 import { CATEGORIES, categoryTagsFromSlug, type CategorySlug } from '@/lib/categories'
 import { LOCATIONS, getLocationLabel } from '@/lib/locations'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import ServiceWizardChrome from '@/components/service-wizard/ServiceWizardChrome'
+import PublishSuccessScreen from '@/components/service-wizard/PublishSuccessScreen'
+import OccasionMultiSelect from '@/components/ui/OccasionMultiSelect'
+import { formatOccasions } from '@/lib/occasions'
 import {
   type ServiceWizardDraft,
   type ServiceWizardStep,
@@ -26,6 +30,7 @@ type ServiceSeed = {
   description: string | null
   category_slug?: string | null
   category_tags: string[] | null
+  occasions?: string[] | null
   location_id?: string | null
   photos: string[] | null
   price_range_min: number | null
@@ -68,8 +73,9 @@ export default function ServiceWizard({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [photoModalOpen, setPhotoModalOpen] = useState(false)
+  const [published, setPublished] = useState(false)
 
-  const fills = phaseProgress(step)
+  const fills = published ? [1, 1, 1] : phaseProgress(step)
   const canNext = isStepValid(step, draft)
 
   const persist = useCallback(
@@ -81,12 +87,14 @@ export default function ServiceWizard({
           description: draft.description.trim() || null,
           category_slug: draft.categorySlug,
           category_tags: categoryTagsFromSlug(draft.categorySlug),
+          occasions: draft.occasions,
           city: getLocationLabel(draft.locationId),
           location_id: draft.locationId,
           price_range_min: draft.priceMin ? Number(draft.priceMin) : null,
           price_range_max: draft.priceMax ? Number(draft.priceMax) : null,
           photos: draft.photos,
           is_published: opts?.publish ? true : false,
+          ...(opts?.publish ? { is_disabled: false } : {}),
         })
         .eq('id', service.id)
 
@@ -108,6 +116,25 @@ export default function ServiceWizard({
     }
   }
 
+  async function handlePreview() {
+    if (saving) return
+    setSaving(true)
+    setError(null)
+    try {
+      await persist({ publish: false })
+      const flowBase =
+        hubPath === '/onboarding' ? '/onboarding/flow' : `${hubPath}/flow`
+      const returnTo = `${flowBase}?resume=1&id=${service.id}`
+      router.push(
+        `/tjanster/${service.id}?return=${encodeURIComponent(returnTo)}`
+      )
+      router.refresh()
+    } catch {
+      setError('Kunde inte spara inför förhandsgranskning.')
+      setSaving(false)
+    }
+  }
+
   async function handleNext() {
     if (!canNext || saving) return
     setError(null)
@@ -117,8 +144,8 @@ export default function ServiceWizard({
       try {
         await persist({ publish: true })
         track('profile_published', { service_id: service.id })
-        router.push(afterPublishPath)
-        router.refresh()
+        setPublished(true)
+        setSaving(false)
       } catch {
         setError('Kunde inte publicera. Försök igen.')
         setSaving(false)
@@ -189,6 +216,23 @@ export default function ServiceWizard({
   const nextLabel =
     step === 'publish' ? 'Publicera tjänst' : step.startsWith('intro') ? 'Nästa' : 'Nästa'
 
+  if (published) {
+    return (
+      <ServiceWizardChrome
+        phaseFills={fills}
+        hideFooter
+        exitHref={afterPublishPath}
+        contentClassName="items-center justify-center"
+      >
+        <PublishSuccessScreen
+          serviceId={service.id}
+          draft={draft}
+          afterPublishPath={afterPublishPath}
+        />
+      </ServiceWizardChrome>
+    )
+  }
+
   return (
     <>
       <ServiceWizardChrome
@@ -201,6 +245,7 @@ export default function ServiceWizard({
         showBack={step !== 'intro1'}
         onSaveExit={handleSaveExit}
         savingExit={saving && step !== 'publish'}
+        exitHref={afterSavePath}
         contentClassName="items-center justify-center"
       >
         <div className="w-full max-w-[640px]">
@@ -220,6 +265,12 @@ export default function ServiceWizard({
             <CategoryStep
               value={draft.categorySlug}
               onChange={categorySlug => setDraft(prev => ({ ...prev, categorySlug }))}
+            />
+          )}
+          {step === 'occasions' && (
+            <OccasionsStep
+              value={draft.occasions}
+              onChange={occasions => setDraft(prev => ({ ...prev, occasions }))}
             />
           )}
           {step === 'location' && (
@@ -255,7 +306,13 @@ export default function ServiceWizard({
               onChange={patch => setDraft(prev => ({ ...prev, ...patch }))}
             />
           )}
-          {step === 'publish' && <PublishStep draft={draft} />}
+          {step === 'publish' && (
+            <PublishStep
+              draft={draft}
+              previewLoading={saving}
+              onPreview={() => void handlePreview()}
+            />
+          )}
         </div>
       </ServiceWizardChrome>
 
@@ -359,9 +416,12 @@ function CategoryStep({
   return (
     <div>
       <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
-        Vilken kategori passar bäst?
+        Vad erbjuder du?
       </h1>
-      <p className="mt-2 text-[15px] text-[#6a6a6a]">Välj en kategori för din tjänst.</p>
+      <p className="mt-2 text-[15px] text-[#6a6a6a]">
+        Välj typ av tjänst — t.ex. DJ eller fotograf. Tillfällen (bröllop, barnkalas …) väljer du i
+        nästa steg.
+      </p>
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {CATEGORIES.map(cat => {
           const selected = value === cat.slug
@@ -387,6 +447,26 @@ function CategoryStep({
           )
         })}
       </div>
+    </div>
+  )
+}
+
+function OccasionsStep({
+  value,
+  onChange,
+}: {
+  value: import('@/lib/occasions').OccasionSlug[]
+  onChange: (next: import('@/lib/occasions').OccasionSlug[]) => void
+}) {
+  return (
+    <div>
+      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+        Vilka tillfällen passar dig?
+      </h1>
+      <p className="mt-2 text-[15px] text-[#6a6a6a]">
+        Välj ett eller flera. Planerare ser vilka fester du tar dig an.
+      </p>
+      <OccasionMultiSelect value={value} onChange={onChange} className="mt-8" />
     </div>
   )
 }
@@ -552,27 +632,12 @@ function PhotosStep({
 
   return (
     <div>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
-            Hur ser det ut?
-          </h1>
-          <p className="mt-2 text-[15px] text-[#6a6a6a]">
-            Första bilden är omslagsfoto. Tryck på en bild för att göra den till omslag.
-          </p>
-        </div>
-        {photos.length < 6 && (
-          <button
-            type="button"
-            onClick={onAddClick}
-            disabled={uploading}
-            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#222222] text-[#222222] hover:bg-[#f7f7f7]"
-            aria-label="Lägg till fler foton"
-          >
-            +
-          </button>
-        )}
-      </div>
+      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+        Hur ser det ut?
+      </h1>
+      <p className="mt-2 text-[15px] text-[#6a6a6a]">
+        Första bilden är omslagsfoto. Tryck på en bild för att göra den till omslag.
+      </p>
 
       <div className="mt-8 space-y-3">
         <div className="relative block w-full overflow-hidden rounded-2xl bg-[#ebebeb] aspect-[16/10]">
@@ -583,39 +648,37 @@ function PhotosStep({
           <PhotoRemoveButton onClick={() => onRemove(0)} />
         </div>
 
-        {photos.length > 1 && (
-          <div className="grid grid-cols-2 gap-3">
-            {photos.slice(1).map((url, i) => {
-              const index = i + 1
-              return (
-                <div
-                  key={url}
-                  className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#ebebeb]"
-                >
-                  <Image src={url} alt="" fill className="object-cover" sizes="320px" />
-                  <button
-                    type="button"
-                    onClick={() => onMakeCover(index)}
-                    className="absolute inset-0"
-                    aria-label="Gör till omslagsfoto"
-                  />
-                  <PhotoRemoveButton onClick={() => onRemove(index)} />
-                </div>
-              )
-            })}
-            {photos.length < 6 && (
-              <button
-                type="button"
-                onClick={onAddClick}
-                disabled={uploading}
-                className="flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-2xl bg-[#f2f2f2] text-[14px] font-medium text-[#222222] hover:bg-[#ebebeb]"
+        <div className="grid grid-cols-2 gap-3">
+          {photos.slice(1).map((url, i) => {
+            const index = i + 1
+            return (
+              <div
+                key={url}
+                className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#ebebeb]"
               >
-                <span className="text-[22px]">+</span>
-                Lägg till fler
-              </button>
-            )}
-          </div>
-        )}
+                <Image src={url} alt="" fill className="object-cover" sizes="320px" />
+                <button
+                  type="button"
+                  onClick={() => onMakeCover(index)}
+                  className="absolute inset-0"
+                  aria-label="Gör till omslagsfoto"
+                />
+                <PhotoRemoveButton onClick={() => onRemove(index)} />
+              </div>
+            )
+          })}
+          {photos.length < 6 && (
+            <button
+              type="button"
+              onClick={onAddClick}
+              disabled={uploading}
+              className="flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-2xl bg-[#f2f2f2] text-[14px] font-medium text-[#222222] hover:bg-[#ebebeb]"
+            >
+              <span className="text-[22px]">+</span>
+              {uploading ? 'Laddar upp...' : 'Lägg till fler'}
+            </button>
+          )}
+        </div>
       </div>
       <p className="mt-3 text-[13px] text-[#6a6a6a]">{photos.length}/6 foton</p>
     </div>
@@ -759,7 +822,15 @@ function PriceStep({
   )
 }
 
-function PublishStep({ draft }: { draft: ServiceWizardDraft }) {
+function PublishStep({
+  draft,
+  onPreview,
+  previewLoading,
+}: {
+  draft: ServiceWizardDraft
+  onPreview: () => void
+  previewLoading: boolean
+}) {
   const cat = CATEGORIES.find(c => c.slug === draft.categorySlug)
   return (
     <div>
@@ -781,12 +852,24 @@ function PublishStep({ draft }: { draft: ServiceWizardDraft }) {
           <p className="text-[14px] text-[#6a6a6a]">
             {cat?.label ?? 'Tjänst'} · {getLocationLabel(draft.locationId)}
           </p>
+          {formatOccasions(draft.occasions) ? (
+            <p className="text-[14px] text-[#6a6a6a]">{formatOccasions(draft.occasions)}</p>
+          ) : null}
           <p className="text-[14px] text-[#6a6a6a]">
             {draft.priceMin}–{draft.priceMax} kr · {draft.photos.length} foto
             {draft.photos.length === 1 ? '' : 'n'}
           </p>
         </div>
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        disabled={previewLoading}
+        onClick={onPreview}
+        className="mt-5 h-11 w-full rounded-xl border-[#dddddd] text-[15px] font-semibold sm:w-auto sm:px-6"
+      >
+        {previewLoading ? 'Sparar…' : 'Förhandsgranska'}
+      </Button>
     </div>
   )
 }

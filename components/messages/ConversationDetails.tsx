@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import PayButton from '@/components/PayButton'
 import { Button } from '@/components/ui/button'
-import { formatEventType } from '@/lib/event-types'
+import { bookingOccasionLabel } from '@/lib/booking-labels'
 import { cn } from '@/lib/utils'
 
 export type ConversationDetailsBooking = {
@@ -13,6 +13,7 @@ export type ConversationDetailsBooking = {
   status: string
   event_date: string | null
   event_type: string | null
+  occasions?: string[] | null
   event_location: string | null
   guest_count: number | null
   description: string | null
@@ -61,7 +62,7 @@ function formatDate(iso: string | null): string | null {
 /** Airbnb-style right rail — booking context beside the chat. */
 export default function ConversationDetails({ booking, inboxPath, side }: Props) {
   const router = useRouter()
-  const eventLabel = formatEventType(booking.event_type)
+  const eventLabel = bookingOccasionLabel(booking)
   const dateLabel = formatDate(booking.event_date)
   const statusLabel = STATUS_LABEL[booking.status] ?? booking.status
 
