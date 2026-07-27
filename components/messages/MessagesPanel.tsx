@@ -7,6 +7,8 @@ import SettingsToggle from '@/components/settings/SettingsToggle'
 import SettingsButton from '@/components/settings/SettingsButton'
 import SettingsInput from '@/components/settings/SettingsInput'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import {
   loadArchivedIds,
   loadQuickReplies,
@@ -27,8 +29,10 @@ type Props = {
   inboxPath: string
   threadPath: string
   accent?: 'ember' | 'ink'
-  /** Right pane (desktop) — conversation or empty */
+  /** Center pane (desktop) — conversation or empty */
   conversation?: ReactNode
+  /** Right pane (desktop) — booking details when a thread is active */
+  details?: ReactNode
   /** Subtract from viewport for shell chrome (default guest header ~80px). Ignored when fillParent. */
   headerOffsetPx?: number
   /** Fill parent height instead of calc(100vh - offset) — use inside DashboardShell flush */
@@ -51,6 +55,7 @@ export default function MessagesPanel({
   threadPath,
   accent = 'ember',
   conversation,
+  details,
   headerOffsetPx = 80,
   fillParent = false,
 }: Props) {
@@ -182,8 +187,10 @@ export default function MessagesPanel({
       {/* Filters — All (dropdown: All / Archived) + Unread */}
       <div className="flex items-center gap-3 px-6 pb-2 flex-shrink-0 relative">
         <div className="relative">
-          <button
+          <Button
             type="button"
+            variant={filter === 'all' || filter === 'archived' ? 'dark' : 'outline'}
+            size="pill"
             aria-expanded={allMenuOpen}
             onClick={() => {
               if (filter === 'unread') {
@@ -193,15 +200,11 @@ export default function MessagesPanel({
               }
               setAllMenuOpen(v => !v)
             }}
-            className={`inline-flex items-center gap-1.5 h-10 px-[18px] rounded-full text-[14px] font-medium transition-colors ${
-              filter === 'all' || filter === 'archived'
-                ? 'bg-[#222222] text-white'
-                : 'bg-white text-[#222222] border border-[#b0b0b0]'
-            }`}
+            className="h-10 gap-1.5 px-[18px] text-[14px]"
           >
             {filter === 'archived' ? 'Arkiverade' : 'Alla'}
             <ChevronIcon />
-          </button>
+          </Button>
           {allMenuOpen && (
             <>
               <button
@@ -234,37 +237,37 @@ export default function MessagesPanel({
             </>
           )}
         </div>
-        <button
+        <Button
           type="button"
+          variant={filter === 'unread' ? 'dark' : 'outline'}
+          size="pill"
           onClick={() => {
             setFilter(prev => (prev === 'unread' ? 'all' : 'unread'))
             setAllMenuOpen(false)
           }}
-          className={`inline-flex items-center h-10 px-[18px] rounded-full text-[14px] font-medium transition-colors ${
-            filter === 'unread'
-              ? 'bg-[#222222] text-white'
-              : 'bg-white text-[#222222] border border-[#b0b0b0]'
-          }`}
+          className="h-10 px-[18px] text-[14px]"
         >
           Olästa
-        </button>
+        </Button>
         {activeId && filter !== 'archived' && (
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={archiveActive}
-            className="ml-auto text-[13px] font-medium text-[#6a6a6a] hover:text-[#222222] underline-offset-2 hover:underline"
+            className="ml-auto h-auto p-0 text-[13px] text-muted-foreground hover:text-foreground"
           >
             Arkivera
-          </button>
+          </Button>
         )}
         {filter === 'archived' && activeId && (
-          <button
+          <Button
             type="button"
+            variant="link"
             onClick={() => unarchive(activeId)}
-            className="ml-auto text-[13px] font-medium text-[#6a6a6a] hover:text-[#222222] underline-offset-2 hover:underline"
+            className="ml-auto h-auto p-0 text-[13px] text-muted-foreground hover:text-foreground"
           >
             Återställ
-          </button>
+          </Button>
         )}
       </div>
 
@@ -313,21 +316,31 @@ export default function MessagesPanel({
         {sidebar}
       </div>
 
-      {/* Desktop full-bleed split — ~375px rail like Airbnb Messages */}
+      {/* Desktop: inbox | chat | booking details (Airbnb Messages) */}
       <div
-        className="hidden lg:grid lg:grid-cols-[375px_minmax(0,1fr)] w-full overflow-hidden bg-white"
+        className={cn(
+          'hidden w-full min-h-0 overflow-hidden bg-white lg:grid',
+          details && activeId
+            ? 'lg:grid-cols-[320px_minmax(0,1fr)_minmax(300px,340px)]'
+            : 'lg:grid-cols-[375px_minmax(0,1fr)]'
+        )}
         style={{
           height: fillParent ? '100%' : `calc(100vh - ${headerOffsetPx}px)`,
         }}
       >
-        <aside
-          className="min-h-0 border-r border-[#ebebeb]"
-        >
+        <aside className="h-full min-h-0 overflow-hidden border-r border-[#ebebeb]">
           {sidebar}
         </aside>
-        <section className="min-h-0 flex flex-col bg-white">
-          {conversation ?? <div className="flex-1 bg-white" />}
+        <section className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
+          {conversation ? (
+            <div className="h-full min-h-0 overflow-hidden">{conversation}</div>
+          ) : (
+            <div className="flex-1 bg-white" />
+          )}
         </section>
+        {details && activeId ? (
+          <div className="h-full min-h-0 overflow-hidden">{details}</div>
+        ) : null}
       </div>
 
       {/* Settings modal */}
@@ -419,20 +432,22 @@ export default function MessagesPanel({
                       <p className="text-[14px] text-[#6a6a6a] mt-1 line-clamp-2">{r.body}</p>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
-                      <button
+                      <Button
                         type="button"
-                        className="text-[13px] font-medium underline"
+                        variant="link"
+                        className="h-auto p-0 text-[13px]"
                         onClick={() => setEditingReply(r)}
                       >
                         Redigera
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="text-[13px] font-medium text-[#c13515] underline"
+                        variant="link"
+                        className="h-auto p-0 text-[13px] text-destructive"
                         onClick={() => persistReplies(replies.filter(x => x.id !== r.id))}
                       >
                         Ta bort
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -533,14 +548,16 @@ function ModalShell({
       >
         <div className="sticky top-0 bg-white flex items-center justify-center px-4 py-4 border-b border-[#ebebeb]">
           <h2 className="text-[16px] font-semibold text-[#222222]">{title}</h2>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={onClose}
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#f2f2f2]"
+            className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2"
             aria-label="Stäng"
           >
             ✕
-          </button>
+          </Button>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -558,15 +575,16 @@ function SettingsRow({
   onClick: () => void
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={onClick}
-      className="w-full flex items-center gap-4 py-4 text-left hover:bg-[#f7f7f7] -mx-2 px-2 rounded-lg transition-colors"
+      className="h-auto w-full justify-start gap-4 py-4 text-left -mx-2 px-2 rounded-lg"
     >
-      <span className="text-[#222222]">{icon}</span>
-      <span className="text-[16px] font-medium text-[#222222] flex-1">{label}</span>
-      <span className="text-[#929292]">›</span>
-    </button>
+      <span className="text-foreground">{icon}</span>
+      <span className="text-[16px] font-medium text-foreground flex-1">{label}</span>
+      <span className="text-muted-foreground">›</span>
+    </Button>
   )
 }
 
@@ -580,12 +598,13 @@ function MenuItem({
   active?: boolean
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       onClick={onClick}
-      className={`w-full px-4 py-2.5 text-left text-[14px] font-medium hover:bg-[#f2f2f2] flex items-center justify-between gap-2 ${
-        active ? 'text-[#222222]' : 'text-[#222222]'
-      }`}
+      className={cn(
+        'h-auto w-full justify-between gap-2 rounded-none px-4 py-2.5 text-left text-[14px] font-medium text-foreground'
+      )}
     >
       <span>{label}</span>
       {active && (
@@ -593,7 +612,7 @@ function MenuItem({
           <polyline points="20 6 9 17 4 12" />
         </svg>
       )}
-    </button>
+    </Button>
   )
 }
 
@@ -607,14 +626,16 @@ function IconButton({
   children: ReactNode
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="icon"
       aria-label={label}
       onClick={onClick}
-      className="h-10 w-10 rounded-full bg-[#f2f2f2] flex items-center justify-center text-[#222222] hover:bg-[#ebebeb] transition-colors"
+      className="bg-accent text-foreground hover:bg-accent/80"
     >
       {children}
-    </button>
+    </Button>
   )
 }
 

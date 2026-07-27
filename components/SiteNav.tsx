@@ -10,15 +10,20 @@ const EXCLUDED = [
   '/onboarding',
   '/forgot-password',
   '/reset-password',
+  '/booking/sent',
+  '/welcome',
 ]
 
 function isExcluded(pathname: string): boolean {
   if (EXCLUDED.includes(pathname)) return true
+  if (pathname.startsWith('/sok')) return true
   if (pathname.startsWith('/admin')) return true
   if (pathname.startsWith('/booking/') && pathname.endsWith('/messages')) return true
+  if (pathname.startsWith('/onboarding')) return true
   if (pathname.startsWith('/dashboard')) return true
   if (pathname.startsWith('/planner')) return true
-  if (pathname.startsWith('/providers/')) return true
+  if (pathname.startsWith('/dev/')) return true
+  if (pathname.startsWith('/tjanster/')) return true
   return false
 }
 

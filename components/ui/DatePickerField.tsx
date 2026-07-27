@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 const WEEKDAYS = ['må', 'ti', 'on', 'to', 'fr', 'lö', 'sö']
 const MONTHS = [
@@ -109,24 +111,26 @@ export default function DatePickerField({
 
   return (
     <div ref={rootRef} className="relative">
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => setOpen(o => !o)}
-        className="w-full text-left px-3 py-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#222222]"
+        className="h-auto w-full flex-col items-start justify-center gap-0.5 whitespace-normal px-3 py-2.5 text-left focus-visible:ring-inset focus-visible:ring-foreground"
         aria-haspopup="dialog"
         aria-expanded={open}
       >
-        <span className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
+        <span className="text-[10px] font-bold text-foreground uppercase tracking-wide leading-none">
           {label}
         </span>
         <span
-          className={`block text-[14px] mt-0.5 ${
-            value ? 'text-[#222222]' : 'text-[#717171]'
-          }`}
+          className={cn(
+            'text-[14px] leading-5 font-normal',
+            value ? 'text-foreground' : 'text-muted-foreground'
+          )}
         >
           {formatDisplay(value) ?? placeholder}
         </span>
-      </button>
+      </Button>
 
       {open && (
         <div
@@ -141,11 +145,13 @@ export default function DatePickerField({
           aria-label="Välj datum"
         >
           <div className="flex items-center justify-between mb-4 px-1">
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               disabled={!canGoPrev}
               onClick={() => setView(new Date(year, month - 1, 1))}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#f7f7f7] disabled:opacity-30 disabled:hover:bg-transparent text-[#222222]"
+              className="size-8 rounded-full"
               aria-label="Föregående månad"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
@@ -157,14 +163,16 @@ export default function DatePickerField({
                   strokeLinejoin="round"
                 />
               </svg>
-            </button>
-            <span className="text-[16px] font-semibold text-[#222222] capitalize">
+            </Button>
+            <span className="text-[16px] font-semibold text-foreground capitalize">
               {MONTHS[month]} {year}
             </span>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setView(new Date(year, month + 1, 1))}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#f7f7f7] text-[#222222]"
+              className="size-8 rounded-full"
               aria-label="Nästa månad"
             >
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
@@ -176,7 +184,7 @@ export default function DatePickerField({
                   strokeLinejoin="round"
                 />
               </svg>
-            </button>
+            </Button>
           </div>
 
           <div className="grid grid-cols-7 mb-1">
@@ -203,26 +211,28 @@ export default function DatePickerField({
 
               return (
                 <div key={iso} className="h-10 flex items-center justify-center">
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     disabled={disabled}
                     onClick={() => {
                       onChange(iso)
                       setOpen(false)
                     }}
-                    className={[
-                      'w-10 h-10 rounded-full text-[14px] transition-colors',
-                      disabled
-                        ? 'text-[#ddd] cursor-not-allowed'
-                        : isSelected
-                          ? 'bg-[#222222] text-white font-semibold'
-                          : isToday
-                            ? 'font-semibold text-[#222222] ring-1 ring-[#222222] hover:bg-[#f7f7f7]'
-                            : 'text-[#222222] hover:bg-[#f7f7f7]',
-                    ].join(' ')}
+                    className={cn(
+                      'size-10 rounded-full p-0 text-[14px]',
+                      disabled && 'text-muted-foreground/40 cursor-not-allowed hover:bg-transparent',
+                      isSelected &&
+                        'bg-foreground text-background font-semibold hover:bg-foreground hover:text-background',
+                      !disabled &&
+                        !isSelected &&
+                        isToday &&
+                        'font-semibold ring-1 ring-foreground',
+                      !disabled && !isSelected && !isToday && 'text-foreground'
+                    )}
                   >
                     {day}
-                  </button>
+                  </Button>
                 </div>
               )
             })}

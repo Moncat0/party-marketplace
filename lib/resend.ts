@@ -107,3 +107,28 @@ export async function sendNewMessage(
     `,
   })
 }
+
+export async function sendDataExportReady(
+  to: string,
+  name: string,
+  jsonPayload: string
+) {
+  const filename = `festen-data-export-${new Date().toISOString().slice(0, 10)}.json`
+  await resend.emails.send({
+    from: FROM,
+    to,
+    subject: 'Din personuppgiftsexport från FESTEN.',
+    html: `
+      <p>Hej ${name}!</p>
+      <p>Här är den personuppgiftsexport du begärde från FESTEN. Filen bifogas som JSON.</p>
+      <p>Om du inte begärde detta, kontakta oss via <a href="${siteUrl()}/privacy">integritetssidan</a>.</p>
+      <p>/ FESTEN.</p>
+    `,
+    attachments: [
+      {
+        filename,
+        content: Buffer.from(jsonPayload, 'utf-8'),
+      },
+    ],
+  })
+}

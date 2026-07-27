@@ -1,24 +1,74 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import OnboardingFlow from './OnboardingFlow'
+import ServiceWizardHub from '@/components/service-wizard/ServiceWizardHub'
+import { ensureProviderAndService, getServiceForUser } from '@/lib/services'
+import {
+  ensureUserIsProvider,
+  ONBOARDING_WIZARD_PATHS,
+  serviceHasProgress,
+} from '@/lib/service-wizard-server'
 
+export const dynamic = 'force-dynamic'
+export const metadata = { title: 'Skapa din tjänst' }
+
+/**
+ * Provider onboarding hub — reuses the Airbnb-style service wizard.
+ * Brand-new providers go straight into the flow; drafts land on this hub.
+ */
 export default async function OnboardingPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     redirect('/signup?intent=provider&next=/onboarding')
   }
 
-  const { data: profile } = await supabase
-    .from('provider_profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
+  await ensureUserIsProvider(supabase, user.id)
 
-  if (profile?.is_published) {
-    redirect('/dashboard')
+  const ensured = await ensureProviderAndService(supabase, user.id)
+  if (ensured.error) {
+    redirect('/planner/dashboard')
   }
 
-  return <OnboardingFlow userId={user.id} existingProfile={profile ?? null} />
+  const result = await getServiceForUser(supabase, user.id)
+  const service = result?.service ?? null
+
+  if (service?.is_published) {
+    redirect(ONBOARDING_WIZARD_PATHS.afterPublish)
+  }
+
+  // First-time: skip hub, start wizard immediately
+  if (!serviceHasProgress(service)) {
+    redirect(ONBOARDING_WIZARD_PATHS.flow)
+  }
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('name')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  const fullName =
+    profile?.name ?? user.user_metadata?.full_name ?? user.user_metadata?.name ?? ''
+  const firstName = fullName.trim().split(/\s+/)[0] ?? ''
+
+  return (
+    <ServiceWizardHub
+      mode="onboarding"
+      basePath="/onboarding"
+      firstName={firstName}
+      service={
+        service
+          ? {
+              id: service.id,
+              title: service.title,
+              is_published: service.is_published,
+              created_at: service.created_at,
+            }
+          : null
+      }
+    />
+  )
 }

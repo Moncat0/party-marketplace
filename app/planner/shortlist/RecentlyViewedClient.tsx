@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase'
 
 type Card = {
   id: string
-  service_title: string | null
+  title: string | null
   city: string | null
   photos: string[]
   users: { name: string | null } | null
@@ -38,8 +38,8 @@ export default function RecentlyViewedClient() {
       }
 
       const { data } = await supabase
-        .from('provider_profiles')
-        .select('id, service_title, city, photos, users(name)')
+        .from('services')
+        .select('id, title, city, photos, provider_profiles(users(name))')
         .in(
           'id',
           recent.map(r => r.id)
@@ -51,11 +51,15 @@ export default function RecentlyViewedClient() {
       for (const r of recent) {
         const p = byId.get(r.id)
         if (!p) continue
-        const usersRaw = p.users as { name: string | null } | { name: string | null }[] | null
+        const providerRaw = p.provider_profiles as unknown
+        const provider = (Array.isArray(providerRaw) ? providerRaw[0] : providerRaw) as {
+          users: { name: string | null } | { name: string | null }[] | null
+        } | null
+        const usersRaw = provider?.users ?? null
         const users = Array.isArray(usersRaw) ? usersRaw[0] ?? null : usersRaw
         ordered.push({
           id: p.id,
-          service_title: p.service_title,
+          title: p.title,
           city: p.city,
           photos: p.photos ?? [],
           users,

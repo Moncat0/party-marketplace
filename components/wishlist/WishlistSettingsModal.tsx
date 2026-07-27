@@ -2,8 +2,10 @@
 
 import { useEffect, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import { track } from '@/lib/posthog'
 import { deleteWishlist, renameWishlist } from '@/lib/wishlists'
+import { lockBodyScroll } from '@/lib/lock-body-scroll'
 
 type Props = {
   open: boolean
@@ -44,10 +46,10 @@ export default function WishlistSettingsModal({
       if (e.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', onKey)
-    document.body.style.overflow = 'hidden'
+    const unlock = lockBodyScroll()
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = ''
+      unlock()
     }
   }, [open, name, onClose])
 
@@ -127,33 +129,37 @@ export default function WishlistSettingsModal({
       <div className="relative w-full sm:max-w-[400px] bg-white shadow-2xl sm:mx-4 rounded-t-3xl sm:rounded-2xl overflow-hidden">
         <div className="relative border-b border-[#ebebeb] px-4 py-4 flex items-center justify-center">
           {step !== 'menu' ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setStep('menu')}
-              className="absolute left-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#f7f7f7]"
+              className="absolute left-4 size-8 rounded-full"
               aria-label="Tillbaka"
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-                <path d="M10 3L5 8l5 5" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={onClose}
-              className="absolute left-4 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#f7f7f7]"
+              className="absolute left-4 size-8 rounded-full"
               aria-label="Stäng"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-                <path d="M1 1l12 12M13 1L1 13" stroke="#222" strokeWidth="1.5" strokeLinecap="round" />
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
               </svg>
-            </button>
+            </Button>
           )}
-          <h2 className="text-[16px] font-semibold text-[#222222]">{title}</h2>
+          <h2 className="text-[16px] font-semibold text-foreground">{title}</h2>
         </div>
 
         <div className="px-2 py-2">
-          {error && <p className="px-4 py-2 text-[14px] text-[#c13515]">{error}</p>}
+          {error && <p className="px-4 py-2 text-[14px] text-destructive">{error}</p>}
 
           {step === 'menu' && (
             <ul>
@@ -223,13 +229,14 @@ export default function WishlistSettingsModal({
                 maxLength={50}
                 className="w-full h-14 px-4 text-[16px] border border-[#b0b0b0] rounded-lg focus:outline-none focus:border-[#222] focus:ring-1 focus:ring-[#222]"
               />
-              <button
+              <Button
                 type="submit"
+                variant="dark"
                 disabled={busy || !renameValue.trim()}
-                className="mt-4 w-full h-12 text-[16px] font-semibold text-white bg-[#222] rounded-lg disabled:opacity-40"
+                className="mt-4 w-full text-base"
               >
                 {busy ? 'Sparar...' : 'Spara'}
-              </button>
+              </Button>
             </form>
           )}
 
@@ -239,14 +246,15 @@ export default function WishlistSettingsModal({
                 Är du säker på att du vill ta bort <span className="font-semibold text-[#222]">{name}</span>?
                 Det går inte att ångra.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="destructive"
                 onClick={handleDelete}
                 disabled={busy}
-                className="w-full h-12 text-[16px] font-semibold text-white bg-[#c13515] rounded-lg disabled:opacity-40"
+                className="w-full text-base"
               >
                 {busy ? 'Tar bort...' : 'Ta bort'}
-              </button>
+              </Button>
             </div>
           )}
 
@@ -261,13 +269,14 @@ export default function WishlistSettingsModal({
                 onFocus={e => e.target.select()}
                 className="w-full h-12 px-3 text-[13px] border border-[#ddd] rounded-lg bg-[#f7f7f7] text-[#222]"
               />
-              <button
+              <Button
                 type="button"
+                variant="dark"
                 onClick={handleCopyLink}
-                className="mt-4 w-full h-12 text-[16px] font-semibold text-white bg-[#222] rounded-lg"
+                className="mt-4 w-full text-base"
               >
                 {copied ? 'Kopierad!' : 'Kopiera länk'}
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -289,19 +298,20 @@ function MenuRow({
 }) {
   return (
     <li>
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={onClick}
-        className="w-full flex items-center gap-4 px-4 py-4 rounded-xl hover:bg-[#f7f7f7] text-left"
+        className="h-auto w-full justify-start gap-4 rounded-xl px-4 py-4 text-left"
       >
-        <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden className={danger ? 'text-[#c13515]' : 'text-[#222]'}>
+        <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden className={danger ? 'text-destructive' : 'text-foreground'}>
           {icon}
         </svg>
-        <span className={`flex-1 text-[16px] ${danger ? 'text-[#c13515]' : 'text-[#222]'}`}>{label}</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden className="text-[#717171]">
+        <span className={`flex-1 text-[16px] ${danger ? 'text-destructive' : 'text-foreground'}`}>{label}</span>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden className="text-muted-foreground">
           <path d="M4.5 2.5L8 6l-3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-      </button>
+      </Button>
     </li>
   )
 }

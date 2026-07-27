@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
 import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsButton from '@/components/settings/SettingsButton'
 import { settingsTokens as t } from '@/components/settings/tokens'
@@ -69,13 +70,15 @@ export default function ReviewForm({ bookingId, revieweeId, revieweeName, alread
           <SettingsSection title="Betyg">
             <div className="flex gap-2 justify-center">
               {[1, 2, 3, 4, 5].map(star => (
-                <button
+                <Button
                   key={star}
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHovered(star)}
                   onMouseLeave={() => setHovered(0)}
-                  className="text-4xl transition-transform hover:scale-110"
+                  className="size-auto rounded-none text-4xl transition-transform hover:scale-110 hover:bg-transparent"
                   style={{ transitionDuration: t.motion.fast }}
                   aria-label={`${star} stjärnor`}
                 >
@@ -86,7 +89,7 @@ export default function ReviewForm({ bookingId, revieweeId, revieweeName, alread
                   >
                     ★
                   </span>
-                </button>
+                </Button>
               ))}
             </div>
             {rating > 0 && (

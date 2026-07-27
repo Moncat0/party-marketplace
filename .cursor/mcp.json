@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ]
+    },
+    "miro-mcp": {
+      "url": "https://mcp.miro.com/"
+    }
+  }
+}

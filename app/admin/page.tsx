@@ -25,7 +25,7 @@ async function getRecentBookings() {
   const supabase = createAdminClient()
   const { data } = await supabase
     .from('booking_requests')
-    .select('id, status, created_at, event_type, users!planner_id(name), provider_profiles!provider_profile_id(service_title)')
+    .select('id, status, created_at, event_type, users!planner_id(name), services!service_id(title)')
     .order('created_at', { ascending: false })
     .limit(5)
   return data ?? []
@@ -77,7 +77,7 @@ export default async function AdminOverviewPage() {
             <div key={b.id} className="rounded-xl bg-white p-3 shadow-sm flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-[#222222] truncate">
-                  {(b.users as any)?.name ?? 'Okänd'} → {(b.provider_profiles as any)?.service_title ?? 'Okänd'}
+                  {(b.users as any)?.name ?? 'Okänd'} → {(b.services as any)?.title ?? 'Okänd'}
                 </p>
                 <p className="text-xs text-[#6A6A6A]">
                   {b.event_type ?? '—'} · {new Date(b.created_at).toLocaleDateString('sv-SE')}

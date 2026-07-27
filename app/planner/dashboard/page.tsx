@@ -1,8 +1,13 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import GuestAppChrome from '@/components/GuestAppChrome'
-import { settingsTokens as t } from '@/components/settings/tokens'
+import {
+  OverviewActionGrid,
+  OverviewBanner,
+  OverviewBannerButton,
+  OverviewGreeting,
+  OverviewStatGrid,
+} from '@/components/dashboard/OverviewUI'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Översikt' }
@@ -45,113 +50,86 @@ export default async function PlannerDashboardPage() {
   )
 
   const totalBookings = bookings?.length ?? 0
-  const firstName = userData?.name?.split(' ')[0]
 
   return (
     <GuestAppChrome>
-      <header className="mb-8">
-        <h1 className="text-[32px] font-medium leading-[1.125] tracking-[-0.8px] text-[#222222]">
-          Hej{firstName ? `, ${firstName}` : ''}
-        </h1>
-        <p className="text-[14px] text-[#6a6a6a] mt-2">Din översikt som planerare</p>
-      </header>
+      <OverviewGreeting name={userData?.name} subtitle="Din översikt som planerare" />
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        {[
-          { value: totalBookings, label: 'Totala bokningar', color: t.colors.ink },
-          { value: pendingCount, label: 'Väntande svar', color: t.colors.primary },
-          { value: unreadMessages ?? 0, label: 'Olästa meddelanden', color: t.colors.ink },
-        ].map(stat => (
-          <div
-            key={stat.label}
-            className="p-5 bg-white"
-            style={{ borderRadius: t.rounded.md, border: `1px solid ${t.colors.hairline}` }}
-          >
-            <p className="text-3xl font-bold" style={{ color: stat.color }}>
-              {stat.value}
-            </p>
-            <p className="text-[14px] text-[#6a6a6a] mt-1">{stat.label}</p>
-          </div>
-        ))}
-      </div>
+      <OverviewStatGrid
+        stats={[
+          { value: totalBookings, label: 'Totala bokningar' },
+          { value: pendingCount, label: 'Väntande svar', emphasize: true },
+          { value: unreadMessages ?? 0, label: 'Olästa meddelanden' },
+        ]}
+      />
 
       {awaitingReview.length > 0 && (
-        <div
-          className="mb-6 px-6 py-5"
-          style={{
-            borderRadius: t.rounded.md,
-            backgroundColor: 'rgba(255, 107, 53, 0.08)',
-            border: '1px solid rgba(255, 107, 53, 0.2)',
-          }}
+        <OverviewBanner
+          variant="primary"
+          title="Hur gick festen?"
+          description={
+            awaitingReview.length === 1
+              ? 'Ett evenemang väntar på ditt omdöme.'
+              : `${awaitingReview.length} evenemang väntar på ditt omdöme.`
+          }
         >
-          <p className="font-semibold text-[#222222] mb-1">Hur gick festen?</p>
-          <p className="text-[14px] text-[#6a6a6a] mb-4">
-            {awaitingReview.length === 1
-              ? 'Ett evenemang'
-              : `${awaitingReview.length} evenemang`}{' '}
-            väntar på ditt omdöme.
-          </p>
-          <div className="flex gap-3 flex-wrap">
-            {awaitingReview.map(b => (
-              <Link
-                key={b.id}
-                href={`/review/${b.id}`}
-                className="rounded-xl bg-[#FF6B35] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
-              >
-                Lämna omdöme →
-              </Link>
-            ))}
-          </div>
-        </div>
+          {awaitingReview.slice(0, 3).map(b => (
+            <OverviewBannerButton key={b.id} href={`/review/${b.id}`} variant="primary">
+              Lämna omdöme →
+            </OverviewBannerButton>
+          ))}
+        </OverviewBanner>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {[
+      <OverviewActionGrid
+        actions={[
           {
             href: '/planner/bookings',
             title: 'Mina bokningar',
-            desc: 'Se och hantera dina förfrågningar',
+            description: 'Se och hantera dina förfrågningar',
             badge: pendingCount > 0 ? `${pendingCount} nya` : null,
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            ),
           },
           {
             href: '/planner/messages',
             title: 'Meddelanden',
-            desc: 'Konversationer med talanger',
+            description: 'Konversationer med talanger',
             badge: (unreadMessages ?? 0) > 0 ? `${unreadMessages} nya` : null,
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            ),
           },
           {
             href: '/planner/shortlist',
             title: 'Önskelistor',
-            desc: 'Din lista med favoriter',
-            badge: null,
+            description: 'Din lista med favoriter',
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            ),
           },
-        ].map(card => (
-          <Link
-            key={card.href}
-            href={card.href}
-            className="block p-6 bg-white hover:bg-[#f7f7f7] transition-colors"
-            style={{ borderRadius: t.rounded.md, border: `1px solid ${t.colors.hairline}` }}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <p className="font-semibold text-[#222222]">{card.title}</p>
-              {card.badge && (
-                <span className="rounded-full bg-[#FF6B35] px-2.5 py-0.5 text-xs font-semibold text-white">
-                  {card.badge}
-                </span>
-              )}
-            </div>
-            <p className="text-[14px] text-[#6a6a6a]">{card.desc}</p>
-          </Link>
-        ))}
-        <Link
-          href="/"
-          className="block p-6 bg-[#222222] hover:bg-[#111111] transition-colors"
-          style={{ borderRadius: t.rounded.md }}
-        >
-          <p className="font-semibold text-white">Hitta underhållning</p>
-          <p className="text-[14px] text-white/60 mt-0.5">Bläddra bland talanger i Stockholm</p>
-        </Link>
-      </div>
+          {
+            href: '/',
+            title: 'Hitta underhållning',
+            description: 'Bläddra bland talanger i Stockholm',
+            featured: true,
+            icon: (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            ),
+          },
+        ]}
+      />
     </GuestAppChrome>
   )
 }

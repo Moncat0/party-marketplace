@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import { Button } from '@/components/ui/button'
 
 export type InboxThread = {
   id: string
@@ -51,12 +52,9 @@ export default function MessagesInbox({
         <p className="text-[16px] font-medium text-[#222222] mb-2">{emptyTitle}</p>
         <p className="text-[14px] text-[#6a6a6a] mb-6 max-w-sm">{emptyDescription}</p>
         {emptyCta && (
-          <Link
-            href={emptyCta.href}
-            className="rounded-xl bg-[#FF6B35] px-6 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
-          >
-            {emptyCta.label}
-          </Link>
+          <Button asChild size="lg" className="rounded-xl">
+            <Link href={emptyCta.href}>{emptyCta.label}</Link>
+          </Button>
         )}
       </div>
     )
@@ -68,9 +66,10 @@ export default function MessagesInbox({
         const active = activeId === thread.id
         const hasUnread = thread.unread > 0
         return (
-          <button
+          <Button
             key={thread.id}
             type="button"
+            variant="ghost"
             onClick={() => {
               // Mobile: full thread page. Desktop: query param split.
               if (typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches) {
@@ -79,7 +78,7 @@ export default function MessagesInbox({
                 router.push(hrefForThread(thread.id))
               }
             }}
-            className="w-full flex items-center gap-3 px-4 py-4 text-left transition-colors"
+            className="h-auto w-full justify-start gap-3 rounded-none px-4 py-4 text-left"
             style={{
               backgroundColor: active ? t.colors.surfaceSoft : 'transparent',
               borderColor: t.colors.hairlineSoft,
@@ -127,7 +126,7 @@ export default function MessagesInbox({
                 {thread.unread}
               </span>
             )}
-          </button>
+          </Button>
         )
       })}
     </div>

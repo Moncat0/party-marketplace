@@ -3,6 +3,9 @@
 import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { siteLogoClass } from '@/components/siteChrome'
 import { settingsTokens as t } from '@/components/settings/tokens'
 
 type NavItem = {
@@ -22,8 +25,15 @@ type Props = {
   flush?: boolean
 }
 
-/** Host / provider shell — Airbnb hosting-style left rail with mobile drawer. */
-export default function DashboardShell({ name, role, navItems, modeSwitcher, children, flush }: Props) {
+/** Host / provider shell — FESTEN tokens + Airbnb hosting left rail. */
+export default function DashboardShell({
+  name,
+  role,
+  navItems,
+  modeSwitcher,
+  children,
+  flush,
+}: Props) {
   const pathname = usePathname()
   const initial = (name ?? '?').charAt(0).toUpperCase()
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -36,27 +46,38 @@ export default function DashboardShell({ name, role, navItems, modeSwitcher, chi
 
   const sidebar = (
     <>
-      <div className="px-6 py-5 border-b" style={{ borderColor: t.colors.hairline }}>
-        <Link href="/" className="text-lg font-bold tracking-tight text-[#FF6B35]">
+      <div
+        className="px-6 py-5"
+        style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
+      >
+        <Link href="/" className={siteLogoClass}>
           FESTEN.
         </Link>
       </div>
 
-      <div className="px-6 py-5 border-b" style={{ borderColor: t.colors.hairlineSoft }}>
+      <div
+        className="px-6 py-5"
+        style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
+      >
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-[#222222]/10 flex items-center justify-center text-sm font-bold text-[#222222] flex-shrink-0">
+          <div
+            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+            style={{ background: t.colors.ink }}
+          >
             {initial}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#222222] truncate">{name ?? 'Användare'}</p>
-            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-[#222222]/10 text-[#222222]">
-              {role === 'provider' ? 'Talang' : 'Planerare'}
-            </span>
+            <p className="truncate text-sm font-semibold" style={{ color: t.colors.ink }}>
+              {name ?? 'Användare'}
+            </p>
+            <p className="mt-0.5 text-[12px]" style={{ color: t.colors.muted }}>
+              {role === 'provider' ? 'Talangläge' : 'Planerarläge'}
+            </p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 py-4">
         {navItems.map(item => {
           const active = isActive(item.href)
           return (
@@ -64,21 +85,23 @@ export default function DashboardShell({ name, role, navItems, modeSwitcher, chi
               key={item.href}
               href={item.href}
               onClick={() => setDrawerOpen(false)}
-              className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm transition-colors"
+              className={cn(
+                'flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors',
+                active
+                  ? 'font-semibold'
+                  : 'font-medium hover:bg-[#f7f7f7]'
+              )}
               style={{
-                borderRadius: t.rounded.sm,
-                fontWeight: active ? 600 : 500,
                 color: t.colors.ink,
-                backgroundColor: active ? t.colors.canvas : 'transparent',
-                border: active ? `1px solid ${t.colors.ink}` : '1px solid transparent',
+                background: active ? t.colors.surfaceStrong : undefined,
               }}
             >
               <div className="flex items-center gap-3">
-                <span className="w-5 flex-shrink-0">{item.icon}</span>
+                <span className="w-5 flex-shrink-0 opacity-80">{item.icon}</span>
                 <span>{item.label}</span>
               </div>
               {item.badge != null && item.badge > 0 && (
-                <span className="rounded-full bg-[#FF6B35] px-2 py-0.5 text-xs font-semibold text-white">
+                <span className="rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
                   {item.badge}
                 </span>
               )}
@@ -87,44 +110,69 @@ export default function DashboardShell({ name, role, navItems, modeSwitcher, chi
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t space-y-0.5" style={{ borderColor: t.colors.hairlineSoft }}>
+      <div
+        className="flex flex-col gap-0.5 px-3 py-4"
+        style={{ borderTop: `1px solid ${t.colors.hairlineSoft}` }}
+      >
         {modeSwitcher && (
-          <Link
-            href={modeSwitcher.href}
-            onClick={() => setDrawerOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6A6A6A] hover:bg-[#F2F2F2] hover:text-[#222222] transition-colors"
+          <Button
+            asChild
+            variant="ghost"
+            className="h-auto justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
+            style={{ color: t.colors.muted }}
           >
-            <span className="w-5">⇄</span>
-            <span>{modeSwitcher.label}</span>
-          </Link>
+            <Link href={modeSwitcher.href} onClick={() => setDrawerOpen(false)}>
+              <span className="w-5" aria-hidden>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M16 3h5v5" />
+                  <path d="M8 21H3v-5" />
+                  <path d="M21 3l-7 7" />
+                  <path d="M3 21l7-7" />
+                </svg>
+              </span>
+              <span>{modeSwitcher.label}</span>
+            </Link>
+          </Button>
         )}
         <form action="/auth/signout" method="post">
-          <button
+          <Button
             type="submit"
-            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#6A6A6A] hover:bg-[#F2F2F2] hover:text-[#222222] transition-colors"
+            variant="ghost"
+            className="h-auto w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
+            style={{ color: t.colors.muted }}
           >
             <span className="w-5">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
             </span>
             <span>Logga ut</span>
-          </button>
+          </Button>
         </form>
       </div>
     </>
   )
 
   return (
-    <div className="min-h-screen bg-white flex">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-64 flex-shrink-0 bg-white border-r flex-col sticky top-0 h-screen" style={{ borderColor: t.colors.hairline }}>
+    <div className="flex min-h-screen bg-white">
+      <aside
+        className="sticky top-0 hidden h-screen w-64 flex-shrink-0 flex-col bg-white lg:flex"
+        style={{ borderRight: `1px solid ${t.colors.hairline}` }}
+      >
         {sidebar}
       </aside>
 
-      {/* Mobile drawer */}
       {drawerOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
@@ -133,22 +181,24 @@ export default function DashboardShell({ name, role, navItems, modeSwitcher, chi
             aria-label="Stäng meny"
             onClick={() => setDrawerOpen(false)}
           />
-          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white flex flex-col shadow-xl">
+          <aside className="absolute bottom-0 left-0 top-0 flex w-72 flex-col bg-white shadow-xl">
             {sidebar}
           </aside>
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col min-h-0">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Mobile top bar */}
         <div
-          className="lg:hidden sticky top-0 z-30 bg-white px-4 h-14 flex items-center gap-3 flex-shrink-0"
+          className="sticky top-0 z-30 flex h-14 flex-shrink-0 items-center gap-3 bg-white px-4 lg:hidden"
           style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
         >
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="icon"
             onClick={() => setDrawerOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f2f2f2]"
+            className="rounded-full"
             aria-label="Öppna meny"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -156,16 +206,48 @@ export default function DashboardShell({ name, role, navItems, modeSwitcher, chi
               <line x1="3" y1="12" x2="21" y2="12" />
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
-          </button>
-          <Link href="/" className="text-base font-bold tracking-tight text-[#FF6B35]">
+          </Button>
+          <Link href="/" className={siteLogoClass}>
             FESTEN.
           </Link>
-          <span className="ml-auto text-sm font-medium text-[#222222] truncate max-w-[40%]">
+          <span
+            className="ml-auto max-w-[40%] truncate text-sm font-medium"
+            style={{ color: t.colors.ink }}
+          >
             {name?.split(' ')[0] ?? ''}
           </span>
         </div>
 
-        <div className={flush ? 'flex-1 min-h-0 overflow-hidden' : 'px-4 py-6 sm:px-8 sm:py-8 flex-1'}>
+        {/* Desktop context strip — matches marketplace identity */}
+        {!flush && (
+          <div
+            className="sticky top-0 z-20 hidden h-14 flex-shrink-0 items-center justify-between bg-white px-8 lg:flex"
+            style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
+          >
+            <p className="text-[14px] font-medium" style={{ color: t.colors.muted }}>
+              {role === 'provider' ? 'Talangläge' : 'Planerarläge'}
+            </p>
+            {modeSwitcher && (
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="h-auto rounded-full px-3 py-1.5 text-[14px] font-medium"
+                style={{ color: t.colors.ink }}
+              >
+                <Link href={modeSwitcher.href}>{modeSwitcher.label}</Link>
+              </Button>
+            )}
+          </div>
+        )}
+
+        <div
+          className={
+            flush
+              ? 'min-h-0 flex-1 overflow-hidden'
+              : 'mx-auto w-full max-w-[1120px] flex-1 px-4 py-8 sm:px-8 sm:py-10'
+          }
+        >
           {children}
         </div>
       </div>

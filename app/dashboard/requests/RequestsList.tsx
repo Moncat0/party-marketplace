@@ -5,6 +5,7 @@ import Link from 'next/link'
 import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsButton from '@/components/settings/SettingsButton'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import { formatEventType } from '@/lib/event-types'
 
 type Request = {
   id: string
@@ -16,14 +17,6 @@ type Request = {
   description: string | null
   created_at: string
   users: { id: string; name: string | null; email: string } | null
-}
-
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  birthday: 'Födelsedag',
-  wedding: 'Bröllop',
-  corporate: 'Företagsevent',
-  kids: 'Barnkalas',
-  other: 'Annat',
 }
 
 function statusStyle(status: string): { bg: string; color: string; label: string } {
@@ -199,7 +192,7 @@ function RequestRow({
             )}
             {req.event_type && (
               <p className="text-[12px] text-[#6a6a6a]">
-                {EVENT_TYPE_LABELS[req.event_type] ?? req.event_type}
+                {formatEventType(req.event_type) ?? req.event_type}
               </p>
             )}
             {req.guest_count && (
@@ -232,7 +225,7 @@ function RequestRow({
             </>
           )}
           {req.status === 'accepted' && (
-            <Link href={`/booking/${req.id}/messages`}>
+            <Link href={`/dashboard/messages?c=${req.id}`}>
               <SettingsButton size="sm" variant="dark">
                 Chatt & offert →
               </SettingsButton>

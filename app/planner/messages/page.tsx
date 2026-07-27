@@ -3,8 +3,11 @@ import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import GuestAppChrome from '@/components/GuestAppChrome'
 import MessagesPanel from '@/components/messages/MessagesPanel'
+import ConversationDetails from '@/components/messages/ConversationDetails'
 import { type InboxThread } from '@/components/MessagesInbox'
 import MessageThread from '@/app/booking/[id]/messages/MessageThread'
+import { fetchMessagesWithReadReceiptPrivacy } from '@/lib/messages-privacy'
+import { formatEventType } from '@/lib/event-types'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Meddelanden' }
@@ -23,7 +26,12 @@ export default async function PlannerMessagesPage({
   const { data: bookings } = await supabase
     .from('booking_requests')
     .select(
-      'id, event_date, event_type, status, event_location, provider_profiles!provider_profile_id(user_id, service_title, users(name))'
+      `id, event_date, event_type, status, event_location, guest_count, description,
+       price_ore, payment_status, created_at,
+       services!service_id(
+         id, title, photos,
+         provider_profiles(user_id, stripe_onboarded, users(name))
+       )`
     )
     .eq('planner_id', user.id)
     .in('status', ['accepted', 'completed'])
@@ -46,22 +54,38 @@ export default async function PlannerMessagesPage({
         .is('read_at', null)
         .neq('sender_id', user.id)
 
-      const profile = (
-        Array.isArray(booking.provider_profiles)
-          ? booking.provider_profiles[0]
-          : booking.provider_profiles
+      const service = (
+        Array.isArray(booking.services) ? booking.services[0] : booking.services
       ) as unknown as {
-        user_id: string
-        service_title: string | null
-        users: { name: string | null } | { name: string | null }[] | null
+        id: string
+        title: string | null
+        photos: string[] | null
+        provider_profiles:
+          | {
+              user_id: string
+              stripe_onboarded?: boolean | null
+              users: { name: string | null } | { name: string | null }[] | null
+            }
+          | {
+              user_id: string
+              stripe_onboarded?: boolean | null
+              users: { name: string | null } | { name: string | null }[] | null
+            }[]
+          | null
       } | null
+
+      const profile = service?.provider_profiles
+        ? Array.isArray(service.provider_profiles)
+          ? service.provider_profiles[0]
+          : service.provider_profiles
+        : null
 
       const userRow = profile?.users
         ? Array.isArray(profile.users)
           ? profile.users[0]
           : profile.users
         : null
-      const name = userRow?.name ?? profile?.service_title ?? 'Talang'
+      const name = userRow?.name ?? service?.title ?? 'Talang'
       const lastText = lastMsg
         ? lastMsg.sender_id === user.id
           ? `Du: ${lastMsg.content ?? '📷 Bild'}`
@@ -71,12 +95,15 @@ export default async function PlannerMessagesPage({
       const thread: InboxThread = {
         id: booking.id,
         name,
-        subtitle: profile?.service_title && userRow?.name ? profile.service_title : null,
+        subtitle:
+          service?.title && userRow?.name
+            ? service.title
+            : formatEventType(booking.event_type),
         lastText,
         lastAt: lastMsg?.created_at ?? null,
         unread: unread ?? 0,
       }
-      return { thread, booking, profile }
+      return { thread, booking, profile, service }
     })
   )
 
@@ -85,13 +112,10 @@ export default async function PlannerMessagesPage({
   const active = activeId ? threadsRaw.find(t => t.thread.id === activeId) : null
 
   let embeddedThread: ReactNode = null
-  if (active) {
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('*, users!sender_id(name), quotes(*)')
-      .eq('booking_request_id', active.booking.id)
-      .order('created_at', { ascending: true })
+  let details: ReactNode = null
 
+  if (active) {
+    const otherUserId = active.profile?.user_id
     await supabase
       .from('messages')
       .update({ read_at: new Date().toISOString() })
@@ -99,18 +123,57 @@ export default async function PlannerMessagesPage({
       .is('read_at', null)
       .neq('sender_id', user.id)
 
+    const messages = otherUserId
+      ? await fetchMessagesWithReadReceiptPrivacy(
+          supabase,
+          active.booking.id,
+          user.id,
+          otherUserId
+        )
+      : []
+
     embeddedThread = (
       <MessageThread
         bookingId={active.booking.id}
         currentUserId={user.id}
-        messages={messages ?? []}
+        messages={messages}
         otherName={active.thread.name}
         isPlanner
         isProvider={false}
         isCompleted={active.booking.status === 'completed'}
         eventDate={active.booking.event_date ?? null}
         eventLocation={active.booking.event_location ?? null}
+        guestCount={active.booking.guest_count ?? null}
+        eventType={active.booking.event_type ?? null}
+        inquiryAt={active.booking.created_at ?? null}
+        serviceId={active.service?.id ?? null}
+        serviceTitle={active.service?.title ?? null}
         embedded
+      />
+    )
+
+    details = (
+      <ConversationDetails
+        inboxPath="/planner/messages"
+        booking={{
+          id: active.booking.id,
+          status: active.booking.status,
+          event_date: active.booking.event_date,
+          event_type: active.booking.event_type,
+          event_location: active.booking.event_location,
+          guest_count: active.booking.guest_count,
+          description: active.booking.description,
+          price_ore: active.booking.price_ore,
+          payment_status: active.booking.payment_status,
+        }}
+        side={{
+          role: 'planner',
+          providerName: active.thread.name,
+          serviceTitle: active.service?.title ?? null,
+          servicePhoto: active.service?.photos?.[0] ?? null,
+          serviceId: active.service?.id ?? null,
+          stripeOnboarded: !!active.profile?.stripe_onboarded,
+        }}
       />
     )
   }
@@ -124,6 +187,8 @@ export default async function PlannerMessagesPage({
         inboxPath="/planner/messages"
         threadPath="/booking/:id/messages"
         conversation={embeddedThread}
+        details={details}
+        fillParent
       />
     </GuestAppChrome>
   )

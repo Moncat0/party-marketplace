@@ -14,7 +14,7 @@ export default async function AdminReviewsPage() {
   const supabase = createAdminClient()
   const { data: reviews } = await supabase
     .from('reviews')
-    .select('id, rating, comment, created_at, users!reviewer_id(name, email), provider_profiles!provider_profile_id(service_title)')
+    .select('id, rating, comment, created_at, users!reviewer_id(name, email), services!service_id(title)')
     .order('created_at', { ascending: false })
 
   return (
@@ -33,7 +33,7 @@ export default async function AdminReviewsPage() {
               <div className="flex items-start justify-between gap-3 mb-1">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#222222] truncate">
-                    {r.users?.name ?? 'Anonym'} → {r.provider_profiles?.service_title ?? 'Okänd'}
+                    {r.users?.name ?? 'Anonym'} → {r.services?.title ?? 'Okänd'}
                   </p>
                   <p className="text-xs text-[#6A6A6A] truncate">{r.users?.email ?? '—'}</p>
                 </div>

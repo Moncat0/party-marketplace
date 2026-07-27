@@ -33,31 +33,38 @@ export default async function CategoryPage({ params }: Props) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: providers } = await supabase
-    .from('provider_profiles')
+  const { data: services } = await supabase
+    .from('services')
     .select(
       `
-      id, service_title, city, location_id, photos, category_tags, created_at,
-      users!user_id(name, avatar_url),
+      id, title, city, location_id, photos, category_slug, category_tags, created_at,
+      provider_profiles(users(name, avatar_url)),
       reviews(rating)
     `
     )
+    .eq('is_published', true)
     .eq('location_id', 'stockholm')
-    .overlaps('category_tags', category.tags)
+    .eq('category_slug', category.slug)
     .order('created_at', { ascending: false })
 
-  const enriched = (providers ?? []).map(p => {
-    const reviews = (p.reviews as { rating: number }[]) ?? []
+  const enriched = (services ?? []).map(s => {
+    const reviews = (s.reviews as { rating: number }[]) ?? []
     const reviewCount = reviews.length
     const avgRating =
       reviewCount > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount : null
-    const users = Array.isArray(p.users) ? p.users[0] : p.users
+    const provider = Array.isArray(s.provider_profiles) ? s.provider_profiles[0] : s.provider_profiles
+    const users = provider
+      ? Array.isArray(provider.users)
+        ? provider.users[0]
+        : provider.users
+      : null
     return {
-      id: p.id,
-      service_title: p.service_title,
-      city: p.city,
-      photos: p.photos ?? [],
-      category_tags: p.category_tags ?? [],
+      id: s.id,
+      title: s.title,
+      city: s.city,
+      photos: s.photos ?? [],
+      category_slug: s.category_slug ?? null,
+      category_tags: s.category_tags ?? [],
       users: users as { name: string | null; avatar_url?: string | null } | null,
       reviewCount,
       avgRating,

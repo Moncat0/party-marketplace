@@ -24,20 +24,36 @@ export async function PATCH(
     .from('booking_requests')
     .update(updatePayload)
     .eq('id', params.id)
-    .select('*, users!planner_id(name, email), provider_profiles!provider_profile_id(user_id, service_title, users(name))')
+    .select(
+      '*, users!planner_id(name, email, notif_booking_accepted, notif_booking_declined), services!service_id(title, provider_profiles(user_id, users(name)))'
+    )
     .single()
 
   if (error || !booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   try {
-    const planner = booking.users as { name: string | null; email: string } | null
-    const profile = booking.provider_profiles as { service_title: string | null; users: { name: string | null } | null } | null
-    const providerName = profile?.users?.name ?? profile?.service_title ?? 'Talangen'
+    const planner = booking.users as {
+      name: string | null
+      email: string
+      notif_booking_accepted: boolean | null
+      notif_booking_declined: boolean | null
+    } | null
+    const serviceRaw = booking.services as unknown
+    const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
+      title: string | null
+      provider_profiles: { users: { name: string | null } | null } | { users: { name: string | null } | null }[] | null
+    } | null
+    const provider = service?.provider_profiles
+      ? Array.isArray(service.provider_profiles)
+        ? service.provider_profiles[0]
+        : service.provider_profiles
+      : null
+    const providerName = provider?.users?.name ?? service?.title ?? 'Talangen'
 
     if (planner?.email) {
-      if (status === 'accepted') {
+      if (status === 'accepted' && planner.notif_booking_accepted !== false) {
         await sendBookingAccepted(planner.email, planner.name ?? 'Hej', providerName, params.id)
-      } else {
+      } else if (status === 'declined' && planner.notif_booking_declined !== false) {
         await sendBookingDeclined(planner.email, planner.name ?? 'Hej', providerName)
       }
     }

@@ -16,25 +16,33 @@ export default async function PlannerBookingsPage() {
   const { data: bookings } = await supabase
     .from('booking_requests')
     .select(
-      'id, status, event_date, event_type, price_ore, payment_status, provider_profiles!provider_profile_id(id, service_title, stripe_onboarded, photos, users(name))'
+      'id, status, event_date, event_type, price_ore, payment_status, services!service_id(id, title, photos, provider_profiles(stripe_onboarded, users(name)))'
     )
     .eq('planner_id', user.id)
     .order('created_at', { ascending: false })
 
   const trips: TripBooking[] = (bookings ?? []).map(b => {
-    const raw = b.provider_profiles as unknown
-    const profileRaw = (Array.isArray(raw) ? raw[0] : raw) as {
+    const raw = b.services as unknown
+    const serviceRaw = (Array.isArray(raw) ? raw[0] : raw) as {
       id: string
-      service_title: string | null
-      stripe_onboarded: boolean
+      title: string | null
       photos: string[] | null
-      users: { name: string | null } | { name: string | null }[] | null
+      provider_profiles:
+        | { stripe_onboarded: boolean; users: { name: string | null } | { name: string | null }[] | null }
+        | { stripe_onboarded: boolean; users: { name: string | null } | { name: string | null }[] | null }[]
+        | null
     } | null
 
-    const users = profileRaw?.users
-      ? Array.isArray(profileRaw.users)
-        ? profileRaw.users[0] ?? null
-        : profileRaw.users
+    const provider = serviceRaw?.provider_profiles
+      ? Array.isArray(serviceRaw.provider_profiles)
+        ? serviceRaw.provider_profiles[0]
+        : serviceRaw.provider_profiles
+      : null
+
+    const users = provider?.users
+      ? Array.isArray(provider.users)
+        ? provider.users[0] ?? null
+        : provider.users
       : null
 
     return {
@@ -44,12 +52,12 @@ export default async function PlannerBookingsPage() {
       event_type: b.event_type,
       price_ore: b.price_ore,
       payment_status: b.payment_status,
-      provider_profiles: profileRaw
+      services: serviceRaw
         ? {
-            id: profileRaw.id,
-            service_title: profileRaw.service_title,
-            stripe_onboarded: profileRaw.stripe_onboarded,
-            photos: profileRaw.photos,
+            id: serviceRaw.id,
+            title: serviceRaw.title,
+            photos: serviceRaw.photos,
+            stripe_onboarded: provider?.stripe_onboarded ?? false,
             users,
           }
         : null,

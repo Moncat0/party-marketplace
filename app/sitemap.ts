@@ -6,14 +6,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
   const supabase = await createClient()
 
-  const { data: profiles } = await supabase
-    .from('provider_profiles')
+  const { data: services } = await supabase
+    .from('services')
     .select('id, created_at')
     .eq('is_published', true)
 
-  const providerUrls: MetadataRoute.Sitemap = (profiles ?? []).map(p => ({
-    url: `${siteUrl}/providers/${p.id}`,
-    lastModified: new Date(p.created_at),
+  const providerUrls: MetadataRoute.Sitemap = (services ?? []).map(s => ({
+    url: `${siteUrl}/tjanster/${s.id}`,
+    lastModified: new Date(s.created_at),
     changeFrequency: 'weekly',
     priority: 0.8,
   }))

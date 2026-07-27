@@ -26,7 +26,25 @@ export async function middleware(request: NextRequest) {
   )
 
   // Refresh the session so it doesn't expire while the user is active
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // Soft-deactivated accounts cannot use the app
+  if (user && !request.nextUrl.pathname.startsWith('/api/')) {
+    const { data: row } = await supabase
+      .from('users')
+      .select('deactivated_at')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (row?.deactivated_at) {
+      await supabase.auth.signOut()
+      const url = new URL('/', request.url)
+      url.searchParams.set('deactivated', '1')
+      return NextResponse.redirect(url)
+    }
+  }
 
   // Protect /admin — only Monica can access it
   if (request.nextUrl.pathname.startsWith('/admin')) {

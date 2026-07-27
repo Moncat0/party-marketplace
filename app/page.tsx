@@ -17,31 +17,40 @@ export default async function HomePage() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { data: profiles } = await supabase
-    .from('provider_profiles')
-    .select('id, service_title, city, location_id, photos, category_tags, created_at, user_id, price_range_min, users(name, avatar_url)')
+  const { data: services } = await supabase
+    .from('services')
+    .select(
+      'id, title, city, location_id, photos, category_slug, category_tags, created_at, price_range_min, provider_profiles(user_id, users(name, avatar_url)), reviews(rating)'
+    )
     .eq('is_published', true)
     .order('created_at', { ascending: false })
 
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('reviewee_id, rating')
-
-  const reviewMap: Record<string, { count: number; total: number }> = {}
-  reviews?.forEach(r => {
-    if (!reviewMap[r.reviewee_id]) reviewMap[r.reviewee_id] = { count: 0, total: 0 }
-    reviewMap[r.reviewee_id].count++
-    reviewMap[r.reviewee_id].total += r.rating
+  const providers = (services ?? []).map(s => {
+    const provider = Array.isArray(s.provider_profiles) ? s.provider_profiles[0] : s.provider_profiles
+    const users = provider
+      ? Array.isArray(provider.users)
+        ? (provider.users[0] ?? null)
+        : provider.users
+      : null
+    const reviews = (s.reviews as { rating: number }[] | null) ?? []
+    const reviewCount = reviews.length
+    const avgRating =
+      reviewCount > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount : null
+    return {
+      id: s.id,
+      title: s.title,
+      city: s.city,
+      location_id: s.location_id,
+      photos: s.photos ?? [],
+      category_slug: s.category_slug ?? null,
+      category_tags: s.category_tags ?? [],
+      created_at: s.created_at,
+      price_range_min: s.price_range_min,
+      users,
+      reviewCount,
+      avgRating,
+    }
   })
-
-  const providers = (profiles ?? []).map(p => ({
-    ...p,
-    users: Array.isArray(p.users) ? (p.users[0] ?? null) : p.users,
-    reviewCount: reviewMap[p.user_id]?.count ?? 0,
-    avgRating: reviewMap[p.user_id]
-      ? reviewMap[p.user_id].total / reviewMap[p.user_id].count
-      : null,
-  }))
 
   return <HomeBrowse providers={providers} isLoggedIn={!!user} plannerId={user?.id ?? null} />
 }

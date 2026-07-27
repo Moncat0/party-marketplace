@@ -18,7 +18,7 @@ export default async function SharedShortlistPage({ params }: { params: { token:
 
   const { data: items } = await supabase
     .from('shortlist_items')
-    .select('id, provider_profiles(id, service_title, city, photos, category_tags, users(name))')
+    .select('id, services(id, title, city, photos, category_tags, provider_profiles(users(name)))')
     .eq('shortlist_id', shortlist.id)
     .order('added_at', { ascending: false })
 
@@ -40,24 +40,38 @@ export default async function SharedShortlistPage({ params }: { params: { token:
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8 mb-12">
           {items.map(item => {
-            const p = item.provider_profiles as unknown as {
+            const raw = item.services as unknown
+            const s = (Array.isArray(raw) ? raw[0] : raw) as {
               id: string
-              service_title: string | null
+              title: string | null
               city: string | null
               photos: string[]
               category_tags: string[]
-              users: { name: string | null } | null
+              provider_profiles:
+                | { users: { name: string | null } | { name: string | null }[] | null }
+                | { users: { name: string | null } | { name: string | null }[] | null }[]
+                | null
             } | null
-            if (!p) return null
+            if (!s) return null
+            const provider = s.provider_profiles
+              ? Array.isArray(s.provider_profiles)
+                ? s.provider_profiles[0]
+                : s.provider_profiles
+              : null
+            const users = provider?.users
+              ? Array.isArray(provider.users)
+                ? provider.users[0]
+                : provider.users
+              : null
             return (
-              <Link key={item.id} href={`/providers/${p.id}`} className="group block">
+              <Link key={item.id} href={`/tjanster/${s.id}`} className="group block">
                 <div
                   className="relative aspect-square overflow-hidden bg-[#f2f2f2] mb-3"
                   style={{ borderRadius: 12 }}
                 >
-                  {p.photos[0] ? (
+                  {s.photos[0] ? (
                     <Image
-                      src={p.photos[0]}
+                      src={s.photos[0]}
                       alt=""
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
@@ -68,12 +82,12 @@ export default async function SharedShortlistPage({ params }: { params: { token:
                   )}
                 </div>
                 <p className="font-semibold text-[14px] text-[#222222] truncate">
-                  {p.service_title}
+                  {s.title}
                 </p>
-                {p.users?.name && (
-                  <p className="text-[13px] text-[#6a6a6a] truncate">{p.users.name}</p>
+                {users?.name && (
+                  <p className="text-[13px] text-[#6a6a6a] truncate">{users.name}</p>
                 )}
-                {p.city && <p className="text-[13px] text-[#6a6a6a]">{p.city}</p>}
+                {s.city && <p className="text-[13px] text-[#6a6a6a]">{s.city}</p>}
               </Link>
             )
           })}

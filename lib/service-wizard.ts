@@ -1,0 +1,165 @@
+import {
+  CATEGORIES,
+  categoryTagsFromSlug,
+  resolveCategorySlug,
+  type CategorySlug,
+} from '@/lib/categories'
+import { DEFAULT_LOCATION_ID } from '@/lib/locations'
+
+export const SERVICE_WIZARD_STEPS = [
+  'intro1',
+  'title',
+  'category',
+  'location',
+  'intro2',
+  'description',
+  'photos',
+  'intro3',
+  'price',
+  'publish',
+] as const
+
+export type ServiceWizardStep = (typeof SERVICE_WIZARD_STEPS)[number]
+
+export type ServiceWizardDraft = {
+  title: string
+  categorySlug: CategorySlug | null
+  locationId: string
+  description: string
+  photos: string[]
+  priceMin: string
+  priceMax: string
+}
+
+export const EMPTY_WIZARD_DRAFT: ServiceWizardDraft = {
+  title: '',
+  categorySlug: null,
+  locationId: DEFAULT_LOCATION_ID,
+  description: '',
+  photos: [],
+  priceMin: '',
+  priceMax: '',
+}
+
+/** Three Airbnb-style phases for the footer progress bar. */
+export const WIZARD_PHASES: ServiceWizardStep[][] = [
+  ['intro1', 'title', 'category', 'location'],
+  ['intro2', 'description', 'photos'],
+  ['intro3', 'price', 'publish'],
+]
+
+export function stepIndex(step: ServiceWizardStep): number {
+  return SERVICE_WIZARD_STEPS.indexOf(step)
+}
+
+export function phaseProgress(step: ServiceWizardStep): number[] {
+  const idx = stepIndex(step)
+  return WIZARD_PHASES.map(phase => {
+    const first = stepIndex(phase[0])
+    const last = stepIndex(phase[phase.length - 1])
+    if (idx < first) return 0
+    if (idx > last) return 1
+    const local = idx - first
+    return (local + 1) / phase.length
+  })
+}
+
+export function nextStep(step: ServiceWizardStep): ServiceWizardStep | null {
+  const i = stepIndex(step)
+  if (i < 0 || i >= SERVICE_WIZARD_STEPS.length - 1) return null
+  return SERVICE_WIZARD_STEPS[i + 1]
+}
+
+export function prevStep(step: ServiceWizardStep): ServiceWizardStep | null {
+  const i = stepIndex(step)
+  if (i <= 0) return null
+  return SERVICE_WIZARD_STEPS[i - 1]
+}
+
+export function isStepValid(step: ServiceWizardStep, draft: ServiceWizardDraft): boolean {
+  switch (step) {
+    case 'intro1':
+    case 'intro2':
+    case 'intro3':
+    case 'publish':
+      return true
+    case 'title':
+      return draft.title.trim().length > 0 && draft.title.trim().length <= 50
+    case 'category':
+      return !!draft.categorySlug && CATEGORIES.some(c => c.slug === draft.categorySlug)
+    case 'location':
+      return draft.locationId === DEFAULT_LOCATION_ID
+    case 'description':
+      return draft.description.trim().length > 0 && draft.description.trim().length <= 500
+    case 'photos':
+      return draft.photos.length >= 1 && draft.photos.length <= 6
+    case 'price': {
+      const min = Number(draft.priceMin)
+      const max = Number(draft.priceMax)
+      return (
+        Number.isFinite(min) &&
+        Number.isFinite(max) &&
+        min > 0 &&
+        max >= min
+      )
+    }
+    default:
+      return false
+  }
+}
+
+/** Resume at first incomplete content step (skip completed intros when possible). */
+export function resumeStep(draft: ServiceWizardDraft): ServiceWizardStep {
+  if (!draft.title.trim()) return 'intro1'
+  if (!draft.categorySlug) return 'category'
+  if (!draft.locationId) return 'location'
+  if (!draft.description.trim()) return 'intro2'
+  if (draft.photos.length < 1) return 'photos'
+  if (!draft.priceMin || !draft.priceMax) return 'intro3'
+  return 'publish'
+}
+
+/** @deprecated use categoryTagsFromSlug from lib/categories */
+export function categoryTagFromSlug(slug: string | null): string[] {
+  return categoryTagsFromSlug(slug)
+}
+
+/** @deprecated use resolveCategorySlug / categorySlugFromTags from lib/categories */
+export { categorySlugFromTags } from '@/lib/categories'
+
+export function draftFromService(service: {
+  title: string | null
+  description: string | null
+  category_slug?: string | null
+  category_tags: string[] | null
+  location_id?: string | null
+  photos: string[] | null
+  price_range_min: number | null
+  price_range_max: number | null
+} | null): ServiceWizardDraft {
+  if (!service) return { ...EMPTY_WIZARD_DRAFT }
+  return {
+    title: service.title ?? '',
+    categorySlug: resolveCategorySlug({
+      category_slug: service.category_slug,
+      category_tags: service.category_tags,
+    }),
+    locationId: service.location_id ?? DEFAULT_LOCATION_ID,
+    description: service.description ?? '',
+    photos: service.photos ?? [],
+    priceMin: service.price_range_min?.toString() ?? '',
+    priceMax: service.price_range_max?.toString() ?? '',
+  }
+}
+
+export function isIncompleteService(service: {
+  is_published: boolean
+} | null): boolean {
+  if (!service || service.is_published) return false
+  return true
+}
+
+export function serviceStartedLabel(createdAt: string): string {
+  const d = new Date(createdAt)
+  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' })
+}

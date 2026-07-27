@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
 import { settingsTokens as t } from './tokens'
 
 type Props = {
@@ -27,7 +28,10 @@ export default function SettingsRow({
   children,
   isLast = false,
 }: Props) {
-  const display = value?.trim() ? value : emptyLabel
+  const hasValue = Boolean(value?.trim())
+  const display = hasValue ? value : emptyLabel
+  // Airbnb phone row: description replaces the empty value line
+  const showValue = hasValue || !description
 
   return (
     <div
@@ -39,26 +43,31 @@ export default function SettingsRow({
     >
       <div className="flex items-start justify-between gap-8 w-full">
         <div className="min-w-0 flex-1 pr-4">
-          <p className="text-[16px] font-medium leading-[1.25] text-[#222222]">{label}</p>
+          <p className="text-[16px] font-semibold leading-[1.25] text-[#222222]">{label}</p>
           {!expanded && (
             <>
               {description && (
-                <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mt-1.5 max-w-2xl">
+                <p className="mt-1.5 max-w-2xl text-[14px] font-normal leading-[1.43] text-[#6a6a6a]">
                   {description}
                 </p>
               )}
-              <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mt-1.5">{display}</p>
+              {showValue && (
+                <p className="mt-1.5 text-[14px] font-normal leading-[1.43] text-[#6a6a6a]">
+                  {display}
+                </p>
+              )}
             </>
           )}
         </div>
-        <button
+        <Button
           type="button"
+          variant="link"
           onClick={onAction}
-          className="flex-shrink-0 text-[14px] font-medium text-[#222222] underline underline-offset-[3px] hover:text-[#6a6a6a] transition-colors pt-0.5"
+          className="h-auto flex-shrink-0 p-0 pt-0.5 text-[14px] font-medium text-foreground underline underline-offset-[3px] hover:text-muted-foreground"
           style={{ transitionDuration: t.motion.fast }}
         >
           {expanded ? 'Avbryt' : actionLabel}
-        </button>
+        </Button>
       </div>
       {expanded && children && <div className="mt-5 max-w-lg space-y-4">{children}</div>}
     </div>

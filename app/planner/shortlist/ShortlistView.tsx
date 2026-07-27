@@ -7,16 +7,17 @@ import GuestAppChrome from '@/components/GuestAppChrome'
 import Container from '@/components/Container'
 import ListingCard from '@/components/listings/ListingCard'
 import WishlistSettingsModal from '@/components/wishlist/WishlistSettingsModal'
+import { Button } from '@/components/ui/button'
 import { removeWishlistItem, updateItemNote } from '@/lib/wishlists'
 import { track } from '@/lib/posthog'
 
 export type WishlistItem = {
   id: string
-  provider_profile_id: string
+  service_id: string
   note: string | null
-  provider_profiles: {
+  services: {
     id: string
-    service_title: string | null
+    title: string | null
     city: string | null
     photos: string[]
     category_tags: string[]
@@ -84,31 +85,35 @@ export default function ShortlistView({
     <GuestAppChrome flush>
       <Container>
         <div className="pt-6 pb-20">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             onClick={() => router.push('/planner/shortlist')}
-            className="mb-6 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#f7f7f7] -ml-1"
+            className="mb-6 -ml-1 size-8 rounded-full"
             aria-label="Tillbaka"
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
               <path
                 d="M10 3L5 8l5 5"
-                stroke="#222"
+                stroke="currentColor"
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
             </svg>
-          </button>
+          </Button>
 
           <div className="flex items-start justify-between gap-4 mb-4">
             <h1 className="text-[32px] font-semibold leading-[36px] tracking-[-0.04em] text-[#222222]">
               {name}
             </h1>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               onClick={() => setSettingsOpen(true)}
-              className="mt-1 w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#f7f7f7]"
+              className="mt-1 size-8 rounded-full"
               aria-label="Inställningar"
             >
               <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor" aria-hidden>
@@ -116,14 +121,15 @@ export default function ShortlistView({
                 <circle cx="9" cy="9" r="1.5" />
                 <circle cx="14.5" cy="9" r="1.5" />
               </svg>
-            </button>
+            </Button>
           </div>
 
           <div className="flex flex-wrap gap-2 mb-10">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleShare}
-              className="inline-flex items-center h-10 px-4 text-[14px] font-semibold rounded-full border border-[#ddd] text-[#222] bg-white hover:border-[#222] transition-colors"
+              className="h-10 rounded-full px-4 text-[14px] font-semibold hover:border-foreground"
             >
               <svg width="14" height="14" viewBox="0 0 32 32" fill="none" aria-hidden className="mr-1.5">
                 <path
@@ -135,7 +141,7 @@ export default function ShortlistView({
                 />
               </svg>
               {copied ? 'Kopierad' : 'Dela'}
-            </button>
+            </Button>
           </div>
 
           {items.length === 0 ? (
@@ -154,14 +160,14 @@ export default function ShortlistView({
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-x-6 gap-y-10">
               {items.map(item => {
-                const p = item.provider_profiles
+                const p = item.services
                 if (!p) return null
                 return (
                   <div key={item.id} className="min-w-0">
                     <ListingCard
                       data={{
                         id: p.id,
-                        service_title: p.service_title,
+                        title: p.title,
                         city: p.city,
                         photos: p.photos,
                         category_tags: p.category_tags,
@@ -185,37 +191,42 @@ export default function ShortlistView({
                           className="w-full px-3 py-2 text-[13px] border border-[#b0b0b0] rounded-lg focus:outline-none focus:border-[#222] resize-none"
                         />
                         <div className="mt-1.5 flex gap-2">
-                          <button
+                          <Button
                             type="button"
+                            variant="dark"
+                            size="sm"
                             onClick={() => saveNote(item.id)}
-                            className="h-8 px-3 text-[13px] font-semibold text-white bg-[#222] rounded-lg"
+                            className="h-8 px-3 text-[13px]"
                           >
                             Spara
-                          </button>
-                          <button
+                          </Button>
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="sm"
                             onClick={() => setNoteEditing(null)}
-                            className="h-8 px-3 text-[13px] font-semibold text-[#222] hover:bg-[#f7f7f7] rounded-lg"
+                            className="h-8 px-3 text-[13px]"
                           >
                             Avbryt
-                          </button>
+                          </Button>
                         </div>
                       </div>
                     ) : (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={() => {
                           setNoteEditing(item.id)
                           setNoteDraft(item.note ?? '')
                         }}
-                        className="mt-2 w-full text-left px-3 py-2 text-[13px] text-[#6a6a6a] bg-[#f7f7f7] hover:bg-[#ebebeb] transition-colors rounded-xl line-clamp-2"
+                        className="mt-2 h-auto w-full justify-start rounded-xl bg-secondary px-3 py-2 text-left text-[13px] text-muted-foreground hover:bg-muted line-clamp-2"
                       >
                         {item.note ? (
-                          <span className="text-[#222]">{item.note}</span>
+                          <span className="text-foreground">{item.note}</span>
                         ) : (
                           'Lägg till anteckning'
                         )}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )

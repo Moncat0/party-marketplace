@@ -3,35 +3,23 @@
 import type { FormEvent } from 'react'
 import DatePickerField from '@/components/ui/DatePickerField'
 import SelectField from '@/components/ui/SelectField'
+import { Button } from '@/components/ui/button'
+import type { BookingFormData } from '@/lib/booking-draft'
 
-type BookingData = {
-  event_date: string
-  event_type: string
-  event_location: string
-  guest_count: string
-  description: string
-}
+import { EVENT_TYPES } from '@/lib/event-types'
 
 type Props = {
   priceLabel: string | null
   reviewCount: number
   avgRating: number | null
-  bookingData: BookingData
-  onChange: (next: BookingData) => void
+  bookingData: BookingFormData
+  onChange: (next: BookingFormData) => void
   onSubmit: (e: FormEvent) => void
   submitting: boolean
   error: string | null
   loggedIn: boolean
   onRequireLogin: () => void
 }
-
-const EVENT_TYPES = [
-  { value: 'birthday', label: 'Födelsedag' },
-  { value: 'wedding', label: 'Bröllop' },
-  { value: 'corporate', label: 'Företagsevent' },
-  { value: 'kids', label: 'Barnkalas' },
-  { value: 'other', label: 'Annat' },
-]
 
 /** Sticky booking widget — Airbnb Reserve card chrome, custom date + select. */
 export default function ListingReservation({
@@ -102,7 +90,7 @@ export default function ListingReservation({
               label="Typ av event"
               value={bookingData.event_type}
               onChange={event_type => onChange({ ...bookingData, event_type })}
-              options={EVENT_TYPES}
+              options={[...EVENT_TYPES]}
               placeholder="Välj typ..."
             />
           </div>
@@ -159,17 +147,13 @@ export default function ListingReservation({
           </div>
         </div>
 
-        {error && <p className="text-[14px] text-[#c13515] mb-3">{error}</p>}
+        {error && <p className="text-[14px] text-destructive mb-3">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full h-12 text-[16px] font-semibold text-white bg-[#FF6B35] hover:bg-[#e55a26] transition-colors disabled:opacity-70 disabled:cursor-not-allowed rounded-xl"
-        >
+        <Button type="submit" disabled={submitting} size="lg" className="w-full rounded-xl text-base font-semibold">
           {submitting ? 'Skickar...' : 'Skicka förfrågan'}
-        </button>
+        </Button>
 
-        <p className="text-center text-[14px] text-[#222222] mt-4">
+        <p className="text-center text-[14px] text-foreground mt-4">
           Du debiteras ingenting ännu
         </p>
       </form>

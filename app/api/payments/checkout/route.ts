@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
     .from('booking_requests')
     .select(`
       id, status, payment_status, price_ore, planner_id,
-      provider_profiles!provider_profile_id(
-        id, service_title, stripe_account_id, stripe_onboarded
+      services!service_id(
+        title, provider_profiles(id, stripe_account_id, stripe_onboarded)
       )
     `)
     .eq('id', bookingId)
@@ -28,9 +28,19 @@ export async function POST(request: NextRequest) {
   if (booking.payment_status === 'paid') return NextResponse.json({ error: 'Already paid' }, { status: 400 })
   if (!booking.price_ore) return NextResponse.json({ error: 'No price set on this booking' }, { status: 400 })
 
-  const profile = (Array.isArray(booking.provider_profiles) ? booking.provider_profiles[0] : booking.provider_profiles) as {
-    id: string; service_title: string | null; stripe_account_id: string | null; stripe_onboarded: boolean
+  const serviceRaw = booking.services as unknown
+  const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
+    title: string | null
+    provider_profiles:
+      | { id: string; stripe_account_id: string | null; stripe_onboarded: boolean }
+      | { id: string; stripe_account_id: string | null; stripe_onboarded: boolean }[]
+      | null
   } | null
+  const profile = service?.provider_profiles
+    ? Array.isArray(service.provider_profiles)
+      ? service.provider_profiles[0]
+      : service.provider_profiles
+    : null
 
   if (!profile?.stripe_account_id || !profile?.stripe_onboarded) {
     return NextResponse.json({ error: 'Talangen har inte kopplat sitt bankkonto ännu. Be dem logga in och ansluta Stripe.' }, { status: 400 })
@@ -48,7 +58,7 @@ export async function POST(request: NextRequest) {
           currency: 'sek',
           unit_amount: booking.price_ore,
           product_data: {
-            name: profile.service_title ?? 'Bokning via FESTEN.',
+            name: service?.title ?? 'Bokning via FESTEN.',
             description: 'Betalning hanteras säkert av FESTEN. — 20% serviceavgift ingår.',
           },
         },

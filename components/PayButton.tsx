@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export default function PayButton({ bookingId, priceOre }: { bookingId: string; priceOre: number }) {
   const [loading, setLoading] = useState(false)
@@ -32,14 +33,16 @@ export default function PayButton({ bookingId, priceOre }: { bookingId: string; 
 
   return (
     <div>
-      <button
+      <Button
+        type="button"
+        size="sm"
         onClick={handlePay}
         disabled={loading}
-        className="rounded-xl bg-[#1D9E75] px-4 py-2 text-xs font-semibold text-white hover:bg-[#178a65] transition-colors disabled:opacity-50 whitespace-nowrap"
+        className="rounded-xl bg-success hover:bg-success/90 text-white"
       >
         {loading ? '...' : `Betala ${priceSek} kr →`}
-      </button>
-      {error && <p className="text-xs text-red-500 mt-1 max-w-[200px]">{error}</p>}
+      </Button>
+      {error && <p className="text-xs text-destructive mt-1 max-w-[200px]">{error}</p>}
     </div>
   )
 }

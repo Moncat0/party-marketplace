@@ -8,6 +8,7 @@ import {
   type AuthIntent,
 } from '@/lib/auth-intent'
 import { ensureAppUser } from '@/lib/ensure-user'
+import { needsDisplayName } from '@/lib/profile-completeness'
 
 function safeNext(raw: string | null): string | null {
   if (!raw) return null
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
 
     let hasProviderProfile = false
     let isPublished = false
+    let missingDisplayName = false
 
     if (user) {
       const signupSource = cookieStore.get('signup_source')?.value ?? 'organic'
@@ -67,14 +69,28 @@ export async function GET(request: NextRequest) {
         console.error('[auth/callback] ensureAppUser failed:', ensureError)
       }
 
-      const { data: profile } = await supabase
-        .from('provider_profiles')
-        .select('id, is_published')
-        .eq('user_id', user.id)
-        .maybeSingle()
+      const [{ data: profile }, { data: appUser }] = await Promise.all([
+        supabase
+          .from('provider_profiles')
+          .select('id, services(is_published)')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('users')
+          .select('name, first_name')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ])
+
+      const service = profile
+        ? Array.isArray(profile.services)
+          ? profile.services[0]
+          : profile.services
+        : null
 
       hasProviderProfile = !!profile
-      isPublished = !!profile?.is_published
+      isPublished = !!service?.is_published
+      missingDisplayName = needsDisplayName(appUser)
     }
 
     const destination = resolvePostAuthDestination({
@@ -82,6 +98,7 @@ export async function GET(request: NextRequest) {
       next: nextParam,
       hasProviderProfile,
       isPublished,
+      needsDisplayName: missingDisplayName,
     })
 
     const response = NextResponse.redirect(`${origin}${destination}`)

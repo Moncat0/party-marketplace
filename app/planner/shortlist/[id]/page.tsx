@@ -33,74 +33,66 @@ export default async function WishlistDetailPage({ params }: Props) {
   const { data: items } = await supabase
     .from('shortlist_items')
     .select(
-      `id, note, provider_profile_id,
-       provider_profiles(
-         id, service_title, city, photos, category_tags,
-         price_range_min, price_range_max, user_id,
-         users(name)
+      `id, note, service_id,
+       services(
+         id, title, city, photos, category_tags,
+         price_range_min, price_range_max,
+         provider_profiles(users(name)),
+         reviews(rating)
        )`
     )
     .eq('shortlist_id', shortlist.id)
     .order('added_at', { ascending: false })
 
-  const userIds = (items ?? [])
-    .map(item => {
-      const raw = item.provider_profiles
-      const profile = (Array.isArray(raw) ? raw[0] : raw) as { user_id?: string } | null
-      return profile?.user_id
-    })
-    .filter((id): id is string => !!id)
-
-  const reviewMap: Record<string, { count: number; total: number }> = {}
-  if (userIds.length > 0) {
-    const { data: reviews } = await supabase
-      .from('reviews')
-      .select('reviewee_id, rating')
-      .in('reviewee_id', userIds)
-    for (const r of reviews ?? []) {
-      if (!reviewMap[r.reviewee_id]) reviewMap[r.reviewee_id] = { count: 0, total: 0 }
-      reviewMap[r.reviewee_id].count++
-      reviewMap[r.reviewee_id].total += r.rating
-    }
-  }
-
   const normalized = (items ?? []).map(item => {
-    const raw = item.provider_profiles
-    const profile = (Array.isArray(raw) ? raw[0] : raw) as {
+    const raw = item.services
+    const service = (Array.isArray(raw) ? raw[0] : raw) as {
       id: string
-      service_title: string | null
+      title: string | null
       city: string | null
       photos: string[]
       category_tags: string[]
       price_range_min: number | null
       price_range_max: number | null
-      user_id: string
-      users: { name: string | null } | { name: string | null }[] | null
+      provider_profiles:
+        | { users: { name: string | null } | { name: string | null }[] | null }
+        | { users: { name: string | null } | { name: string | null }[] | null }[]
+        | null
+      reviews: { rating: number }[] | null
     } | null
 
+    const provider = service?.provider_profiles
+      ? Array.isArray(service.provider_profiles)
+        ? service.provider_profiles[0]
+        : service.provider_profiles
+      : null
+
     let users: { name: string | null } | null = null
-    if (profile?.users) {
-      users = Array.isArray(profile.users) ? profile.users[0] ?? null : profile.users
+    if (provider?.users) {
+      users = Array.isArray(provider.users) ? provider.users[0] ?? null : provider.users
     }
 
-    const stats = profile ? reviewMap[profile.user_id] : null
+    const reviews = service?.reviews ?? []
+    const reviewCount = reviews.length
+    const avgRating =
+      reviewCount > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount : null
 
     return {
       id: item.id,
-      provider_profile_id: item.provider_profile_id,
+      service_id: item.service_id,
       note: (item as { note?: string | null }).note ?? null,
-      provider_profiles: profile
+      services: service
         ? {
-            id: profile.id,
-            service_title: profile.service_title,
-            city: profile.city,
-            photos: profile.photos ?? [],
-            category_tags: profile.category_tags ?? [],
-            price_range_min: profile.price_range_min,
-            price_range_max: profile.price_range_max,
+            id: service.id,
+            title: service.title,
+            city: service.city,
+            photos: service.photos ?? [],
+            category_tags: service.category_tags ?? [],
+            price_range_min: service.price_range_min,
+            price_range_max: service.price_range_max,
             users,
-            avgRating: stats ? stats.total / stats.count : null,
-            reviewCount: stats?.count ?? 0,
+            avgRating,
+            reviewCount,
           }
         : null,
     }

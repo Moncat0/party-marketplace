@@ -10,7 +10,7 @@ export default async function AdminMessagesPage() {
   // Get all bookings that have at least one message
   const { data: bookings } = await supabase
     .from('booking_requests')
-    .select('id, status, event_date, users!planner_id(name, email), provider_profiles!provider_profile_id(service_title, users(name, email))')
+    .select('id, status, event_date, users!planner_id(name, email), services!service_id(title, provider_profiles(users(name, email)))')
     .in('status', ['accepted', 'completed'])
     .order('created_at', { ascending: false })
 
@@ -39,7 +39,16 @@ export default async function AdminMessagesPage() {
         <div className="space-y-4">
           {bookingsWithMessages.map(booking => {
             const planner = (Array.isArray(booking.users) ? booking.users[0] : booking.users) as { name: string | null; email: string } | null
-            const profile = (Array.isArray(booking.provider_profiles) ? booking.provider_profiles[0] : booking.provider_profiles) as unknown as { service_title: string | null; users: { name: string | null; email: string } | null } | null
+            const serviceRaw = booking.services as unknown
+            const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
+              title: string | null
+              provider_profiles: { users: { name: string | null; email: string } | null } | { users: { name: string | null; email: string } | null }[] | null
+            } | null
+            const profile = service?.provider_profiles
+              ? Array.isArray(service.provider_profiles)
+                ? service.provider_profiles[0]
+                : service.provider_profiles
+              : null
             const msgCount = countMap[booking.id] ?? 0
 
             return (
@@ -65,7 +74,7 @@ export default async function AdminMessagesPage() {
                     <p className="text-sm font-semibold text-[#222222]">
                       {planner?.name ?? planner?.email ?? 'Okänd planerare'}
                       <span className="font-normal text-[#6A6A6A]"> → </span>
-                      {profile?.users?.name ?? profile?.service_title ?? 'Okänd talang'}
+                      {profile?.users?.name ?? service?.title ?? 'Okänd talang'}
                     </p>
                     <p className="text-xs text-[#6A6A6A] mt-0.5">
                       {planner?.email} · {profile?.users?.email}

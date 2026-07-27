@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  /* FESTEN brand + Airbnb marketplace neutrals (VoltAgent Source 1) */
+  /* FESTEN brand */
   --color-ember: #ff6b35;
   --color-ember-hover: #e55a26;
   --color-canvas: #ffffff;
@@ -17,10 +17,31 @@
   --radius-control: 8px;
   --radius-card: 12px;
   --radius-search: 32px;
-  /* Motion: Source 2 has no tokens — guide inference for toggles/settings */
   --motion-fast: 160ms;
   --ease-warm: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* shadcn semantic tokens → FESTEN / Airbnb neutrals */
+  --background: 0 0% 100%;
+  --foreground: 240 14% 13%; /* #222222 */
+  --card: 0 0% 100%;
+  --card-foreground: 240 14% 13%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 14% 13%;
+  --primary: 16 100% 60%; /* #FF6B35 ember */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 95%; /* #F2F2F2 */
+  --secondary-foreground: 240 14% 13%;
+  --muted: 0 0% 96%; /* #F5F5F5 / soft surface */
+  --muted-foreground: 40 3% 39%; /* #6A6A6A */
+  --accent: 0 0% 95%;
+  --accent-foreground: 240 14% 13%;
+  --destructive: 10 80% 42%; /* #C13515 */
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 87%; /* #DDDDDD */
+  --input: 0 0% 87%;
+  --ring: 16 100% 60%;
+  --radius: 0.5rem; /* 8px — settings / controls */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -31,20 +52,26 @@
 
 @layer base {
   * {
+    border-color: hsl(var(--border));
     box-sizing: border-box;
   }
 
   html {
-    background: var(--color-canvas);
-    color: var(--color-foreground);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   body {
-    background: var(--color-canvas);
-    color: var(--color-foreground);
-    font-family: var(--font-hanken), sans-serif;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-jakarta), sans-serif;
+    /*
+      Plus Jakarta’s x-height is taller than Airbnb Cereal VF.
+      font-size-adjust brings perceived size closer at the same rem.
+    */
+    font-size-adjust: 0.5;
   }
 
   h1,
@@ -58,25 +85,22 @@
 }
 
 @layer components {
-  /* Airbnb-inspired search shell (marketplace only) */
   .search-shell {
-    @apply w-full rounded-[32px] bg-[#ebebeb] text-[#222222] text-sm font-medium;
+    @apply w-full rounded-[32px] bg-surface-soft text-foreground text-sm font-medium;
     height: 66px;
   }
 
-  /* Filled FESTEN CTA */
+  /* Prefer <Button /> — these remain for gradual migration */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl bg-[#FF6B35] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#e55a26] disabled:opacity-40;
+    @apply inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-40;
   }
 
-  /* Neutral ghost / hosting-style action */
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-[20px] px-3 py-2.5 text-sm font-medium text-[#222222] transition-colors hover:bg-[#f2f2f2];
+    @apply inline-flex items-center justify-center rounded-[20px] px-3 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent;
   }
 
-  /* Compact circular icon control */
   .btn-icon {
-    @apply inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#f2f2f2] text-[#222222] transition-colors hover:bg-[#ebebeb] disabled:text-[#c1c1c1];
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-surface-soft disabled:text-disabled;
   }
 }
 
@@ -91,5 +115,17 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Results little-pill → homepage search pill */
+@keyframes festen-search-expand {
+  from {
+    opacity: 0.6;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

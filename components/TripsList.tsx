@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import PayButton from '@/components/PayButton'
+import { Button } from '@/components/ui/button'
 import SettingsButton from '@/components/settings/SettingsButton'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import { formatEventType } from '@/lib/event-types'
 
 export type TripBooking = {
   id: string
@@ -14,11 +16,11 @@ export type TripBooking = {
   event_type: string | null
   price_ore: number | null
   payment_status: string | null
-  provider_profiles: {
+  services: {
     id: string
-    service_title: string | null
-    stripe_onboarded: boolean
+    title: string | null
     photos: string[] | null
+    stripe_onboarded: boolean
     users: { name: string | null } | null
   } | null
 }
@@ -28,14 +30,6 @@ const STATUS_LABEL: Record<string, string> = {
   accepted: 'Bekräftad',
   declined: 'Avböjd',
   completed: 'Avslutad',
-}
-
-const EVENT_TYPE_LABEL: Record<string, string> = {
-  birthday: 'Födelsedag',
-  wedding: 'Bröllop',
-  corporate: 'Företagsevent',
-  kids: 'Barnkalas',
-  other: 'Annat',
 }
 
 type Tab = 'upcoming' | 'past' | 'declined'
@@ -99,23 +93,22 @@ export default function TripsList({ bookings }: { bookings: TripBooking[] }) {
         {tabs.map(item => {
           const active = tab === item.id
           return (
-            <button
+            <Button
               key={item.id}
               type="button"
+              variant="ghost"
               onClick={() => setTab(item.id)}
-              className="relative pb-3 text-[14px] font-medium whitespace-nowrap transition-colors"
+              className="relative h-auto rounded-none px-0 pb-3 text-[14px] font-medium whitespace-nowrap hover:bg-transparent"
               style={{ color: active ? t.colors.ink : t.colors.muted }}
             >
               {item.label}
               {counts[item.id] > 0 && (
-                <span className="ml-1.5 text-[#6a6a6a]">({counts[item.id]})</span>
+                <span className="ml-1.5 text-muted-foreground">({counts[item.id]})</span>
               )}
               {active && (
-                <span
-                  className="absolute left-0 right-0 bottom-0 h-0.5 bg-[#222222]"
-                />
+                <span className="absolute left-0 right-0 bottom-0 h-0.5 bg-foreground" />
               )}
-            </button>
+            </Button>
           )
         })}
       </div>
@@ -152,8 +145,8 @@ export default function TripsList({ bookings }: { bookings: TripBooking[] }) {
 }
 
 function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
-  const profile = booking.provider_profiles
-  const providerName = profile?.users?.name ?? profile?.service_title ?? 'Okänd'
+  const profile = booking.services
+  const providerName = profile?.users?.name ?? profile?.title ?? 'Okänd'
   const photo = profile?.photos?.[0]
   const eventPast = booking.event_date ? new Date(booking.event_date) < today : false
   const canReview =
@@ -190,7 +183,7 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[16px] font-semibold text-[#222222] truncate">
-              {profile?.service_title ?? 'Tjänst'}
+              {profile?.title ?? 'Tjänst'}
             </p>
             <p className="text-[14px] text-[#6a6a6a] truncate">{providerName}</p>
           </div>
@@ -217,7 +210,7 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
             </span>
           )}
           {booking.event_type && (
-            <span>{EVENT_TYPE_LABEL[booking.event_type] ?? booking.event_type}</span>
+            <span>{formatEventType(booking.event_type) ?? booking.event_type}</span>
           )}
           {booking.payment_status === 'paid' && (
             <span style={{ color: t.colors.success }}>Betald ✓</span>
@@ -237,7 +230,7 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
             </Link>
           )}
           {canChat && (
-            <Link href={`/booking/${booking.id}/messages`}>
+            <Link href={`/planner/messages?c=${booking.id}`}>
               <SettingsButton size="sm" variant="secondary">
                 Chatt →
               </SettingsButton>
@@ -255,7 +248,7 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
           )}
           {profile?.id && (
             <Link
-              href={`/providers/${profile.id}`}
+              href={`/tjanster/${profile.id}`}
               className="text-[13px] font-medium text-[#222222] underline underline-offset-2 ml-auto"
             >
               Visa profil

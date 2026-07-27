@@ -1,20 +1,16 @@
 import type { Metadata, Viewport } from 'next'
-import { Plus_Jakarta_Sans, Hanken_Grotesk, JetBrains_Mono } from 'next/font/google'
+import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import PostHogProvider from '@/components/PostHogProvider'
 import CookieBanner from '@/components/CookieBanner'
 import SiteNav from '@/components/SiteNav'
+import AuthHost from '@/components/auth/AuthHost'
+import RememberAccountSync from '@/components/auth/RememberAccountSync'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-jakarta',
-  weight: ['400', '500', '600', '700', '800'],
-})
-
-const hanken = Hanken_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-hanken',
-  weight: ['400', '500', '600'],
+  weight: ['300', '400', '500', '600', '700'],
 })
 
 const jetbrains = JetBrains_Mono({
@@ -73,10 +69,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sv">
-      <body className={`${jakarta.variable} ${hanken.variable} ${jetbrains.variable} font-body antialiased bg-white text-[#222222]`}>
+      <body className={`${jakarta.variable} ${jetbrains.variable} font-sans antialiased bg-white text-[#222222]`}>
         <PostHogProvider>
           <SiteNav />
           {children}
+          <AuthHost />
+          <RememberAccountSync />
           <CookieBanner />
         </PostHogProvider>
       </body>

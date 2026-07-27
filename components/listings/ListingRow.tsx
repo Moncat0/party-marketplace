@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, Children, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useRef, Children, isValidElement, type ReactNode } from 'react'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 type Props = {
   title: string
@@ -18,6 +19,14 @@ type Props = {
  */
 export const HOME_SHELL =
   'mx-auto w-full max-w-[1344px] min-[1920px]:max-w-[1824px] px-4 min-[375px]:px-6 min-[950px]:px-8 min-[1440px]:px-12'
+
+/**
+ * Airbnb Services search results shell — live audit Jul 2026:
+ * --explore_max-width: 1920px
+ * --explore_padding-inline: 24px (32px at larger breakpoints)
+ */
+export const RESULTS_SHELL =
+  'mx-auto w-full max-w-[1920px] px-6 min-[744px]:px-8 min-[1128px]:px-10 min-[1440px]:px-12'
 
 /** Airbnb --peek_* visible card counts by viewport. */
 function columnsForViewport(w: number) {
@@ -77,7 +86,7 @@ export default function ListingRow({ title, href, children }: Props) {
   const showArrows = pageCount > 1
 
   const heading = (
-    <span className="inline-flex items-center gap-1 text-[22px] font-semibold tracking-[-0.44px] text-[#222222]">
+    <span className="inline-flex items-center gap-1 text-[22px] font-semibold tracking-[-0.44px] text-foreground">
       {title}
       {href && (
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="mt-0.5">
@@ -130,7 +139,14 @@ export default function ListingRow({ title, href, children }: Props) {
                 }}
               >
                 {pageItems.map((child, i) => (
-                  <div key={i} className="min-w-0">
+                  <div
+                    key={
+                      isValidElement(child) && child.key != null
+                        ? String(child.key)
+                        : `idx-${i}`
+                    }
+                    className="min-w-0"
+                  >
                     {child}
                   </div>
                 ))}
@@ -153,12 +169,14 @@ function ArrowBtn({
   onClick: () => void
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="icon"
       aria-label={direction === 'prev' ? 'Föregående' : 'Nästa'}
       disabled={disabled}
       onClick={onClick}
-      className="w-8 h-8 flex items-center justify-center rounded-full border border-[#ddd] bg-white text-[#222] hover:scale-105 transition disabled:opacity-30 disabled:hover:scale-100 disabled:cursor-default"
+      className="h-8 w-8 rounded-full border-border bg-background text-foreground shadow-none hover:scale-105 hover:bg-background disabled:opacity-30 disabled:hover:scale-100"
     >
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
         <path
@@ -169,6 +187,6 @@ function ArrowBtn({
           strokeLinejoin="round"
         />
       </svg>
-    </button>
+    </Button>
   )
 }

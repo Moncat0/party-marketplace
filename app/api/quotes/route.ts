@@ -14,15 +14,22 @@ export async function POST(request: NextRequest) {
   // Verify sender is the provider
   const { data: booking } = await supabase
     .from('booking_requests')
-    .select('*, provider_profiles!provider_profile_id(id, user_id)')
+    .select('*, services!service_id(id, provider_profiles(user_id))')
     .eq('id', booking_request_id)
     .single()
 
   if (!booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const profile = (Array.isArray(booking.provider_profiles)
-    ? booking.provider_profiles[0]
-    : booking.provider_profiles) as { id: string; user_id: string } | null
+  const serviceRaw = booking.services as unknown
+  const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
+    id: string
+    provider_profiles: { user_id: string } | { user_id: string }[] | null
+  } | null
+  const profile = service?.provider_profiles
+    ? Array.isArray(service.provider_profiles)
+      ? service.provider_profiles[0]
+      : service.provider_profiles
+    : null
 
   if (profile?.user_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
@@ -33,7 +40,7 @@ export async function POST(request: NextRequest) {
     .from('quotes')
     .insert({
       booking_request_id,
-      provider_profile_id: profile.id,
+      service_id: service!.id,
       price_ore,
       description: description || null,
       duration: duration || null,

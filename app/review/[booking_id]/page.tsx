@@ -9,13 +9,22 @@ export default async function ReviewPage({ params }: { params: { booking_id: str
 
   const { data: booking } = await supabase
     .from('booking_requests')
-    .select('*, users!planner_id(id, name), provider_profiles!provider_profile_id(user_id, service_title, users(name))')
+    .select('*, users!planner_id(id, name), services!service_id(title, provider_profiles(user_id, users(name)))')
     .eq('id', params.booking_id)
     .single()
 
   if (!booking) notFound()
 
-  const profile = booking.provider_profiles as { user_id: string; service_title: string | null; users: { name: string | null } | null } | null
+  const serviceRaw = booking.services as unknown
+  const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
+    title: string | null
+    provider_profiles: { user_id: string; users: { name: string | null } | null } | { user_id: string; users: { name: string | null } | null }[] | null
+  } | null
+  const profile = service?.provider_profiles
+    ? Array.isArray(service.provider_profiles)
+      ? service.provider_profiles[0]
+      : service.provider_profiles
+    : null
   const planner = booking.users as { id: string; name: string | null } | null
 
   const isPlanner = user.id === planner?.id
@@ -34,7 +43,7 @@ export default async function ReviewPage({ params }: { params: { booking_id: str
 
   const revieweeId = isPlanner ? profile!.user_id : planner!.id
   const revieweeName = isPlanner
-    ? (profile?.users?.name ?? profile?.service_title ?? 'Talangen')
+    ? (profile?.users?.name ?? service?.title ?? 'Talangen')
     : (planner?.name ?? 'Arrangören')
 
   return (

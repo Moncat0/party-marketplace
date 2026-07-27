@@ -19,7 +19,9 @@ export async function GET(request: Request) {
 
   const { data: bookings } = await supabase
     .from('booking_requests')
-    .select('*, users!planner_id(id, name, email), provider_profiles!provider_profile_id(user_id, service_title, users(name, email))')
+    .select(
+      '*, users!planner_id(id, name, email, notif_review_reminder), services!service_id(title, provider_profiles(user_id, users(name, email, notif_review_reminder)))'
+    )
     .eq('status', 'accepted')
     .lte('event_date', dateStr)
 
@@ -36,18 +38,46 @@ export async function GET(request: Request) {
 
   let sent = 0
   for (const booking of bookings) {
-    const planner = booking.users as { id: string; name: string | null; email: string } | null
-    const profile = booking.provider_profiles as { user_id: string; service_title: string | null; users: { name: string | null; email: string } | null } | null
-    const providerName = profile?.users?.name ?? profile?.service_title ?? 'Talangen'
+    const planner = booking.users as {
+      id: string
+      name: string | null
+      email: string
+      notif_review_reminder: boolean | null
+    } | null
+    const serviceRaw = booking.services as unknown
+    const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
+      title: string | null
+      provider_profiles: {
+        user_id: string
+        users: {
+          name: string | null
+          email: string
+          notif_review_reminder: boolean | null
+        } | null
+      } | {
+        user_id: string
+        users: {
+          name: string | null
+          email: string
+          notif_review_reminder: boolean | null
+        } | null
+      }[] | null
+    } | null
+    const provider = service?.provider_profiles
+      ? Array.isArray(service.provider_profiles)
+        ? service.provider_profiles[0]
+        : service.provider_profiles
+      : null
+    const providerName = provider?.users?.name ?? service?.title ?? 'Talangen'
     const plannerName = planner?.name ?? 'Arrangören'
 
     try {
-      if (planner?.email) {
+      if (planner?.email && planner.notif_review_reminder !== false) {
         await sendReviewReminder(planner.email, plannerName, providerName, booking.id)
         sent++
       }
-      if (profile?.users?.email) {
-        await sendReviewReminder(profile.users.email, providerName, plannerName, booking.id)
+      if (provider?.users?.email && provider.users.notif_review_reminder !== false) {
+        await sendReviewReminder(provider.users.email, providerName, plannerName, booking.id)
         sent++
       }
     } catch (err) {

@@ -18,7 +18,7 @@ export default async function AdminBookingsPage() {
   const supabase = createAdminClient()
   const { data: bookings } = await supabase
     .from('booking_requests')
-    .select('id, status, event_type, event_date, event_location, guest_count, created_at, users!planner_id(name, email), provider_profiles!provider_profile_id(service_title)')
+    .select('id, status, event_type, event_date, event_location, guest_count, created_at, users!planner_id(name, email), services!service_id(title)')
     .order('created_at', { ascending: false })
 
   return (
@@ -37,7 +37,7 @@ export default async function AdminBookingsPage() {
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-[#222222] truncate">
-                    {b.users?.name ?? 'Okänd'} → {b.provider_profiles?.service_title ?? 'Okänd'}
+                    {b.users?.name ?? 'Okänd'} → {b.services?.title ?? 'Okänd'}
                   </p>
                   <p className="text-xs text-[#6A6A6A] truncate">{b.users?.email ?? '—'}</p>
                 </div>

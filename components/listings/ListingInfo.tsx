@@ -2,37 +2,32 @@
 
 import Image from 'next/image'
 import ListingCategory from './ListingCategory'
+import { formatCategoryFromSlug } from '@/lib/categories'
 
 type Props = {
   hostName: string | null
   hostAvatar: string | null
-  categoryTags: string[]
+  categorySlug: string | null
   description: string | null
   city: string | null
   serviceTitle: string | null
   reviewCount: number
   avgRating: number | null
-  reviews?: {
-    rating: number
-    comment: string | null
-    created_at: string
-    users: { name: string | null; avatar_url: string | null } | null
-  }[]
 }
 
-/** Left column under gallery — Airbnb listing body (no map). */
+/** Left column under gallery — Airbnb listing body (reviews live full-width below). */
 export default function ListingInfo({
   hostName,
   hostAvatar,
-  categoryTags,
+  categorySlug,
   description,
   city,
   serviceTitle,
   reviewCount,
   avgRating,
-  reviews = [],
 }: Props) {
   const initial = (hostName ?? '?').charAt(0).toUpperCase()
+  const categoryLabel = formatCategoryFromSlug(categorySlug)
 
   return (
     <div className="col-span-4 flex flex-col gap-8">
@@ -72,74 +67,21 @@ export default function ListingInfo({
         </div>
       </div>
 
-      {categoryTags.length > 0 && (
+      {categoryLabel && (
         <>
           <div className="flex flex-col gap-6">
-            {categoryTags.slice(0, 3).map(tag => (
-              <ListingCategory key={tag} label={tag} description={`Kategori · ${tag}`} />
-            ))}
+            <ListingCategory label={categoryLabel} description={`Kategori · ${categoryLabel}`} />
           </div>
           <hr className="border-[#ebebeb]" />
         </>
       )}
 
       {description && (
-        <>
-          <div>
-            <h3 className="text-[22px] font-semibold text-[#222222] mb-4">Om tjänsten</h3>
-            <p className="text-[16px] text-[#222222] leading-[1.5] whitespace-pre-line">
-              {description}
-            </p>
-          </div>
-          <hr className="border-[#ebebeb]" />
-        </>
-      )}
-
-      {reviews.length > 0 && (
-        <div className="flex flex-col gap-6">
-          <h3 className="text-[22px] font-semibold text-[#222222]">
-            ★ {avgRating!.toFixed(1)} · {reviewCount}{' '}
-            {reviewCount === 1 ? 'recension' : 'recensioner'}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8">
-            {reviews.slice(0, 6).map((review, i) => (
-              <div key={i} className="space-y-3">
-                <div className="flex items-center gap-3">
-                  {review.users?.avatar_url ? (
-                    <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                      <Image
-                        src={review.users.avatar_url}
-                        alt=""
-                        fill
-                        className="object-cover"
-                        sizes="40px"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f2f2f2] text-sm font-semibold text-[#222222]">
-                      {(review.users?.name ?? '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-[14px] font-semibold text-[#222222]">
-                      {review.users?.name ?? 'Anonym'}
-                    </p>
-                    <p className="text-[14px] text-[#6a6a6a]">
-                      {new Date(review.created_at).toLocaleDateString('sv-SE', {
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                </div>
-                {review.comment && (
-                  <p className="text-[16px] text-[#222222] leading-[1.4] line-clamp-4">
-                    {review.comment}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+        <div>
+          <h3 className="text-[22px] font-semibold text-[#222222] mb-4">Om tjänsten</h3>
+          <p className="text-[16px] text-[#222222] leading-[1.5] whitespace-pre-line">
+            {description}
+          </p>
         </div>
       )}
     </div>

@@ -1,5 +1,7 @@
 /** Airbnb-inspired settings tokens (VoltAgent Source 1) + FESTEN ember as brand primary. */
 
+export { settingsLayout } from './layout'
+
 export const settingsTokens = {
   colors: {
     primary: '#FF6B35', // FESTEN brand (maps to Source 1 primary role)

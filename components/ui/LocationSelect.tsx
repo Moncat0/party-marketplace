@@ -1,6 +1,9 @@
 'use client'
 
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { getActiveLocations, getLocationLabel, LOCATIONS, type Location } from '@/lib/locations'
+import { cn } from '@/lib/utils'
 
 type Props = {
   id?: string
@@ -27,54 +30,56 @@ export default function LocationSelect({
   return (
     <div>
       {label && (
-        <label htmlFor={id} className="block text-[14px] font-medium text-[#222222] mb-2">
+        <label htmlFor={id} className="block text-[14px] font-medium text-foreground mb-2">
           {label}
         </label>
       )}
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         {active.map(loc => {
           const selected = value === loc.id
           return (
-            <button
+            <Button
               key={loc.id}
               type="button"
+              variant="outline"
               id={selected ? id : undefined}
               onClick={() => onChange(loc.id)}
-              className={`w-full flex items-center justify-between px-4 h-14 text-left text-[16px] rounded-xl border transition-colors ${
-                selected
-                  ? 'border-[#222222] bg-[#f7f7f7] font-semibold text-[#222222]'
-                  : 'border-[#dddddd] text-[#222222] hover:border-[#b0b0b0]'
-              }`}
+              className={cn(
+                'h-14 w-full justify-between rounded-xl px-4 text-left text-[16px]',
+                selected && 'border-foreground bg-accent font-semibold'
+              )}
             >
               <span>{loc.label}</span>
               {selected && (
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
                   <path
                     d="M3.5 9.5l3.5 3.5 7.5-8"
-                    stroke="#222"
+                    stroke="currentColor"
                     strokeWidth="1.75"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
                 </svg>
               )}
-            </button>
+            </Button>
           )
         })}
       </div>
       {showComingSoon && comingSoon.length > 0 && (
         <div className="mt-4">
-          <p className="text-[12px] font-semibold text-[#6a6a6a] uppercase tracking-wide mb-2">
+          <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
             Kommer snart
           </p>
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             {comingSoon.map(loc => (
               <div
                 key={loc.id}
-                className="w-full flex items-center justify-between px-4 h-12 text-[15px] rounded-xl border border-[#ebebeb] text-[#b0b0b0] cursor-not-allowed"
+                className="w-full flex items-center justify-between px-4 h-12 text-[15px] rounded-xl border border-border text-muted-foreground/60 cursor-not-allowed"
               >
                 <span>{loc.label}</span>
-                <span className="text-[12px]">Snart</span>
+                <Badge variant="outline" className="text-[12px] font-normal text-muted-foreground/60">
+                  Snart
+                </Badge>
               </div>
             ))}
           </div>

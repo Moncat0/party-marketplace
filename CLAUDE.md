@@ -115,10 +115,11 @@ Success:                 #1D9E75
 ```
 
 ### Typography
-- Display / headlines: Playfair Display (Google Fonts)
-- Body / UI: Inter (Google Fonts)
-- Use Playfair Display only for large hero headlines
-- Use Inter for all UI text, buttons, labels, inputs
+- Display / headlines: Plus Jakarta Sans (Google Fonts)
+- Body / UI: Plus Jakarta Sans (Google Fonts)
+- Mono: JetBrains Mono
+- Use Plus Jakarta Sans for all UI text, buttons, labels, inputs, and headlines
+- Closest free stand-in for Airbnb Cereal VF (soft geometric sans)
 
 ### Design principles
 - Mobile first — design every screen at 390px wide first

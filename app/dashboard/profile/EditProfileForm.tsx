@@ -8,64 +8,55 @@ import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsInput from '@/components/settings/SettingsInput'
 import SettingsButton from '@/components/settings/SettingsButton'
 import LocationSelect from '@/components/ui/LocationSelect'
+import { Button } from '@/components/ui/button'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import {
+  CATEGORIES,
+  categoryTagsFromSlug,
+  resolveCategorySlug,
+  type CategorySlug,
+} from '@/lib/categories'
+import { cn } from '@/lib/utils'
 import {
   DEFAULT_LOCATION_ID,
   getLocationLabel,
   locationIdFromCity,
 } from '@/lib/locations'
 
-type Profile = {
+type Service = {
   id: string
-  service_title: string | null
-  service_description: string | null
-  category_tags: string[]
+  title: string | null
+  description: string | null
+  category_slug?: string | null
+  category_tags: string[] | null
   city: string | null
   location_id?: string | null
   price_range_min: number | null
   price_range_max: number | null
-  photos: string[]
+  photos: string[] | null
 }
 
-const CATEGORY_SUGGESTIONS = [
-  'Sångare', 'DJ', 'Fotograf', 'Makeupartist', 'Kock',
-  'Underhållare', 'Dansare', 'Musiker', 'Trollkarl', 'Ballongkonstnär',
-]
-
-export default function EditProfileForm({ profile, userId }: { profile: Profile; userId: string }) {
+export default function EditProfileForm({ service, userId }: { service: Service; userId: string }) {
   const router = useRouter()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState({
-    service_title: profile.service_title ?? '',
-    service_description: profile.service_description ?? '',
-    category_tags: profile.category_tags ?? [],
-    location_id: profile.location_id ?? locationIdFromCity(profile.city) ?? DEFAULT_LOCATION_ID,
-    price_range_min: profile.price_range_min?.toString() ?? '',
-    price_range_max: profile.price_range_max?.toString() ?? '',
-    photos: profile.photos ?? [],
+    service_title: service.title ?? '',
+    service_description: service.description ?? '',
+    category_slug: resolveCategorySlug({
+      category_slug: service.category_slug,
+      category_tags: service.category_tags,
+    }) as CategorySlug | null,
+    location_id: service.location_id ?? locationIdFromCity(service.city) ?? DEFAULT_LOCATION_ID,
+    price_range_min: service.price_range_min?.toString() ?? '',
+    price_range_max: service.price_range_max?.toString() ?? '',
+    photos: service.photos ?? [],
   })
 
-  const [tagInput, setTagInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  function addTag(tag: string) {
-    const cleaned = tag.trim().replace(/,$/, '')
-    if (!cleaned || form.category_tags.includes(cleaned)) {
-      setTagInput('')
-      return
-    }
-    setForm(prev => ({ ...prev, category_tags: [...prev.category_tags, cleaned] }))
-    setTagInput('')
-  }
-
-  function removeTag(tag: string) {
-    setForm(prev => ({ ...prev, category_tags: prev.category_tags.filter(tg => tg !== tag) }))
-  }
 
   function removePhoto(index: number) {
     setForm(prev => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }))
@@ -100,30 +91,35 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
   }
 
   async function handleSave() {
+    if (!form.category_slug) {
+      setError('Välj en kategori för din tjänst.')
+      return
+    }
     setSaving(true)
     setError(null)
-    setSaved(false)
     const { error: updateError } = await supabase
-      .from('provider_profiles')
+      .from('services')
       .update({
-        service_title: form.service_title || null,
-        service_description: form.service_description || null,
-        category_tags: form.category_tags,
+        title: form.service_title || null,
+        description: form.service_description || null,
+        category_slug: form.category_slug,
+        category_tags: categoryTagsFromSlug(form.category_slug),
         city: getLocationLabel(form.location_id),
         location_id: form.location_id,
         price_range_min: form.price_range_min ? Number(form.price_range_min) : null,
         price_range_max: form.price_range_max ? Number(form.price_range_max) : null,
         photos: form.photos,
       })
-      .eq('id', profile.id)
+      .eq('id', service.id)
 
     if (updateError) {
       setError('Något gick fel. Försök igen.')
-    } else {
-      setSaved(true)
-      setTimeout(() => setSaved(false), 3000)
+      setSaving(false)
+      return
     }
-    setSaving(false)
+
+    router.push('/dashboard/listings')
+    router.refresh()
   }
 
   return (
@@ -131,10 +127,10 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[22px] font-medium leading-[1.18] tracking-[-0.44px] text-[#222222]">
-            Redigera profil
+            Redigera tjänst
           </h1>
           <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mt-1">
-            Det här är vad planerare ser när de besöker din sida
+            Det här är vad planerare ser när de besöker din tjänst
           </p>
         </div>
         <div className="flex gap-3">
@@ -142,7 +138,7 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
             Avbryt
           </SettingsButton>
           <SettingsButton onClick={handleSave} disabled={saving || uploading}>
-            {saving ? 'Sparar...' : saved ? 'Sparat ✓' : 'Spara ändringar'}
+            {saving ? 'Sparar...' : 'Spara ändringar'}
           </SettingsButton>
         </div>
       </div>
@@ -173,7 +169,7 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
             />
           </SettingsSection>
 
-          <SettingsSection title="Om dig">
+          <SettingsSection title="Om tjänsten">
             <textarea
               value={form.service_description}
               onChange={e =>
@@ -182,7 +178,7 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
                   service_description: e.target.value.slice(0, 500),
                 }))
               }
-              placeholder="Beskriv din tjänst, din stil och vad arrangörer kan förvänta sig..."
+              placeholder="Beskriv vad du erbjuder, din stil och vad arrangörer kan förvänta sig..."
               rows={5}
               className="w-full bg-white text-[#222222] text-[16px] leading-[1.5] placeholder:text-[#929292] focus:outline-none resize-none"
               style={{
@@ -205,58 +201,32 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
             </p>
           </SettingsSection>
 
-          <SettingsSection title="Taggar">
-            {form.category_tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {form.category_tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="flex items-center gap-1 px-3 py-1 text-[13px] text-white"
-                    style={{
-                      backgroundColor: t.colors.primary,
-                      borderRadius: t.rounded.full,
-                    }}
+          <SettingsSection title="Kategori" description="Samma kategorier som planerare filtrerar på.">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {CATEGORIES.map(cat => {
+                const active = form.category_slug === cat.slug
+                return (
+                  <button
+                    key={cat.slug}
+                    type="button"
+                    onClick={() =>
+                      setForm(prev => ({
+                        ...prev,
+                        category_slug: cat.slug as CategorySlug,
+                      }))
+                    }
+                    className={cn(
+                      'flex items-center gap-2 rounded-xl border px-3 py-3 text-left text-[14px] font-medium transition-colors',
+                      active
+                        ? 'border-[#222222] bg-[#f7f7f7] text-[#222222]'
+                        : 'border-[#dddddd] text-[#222222] hover:border-[#222222]'
+                    )}
                   >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeTag(tag)}
-                      className="text-white/70 hover:text-white leading-none ml-0.5"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <SettingsInput
-              id="tag_input"
-              label="Lägg till tagg"
-              value={tagInput}
-              onChange={setTagInput}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ',') {
-                  e.preventDefault()
-                  addTag(tagInput)
-                }
-              }}
-              placeholder="Lägg till tagg och tryck Enter..."
-            />
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {CATEGORY_SUGGESTIONS.filter(s => !form.category_tags.includes(s)).map(s => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => addTag(s)}
-                  className="px-3 py-1 text-[12px] text-[#6a6a6a] hover:text-[#FF6B35] transition-colors"
-                  style={{
-                    borderRadius: t.rounded.full,
-                    border: `1px solid ${t.colors.hairline}`,
-                  }}
-                >
-                  + {s}
-                </button>
-              ))}
+                    <span aria-hidden>{cat.emoji}</span>
+                    <span>{cat.chipLabel ?? cat.label}</span>
+                  </button>
+                )
+              })}
             </div>
           </SettingsSection>
 
@@ -317,13 +287,16 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
                         className="object-cover"
                         sizes={i === 0 ? '320px' : '160px'}
                       />
-                      <button
+                      <Button
                         type="button"
+                        size="icon"
+                        variant="dark"
                         onClick={() => removePhoto(i)}
-                        className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 text-xs text-white hover:bg-black/70 flex items-center justify-center"
+                        className="absolute top-1.5 right-1.5 h-6 w-6 rounded-full bg-black/50 hover:bg-black/70"
+                        aria-label="Ta bort foto"
                       >
                         ×
-                      </button>
+                      </Button>
                       {i === 0 && (
                         <span className="absolute bottom-2 left-2 rounded-md bg-black/50 px-2 py-0.5 text-xs text-white">
                           Huvudbild
@@ -344,15 +317,12 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
                     onChange={handlePhotoSelect}
                     className="hidden"
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="w-full py-8 text-[14px] text-[#6a6a6a] hover:text-[#FF6B35] transition-colors disabled:opacity-50 flex flex-col items-center gap-2"
-                    style={{
-                      borderRadius: t.rounded.sm,
-                      border: `2px dashed ${t.colors.hairline}`,
-                    }}
+                    className="h-auto w-full flex-col gap-2 border-dashed py-8 text-[14px] text-muted-foreground hover:text-primary"
                   >
                     <svg
                       width="24"
@@ -369,11 +339,11 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
                       <polyline points="21 15 16 10 5 21" />
                     </svg>
                     {uploading ? 'Laddar upp...' : 'Lägg till foton'}
-                  </button>
+                  </Button>
                 </>
               )}
 
-              <p className="text-[13px] text-[#929292] mt-3 text-center">
+              <p className="mt-3 text-center text-[13px] text-muted-foreground">
                 Första bilden är din profilbild i sökresultaten
               </p>
             </SettingsSection>
@@ -386,7 +356,7 @@ export default function EditProfileForm({ profile, userId }: { profile: Profile;
           Avbryt
         </SettingsButton>
         <SettingsButton onClick={handleSave} disabled={saving || uploading}>
-          {saving ? 'Sparar...' : saved ? 'Sparat ✓' : 'Spara ändringar'}
+          {saving ? 'Sparar...' : 'Spara ändringar'}
         </SettingsButton>
       </div>
     </div>

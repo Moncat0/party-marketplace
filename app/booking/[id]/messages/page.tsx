@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import MessageThread from './MessageThread'
 import GuestAppChrome from '@/components/GuestAppChrome'
+import { fetchMessagesWithReadReceiptPrivacy } from '@/lib/messages-privacy'
 
 export default async function MessagesPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
@@ -13,18 +14,24 @@ export default async function MessagesPage({ params }: { params: { id: string } 
   const { data: booking } = await supabase
     .from('booking_requests')
     .select(
-      '*, event_date, event_location, users!planner_id(id, name), provider_profiles!provider_profile_id(user_id, service_title, users(name))'
+      '*, event_date, event_location, guest_count, event_type, created_at, users!planner_id(id, name), services!service_id(id, title, provider_profiles(user_id, users(name)))'
     )
     .eq('id', params.id)
     .single()
 
   if (!booking) notFound()
 
-  const profile = booking.provider_profiles as {
-    user_id: string
-    service_title: string | null
-    users: { name: string | null } | null
+  const serviceRaw = booking.services as unknown
+  const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
+    id: string
+    title: string | null
+    provider_profiles: { user_id: string; users: { name: string | null } | null } | { user_id: string; users: { name: string | null } | null }[] | null
   } | null
+  const profile = service?.provider_profiles
+    ? Array.isArray(service.provider_profiles)
+      ? service.provider_profiles[0]
+      : service.provider_profiles
+    : null
   const planner = booking.users as { id: string; name: string | null } | null
 
   const isPlanner = user.id === planner?.id
@@ -35,12 +42,6 @@ export default async function MessagesPage({ params }: { params: { id: string } 
     redirect(isPlanner ? '/planner/dashboard' : '/dashboard')
   }
 
-  const { data: messages } = await supabase
-    .from('messages')
-    .select('*, users!sender_id(name), quotes(*)')
-    .eq('booking_request_id', params.id)
-    .order('created_at', { ascending: true })
-
   await supabase
     .from('messages')
     .update({ read_at: new Date().toISOString() })
@@ -48,21 +49,34 @@ export default async function MessagesPage({ params }: { params: { id: string } 
     .is('read_at', null)
     .neq('sender_id', user.id)
 
+  const otherUserId = isPlanner ? profile!.user_id : planner!.id
+  const messages = await fetchMessagesWithReadReceiptPrivacy(
+    supabase,
+    params.id,
+    user.id,
+    otherUserId
+  )
+
   const otherName = isPlanner
-    ? profile?.users?.name ?? profile?.service_title ?? 'Talangen'
+    ? profile?.users?.name ?? service?.title ?? 'Talangen'
     : planner?.name ?? 'Arrangören'
 
   const thread = (
     <MessageThread
       bookingId={params.id}
       currentUserId={user.id}
-      messages={messages ?? []}
+      messages={messages}
       otherName={otherName}
       isPlanner={isPlanner}
       isProvider={isProvider}
       isCompleted={booking.status === 'completed'}
       eventDate={booking.event_date ?? null}
       eventLocation={booking.event_location ?? null}
+      guestCount={booking.guest_count ?? null}
+      eventType={booking.event_type ?? null}
+      inquiryAt={booking.created_at ?? null}
+      serviceId={service?.id ?? null}
+      serviceTitle={service?.title ?? null}
       embedded={isPlanner}
       showBackLink={isPlanner}
     />

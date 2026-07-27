@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import posthog from 'posthog-js'
+import { Button } from '@/components/ui/button'
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false)
@@ -40,32 +41,37 @@ export default function CookieBanner() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-      <div className="mx-auto max-w-sm rounded-2xl bg-[#222222] p-4 shadow-lg relative">
-        <button
+      <div className="mx-auto max-w-sm rounded-2xl bg-foreground p-4 shadow-lg relative">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
           onClick={handleDecline}
           aria-label="Stäng"
-          className="absolute top-3 right-3 text-white/40 hover:text-white/80 transition-colors text-lg leading-none"
+          className="absolute top-2 right-2 h-8 w-8 text-background/40 hover:text-background/80 hover:bg-background/10"
         >
           ✕
-        </button>
-        <p className="text-sm text-white mb-1 font-medium pr-6">Vi använder cookies 🍪</p>
-        <p className="text-xs text-white/60 mb-4 leading-relaxed">
+        </Button>
+        <p className="text-sm text-background mb-1 font-medium pr-6">Vi använder cookies 🍪</p>
+        <p className="text-xs text-background/60 mb-4 leading-relaxed">
           Vi använder analyscookies för att förstå hur du använder FESTEN. och förbättra tjänsten.{' '}
-          <Link href="/privacy" className="text-white/80 underline hover:text-white">Läs mer</Link>
+          <Link href="/privacy" className="text-background/80 underline hover:text-background">
+            Läs mer
+          </Link>
         </p>
         <div className="flex gap-2">
-          <button
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
             onClick={handleDecline}
-            className="flex-1 rounded-xl border border-white/20 py-2 text-xs font-medium text-white/70 hover:bg-white/10 transition-colors"
+            className="flex-1 border-background/20 bg-transparent text-background/70 hover:bg-background/10 hover:text-background"
           >
             Neka
-          </button>
-          <button
-            onClick={handleAccept}
-            className="flex-1 rounded-xl bg-[#FF6B35] py-2 text-xs font-semibold text-white hover:bg-[#e55a26] transition-colors"
-          >
+          </Button>
+          <Button type="button" size="sm" onClick={handleAccept} className="flex-1 rounded-xl">
             Acceptera
-          </button>
+          </Button>
         </div>
       </div>
     </div>

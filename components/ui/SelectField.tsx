@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export type SelectOption = {
   value: string
@@ -44,24 +46,26 @@ export default function SelectField({
 
   return (
     <div ref={rootRef} className="relative">
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => setOpen(o => !o)}
-        className="w-full text-left px-3 py-2.5 pr-9 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#222222]"
+        className="relative h-auto w-full flex-col items-start justify-center gap-0.5 whitespace-normal px-3 py-2.5 pr-9 text-left focus-visible:ring-inset focus-visible:ring-foreground"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
+        <span className="text-[10px] font-bold text-foreground uppercase tracking-wide leading-none">
           {label}
         </span>
         <span
-          className={`block text-[14px] mt-0.5 ${
-            selected ? 'text-[#222222]' : 'text-[#717171]'
-          }`}
+          className={cn(
+            'text-[14px] leading-5 font-normal',
+            selected ? 'text-foreground' : 'text-muted-foreground'
+          )}
         >
           {selected?.label ?? placeholder}
         </span>
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#222222] pointer-events-none">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground pointer-events-none">
           <svg
             width="16"
             height="16"
@@ -79,7 +83,7 @@ export default function SelectField({
             />
           </svg>
         </span>
-      </button>
+      </Button>
 
       {open && (
         <ul
@@ -95,21 +99,20 @@ export default function SelectField({
             const active = opt.value === value
             return (
               <li key={opt.value} role="option" aria-selected={active}>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     onChange(opt.value)
                     setOpen(false)
                   }}
-                  className={[
-                    'w-full text-left px-4 py-3 text-[14px] transition-colors',
-                    active
-                      ? 'bg-[#f7f7f7] font-semibold text-[#222222]'
-                      : 'text-[#222222] hover:bg-[#f7f7f7]',
-                  ].join(' ')}
+                  className={cn(
+                    'h-auto w-full justify-start rounded-none px-4 py-3 text-[14px]',
+                    active && 'bg-accent font-semibold text-foreground'
+                  )}
                 >
                   {opt.label}
-                </button>
+                </Button>
               </li>
             )
           })}

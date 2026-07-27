@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default function Error({ reset }: { reset: () => void }) {
   return (
@@ -12,12 +13,9 @@ export default function Error({ reset }: { reset: () => void }) {
           Ett oväntat fel inträffade. Försök igen eller gå tillbaka till startsidan.
         </p>
         <div className="flex gap-3 justify-center">
-          <button
-            onClick={reset}
-            className="rounded-xl border border-[#DDDDDD] bg-white px-5 py-3 text-sm font-medium text-[#222222] hover:bg-[#F2F2F2] transition-colors"
-          >
+          <Button type="button" variant="outline" onClick={reset} className="rounded-xl">
             Försök igen
-          </button>
+          </Button>
           <Link
             href="/"
             className="rounded-xl bg-[#FF6B35] px-5 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"

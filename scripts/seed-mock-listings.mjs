@@ -287,30 +287,30 @@ async function upsertUsers(rows) {
   if (error) throw new Error(`users upsert: ${error.message}`)
 }
 
-async function ensureReviewsForProvider(profile, planners, target = 10) {
+async function ensureReviewsForService(service, planners, target = 10) {
   const { count, error: cErr } = await sb
     .from('reviews')
     .select('*', { count: 'exact', head: true })
-    .eq('reviewee_id', profile.user_id)
+    .eq('service_id', service.id)
   if (cErr) throw new Error(`review count: ${cErr.message}`)
 
   const needed = Math.max(0, target - (count || 0))
   if (needed === 0) {
-    console.log(`  reviews ok (${count}) — ${profile.service_title}`)
+    console.log(`  reviews ok (${count}) — ${service.title}`)
     return
   }
 
   for (let i = 0; i < needed; i++) {
     const planner = planners[i % planners.length]
-    const eventDate = daysAgo(30 + i * 17 + (profile.id.charCodeAt(0) % 7))
+    const eventDate = daysAgo(30 + i * 17 + (service.id.charCodeAt(0) % 7))
 
     const { data: booking, error: bErr } = await sb
       .from('booking_requests')
       .insert({
         planner_id: planner.id,
-        provider_profile_id: profile.id,
+        service_id: service.id,
         event_date: eventDate,
-        event_location: LOCATIONS[(i + profile.id.length) % LOCATIONS.length],
+        event_location: LOCATIONS[(i + service.id.length) % LOCATIONS.length],
         guest_count: 20 + ((i * 7) % 80),
         event_type: EVENT_TYPES[i % EVENT_TYPES.length],
         description: `Mockbokning för recension (${i + 1})`,
@@ -325,14 +325,15 @@ async function ensureReviewsForProvider(profile, planners, target = 10) {
     const { error: rErr } = await sb.from('reviews').insert({
       booking_request_id: booking.id,
       reviewer_id: planner.id,
-      reviewee_id: profile.user_id,
+      reviewee_id: service.user_id,
+      service_id: service.id,
       rating,
-      comment: REVIEW_COMMENTS[(i + profile.user_id.charCodeAt(0)) % REVIEW_COMMENTS.length],
+      comment: REVIEW_COMMENTS[(i + service.user_id.charCodeAt(0)) % REVIEW_COMMENTS.length],
       created_at: new Date(Date.now() - (i + 3) * 86400000).toISOString(),
     })
     if (rErr) throw new Error(`review insert: ${rErr.message}`)
   }
-  console.log(`  +${needed} reviews — ${profile.service_title}`)
+  console.log(`  +${needed} reviews — ${service.title}`)
 }
 
 async function main() {
@@ -363,82 +364,98 @@ async function main() {
   )
 
   for (const p of NEW_PROVIDERS) {
-    const { data: existing } = await sb
+    const { data: existingProvider } = await sb
       .from('provider_profiles')
       .select('id')
       .eq('user_id', p.id)
       .maybeSingle()
 
-    if (existing) {
-      const { error } = await sb
+    let providerId = existingProvider?.id
+    if (!providerId) {
+      const { data: created, error } = await sb
         .from('provider_profiles')
-        .update({
-          service_title: p.title,
-          service_description: p.description,
-          category_tags: p.tags,
-          city: p.city,
-          price_range_min: p.min,
-          price_range_max: p.max,
-          photos: p.photos,
-          is_published: true,
-        })
-        .eq('id', existing.id)
-      if (error) throw new Error(`profile update ${p.name}: ${error.message}`)
-      console.log(`Updated listing: ${p.title}`)
+        .insert({ user_id: p.id, city: p.city })
+        .select('id')
+        .single()
+      if (error) throw new Error(`provider insert ${p.name}: ${error.message}`)
+      providerId = created.id
+    }
+
+    const { data: existingService } = await sb
+      .from('services')
+      .select('id')
+      .eq('provider_profile_id', providerId)
+      .maybeSingle()
+
+    const servicePayload = {
+      title: p.title,
+      description: p.description,
+      category_tags: p.tags,
+      city: p.city,
+      price_range_min: p.min,
+      price_range_max: p.max,
+      photos: p.photos,
+      is_published: true,
+    }
+
+    if (existingService) {
+      const { error } = await sb.from('services').update(servicePayload).eq('id', existingService.id)
+      if (error) throw new Error(`service update ${p.name}: ${error.message}`)
+      console.log(`Updated service: ${p.title}`)
     } else {
-      const { error } = await sb.from('provider_profiles').insert({
-        user_id: p.id,
-        service_title: p.title,
-        service_description: p.description,
-        category_tags: p.tags,
-        city: p.city,
-        price_range_min: p.min,
-        price_range_max: p.max,
-        photos: p.photos,
-        is_published: true,
-        profile_views: 40 + Math.floor(Math.random() * 200),
+      const { error } = await sb.from('services').insert({
+        provider_profile_id: providerId,
+        ...servicePayload,
+        view_count: 40 + Math.floor(Math.random() * 200),
       })
-      if (error) throw new Error(`profile insert ${p.name}: ${error.message}`)
-      console.log(`Created listing: ${p.title}`)
+      if (error) throw new Error(`service insert ${p.name}: ${error.message}`)
+      console.log(`Created service: ${p.title}`)
     }
   }
 
-  // 3) Enrich photos on existing published listings
+  // 3) Enrich photos on existing published services
   const { data: published, error: pErr } = await sb
-    .from('provider_profiles')
-    .select('id, user_id, service_title, category_tags, photos, is_published')
+    .from('services')
+    .select('id, provider_profile_id, title, category_tags, photos, is_published, provider_profiles(user_id)')
     .eq('is_published', true)
   if (pErr) throw new Error(pErr.message)
 
-  for (const profile of published) {
-    const merged = mergePhotos(profile.photos, photoSetForTags(profile.category_tags), 5)
-    if (merged.length !== (profile.photos || []).length || merged.some((u, i) => u !== profile.photos?.[i])) {
-      const { error } = await sb.from('provider_profiles').update({ photos: merged }).eq('id', profile.id)
+  for (const service of published) {
+    const merged = mergePhotos(service.photos, photoSetForTags(service.category_tags), 5)
+    if (merged.length !== (service.photos || []).length || merged.some((u, i) => u !== service.photos?.[i])) {
+      const { error } = await sb.from('services').update({ photos: merged }).eq('id', service.id)
       if (error) throw new Error(`photos update: ${error.message}`)
-      console.log(`Photos → ${merged.length}: ${profile.service_title}`)
+      console.log(`Photos → ${merged.length}: ${service.title}`)
     }
   }
 
-  // 4) ~10 reviews per published provider
+  // 4) ~10 reviews per published service
   const planners = plannerRows.map(p => ({ id: p.id }))
   const { data: allPublished, error: aErr } = await sb
-    .from('provider_profiles')
-    .select('id, user_id, service_title')
+    .from('services')
+    .select('id, title, provider_profiles(user_id)')
     .eq('is_published', true)
   if (aErr) throw new Error(aErr.message)
 
-  for (const profile of allPublished) {
-    await ensureReviewsForProvider(profile, planners, 10)
+  for (const service of allPublished) {
+    const provider = Array.isArray(service.provider_profiles)
+      ? service.provider_profiles[0]
+      : service.provider_profiles
+    await ensureReviewsForService(
+      { id: service.id, title: service.title, user_id: provider?.user_id },
+      planners,
+      10
+    )
   }
 
   // Summary
   const { count: listingCount } = await sb
-    .from('provider_profiles')
+    .from('services')
     .select('*', { count: 'exact', head: true })
     .eq('is_published', true)
   const { count: reviewCount } = await sb.from('reviews').select('*', { count: 'exact', head: true })
   console.log('\nDone.')
-  console.log(`Published listings: ${listingCount}`)
+  console.log(`Published services: ${listingCount}`)
   console.log(`Total reviews: ${reviewCount}`)
 }
 
