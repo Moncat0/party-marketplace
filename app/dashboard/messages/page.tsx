@@ -37,20 +37,20 @@ export default async function ProviderMessagesPage({
   const serviceById = new Map(result.services.map(s => [s.id, s]))
 
   const activeId = searchParams.c ?? null
-  if (activeId) {
-    await markThreadRead(supabase, activeId, user.id)
-  }
 
-  const { data: bookings } = serviceIds.length
-    ? await supabase
-        .from('booking_requests')
-        .select(
-          'id, event_date, event_type, occasions, status, event_location, guest_count, description, planner_id, created_at, service_id, users!planner_id(name, avatar_url)'
-        )
-        .in('service_id', serviceIds)
-        .in('status', ['accepted', 'completed'])
-        .order('created_at', { ascending: false })
-    : { data: [] }
+  const [{ data: bookings }] = await Promise.all([
+    serviceIds.length
+      ? supabase
+          .from('booking_requests')
+          .select(
+            'id, event_date, event_type, occasions, status, event_location, guest_count, description, planner_id, created_at, service_id, users!planner_id(name, avatar_url)'
+          )
+          .in('service_id', serviceIds)
+          .in('status', ['accepted', 'completed'])
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: [] as never[] }),
+    activeId ? markThreadRead(supabase, activeId, user.id) : Promise.resolve(),
+  ])
 
   const bookingIds = (bookings ?? []).map(b => b.id)
   const metaByBooking = await loadInboxMessageMeta(supabase, bookingIds, user.id)

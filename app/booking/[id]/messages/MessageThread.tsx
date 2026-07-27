@@ -145,46 +145,73 @@ export default function MessageThread({
     }
   }, [currentUserId])
 
-  async function refreshMessages(opts?: { markRead?: boolean }) {
+  async function refreshMessages(opts?: { markRead?: boolean; refreshInbox?: boolean }) {
     const qs = new URLSearchParams({ booking_request_id: bookingId })
     if (opts?.markRead) qs.set('mark_read', '1')
     const res = await fetch(`/api/messages?${qs.toString()}`)
     if (!res.ok) return
     const data = await res.json()
-    setMessages(data.messages)
-    if (opts?.markRead && !refreshInboxRef.current) {
+    const next = data.messages as Message[]
+    setMessages(prev => {
+      // Skip state thrash when nothing changed
+      if (
+        prev.length === next.length &&
+        prev[prev.length - 1]?.id === next[next.length - 1]?.id &&
+        prev[prev.length - 1]?.read_at === next[next.length - 1]?.read_at
+      ) {
+        return prev
+      }
+      return next
+    })
+    if (opts?.refreshInbox && !refreshInboxRef.current) {
       refreshInboxRef.current = true
       router.refresh()
-      // Allow another refresh later if more messages arrive while open
       window.setTimeout(() => {
         refreshInboxRef.current = false
-      }, 2000)
+      }, 2500)
     }
   }
 
-  // Realtime + slow polling fallback
+  // Realtime for new messages; SSR already loaded the thread — don't refetch on mount.
   useEffect(() => {
-    void refreshMessages({ markRead: true })
-
     const channel = supabase
       .channel(`messages:${bookingId}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `booking_request_id=eq.${bookingId}`,
+        },
+        payload => {
+          const row = payload.new as { sender_id?: string } | undefined
+          const fromOther = row?.sender_id && row.sender_id !== currentUserId
+          void refreshMessages({
+            markRead: !!fromOther,
+            refreshInbox: true,
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
           schema: 'public',
           table: 'messages',
           filter: `booking_request_id=eq.${bookingId}`,
         },
         () => {
-          void refreshMessages({ markRead: true })
+          // read receipts — soft refresh, no full inbox SSR
+          void refreshMessages({ markRead: false, refreshInbox: false })
         }
       )
       .subscribe()
 
+    // Fallback if Realtime drops — no mark_read / no inbox SSR unless content changed
     const interval = window.setInterval(() => {
-      void refreshMessages({ markRead: true })
-    }, 30000)
+      void refreshMessages({ markRead: false, refreshInbox: false })
+    }, 45000)
 
     return () => {
       window.clearInterval(interval)

@@ -29,23 +29,23 @@ export default async function PlannerMessagesPage({
   if (!user) redirect('/signup')
 
   const activeId = searchParams.c ?? null
-  if (activeId) {
-    await markThreadRead(supabase, activeId, user.id)
-  }
 
-  const { data: bookings } = await supabase
-    .from('booking_requests')
-    .select(
-      `id, event_date, event_type, occasions, status, event_location, guest_count, description,
-       price_ore, payment_status, created_at,
-       services!service_id(
-         id, title, photos,
-         provider_profiles(user_id, stripe_onboarded, users(name))
-       )`
-    )
-    .eq('planner_id', user.id)
-    .in('status', ['accepted', 'completed'])
-    .order('created_at', { ascending: false })
+  const [{ data: bookings }] = await Promise.all([
+    supabase
+      .from('booking_requests')
+      .select(
+        `id, event_date, event_type, occasions, status, event_location, guest_count, description,
+         price_ore, payment_status, created_at,
+         services!service_id(
+           id, title, photos,
+           provider_profiles(user_id, stripe_onboarded, users(name))
+         )`
+      )
+      .eq('planner_id', user.id)
+      .in('status', ['accepted', 'completed'])
+      .order('created_at', { ascending: false }),
+    activeId ? markThreadRead(supabase, activeId, user.id) : Promise.resolve(),
+  ])
 
   const bookingIds = (bookings ?? []).map(b => b.id)
   const metaByBooking = await loadInboxMessageMeta(supabase, bookingIds, user.id)
