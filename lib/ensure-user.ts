@@ -9,7 +9,7 @@ type EnsureUserOptions = {
 
 type AppUserType = 'planner' | 'provider' | 'both'
 
-/** Intent stored on auth.users metadata so email-confirm survives cookie expiry. */
+/** Intent stored on auth.users metadata so magic-link / OAuth survives cookie expiry. */
 export const AUTH_INTENT_METADATA_KEY = 'festen_intent'
 
 export function intentFromUserMetadata(user: User | null | undefined): AuthIntent | null {

@@ -7,7 +7,13 @@ import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsInput from '@/components/settings/SettingsInput'
 import SettingsButton from '@/components/settings/SettingsButton'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import { AUTH_INTENT_METADATA_KEY } from '@/lib/ensure-user'
+import { rememberAccount } from '@/lib/remembered-accounts'
 
+/**
+ * Legacy route — password auth is replaced by magic links.
+ * Keeps the URL working and sends a passwordless sign-in link instead.
+ */
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,18 +26,25 @@ export default function ForgotPasswordPage() {
     setLoading(true)
     setError(null)
 
+    const normalized = email.trim().toLowerCase()
     const redirectTo =
       typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback?next=/reset-password`
-        : '/auth/callback?next=/reset-password'
+        ? `${window.location.origin}/auth/callback?next=/planner/dashboard&intent=planner`
+        : '/auth/callback?next=/planner/dashboard&intent=planner'
 
-    const { error } = await createClient().auth.resetPasswordForEmail(email.trim(), {
-      redirectTo,
+    const { error: otpError } = await createClient().auth.signInWithOtp({
+      email: normalized,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: redirectTo,
+        data: { [AUTH_INTENT_METADATA_KEY]: 'planner' },
+      },
     })
 
-    if (error) {
+    if (otpError) {
       setError('Något gick fel. Kontrollera att e-postadressen stämmer och försök igen.')
     } else {
+      rememberAccount({ email: normalized })
       setDone(true)
     }
     setLoading(false)
@@ -44,15 +57,15 @@ export default function ForgotPasswordPage() {
           <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
             FESTEN.
           </Link>
-          <p className="mt-2 text-[14px] leading-[1.43] text-[#6a6a6a]">Återställ ditt lösenord</p>
+          <p className="mt-2 text-[14px] leading-[1.43] text-[#6a6a6a]">Logga in med e-postlänk</p>
         </div>
 
         {done ? (
           <SettingsSection title="Kolla din inkorg!">
             <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mb-6">
-              Vi har skickat en återställningslänk till{' '}
-              <span className="font-medium text-[#222222]">{email}</span>. Länken är giltig i 60
-              minuter.
+              Vi har skickat en inloggningslänk till{' '}
+              <span className="font-medium text-[#222222]">{email}</span>. Öppna länken för att
+              logga in — inget lösenord behövs.
             </p>
             <Link
               href="/signup?intent=planner"
@@ -63,9 +76,10 @@ export default function ForgotPasswordPage() {
           </SettingsSection>
         ) : (
           <>
-            <SettingsSection title="Skicka återställningslänk">
+            <SettingsSection title="Skicka inloggningslänk">
               <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mb-5">
-                Ange din e-postadress så skickar vi en länk för att återställa ditt lösenord.
+                FESTEN. använder inloggningslänkar istället för lösenord. Ange din e-post så skickar
+                vi en länk.
               </p>
               {error && (
                 <div
@@ -95,15 +109,14 @@ export default function ForgotPasswordPage() {
                   className="w-full"
                   disabled={!email.trim() || loading}
                 >
-                  {loading ? 'Skickar...' : 'Skicka återställningslänk'}
+                  {loading ? 'Skickar...' : 'Skicka inloggningslänk'}
                 </SettingsButton>
               </form>
             </SettingsSection>
 
             <p className="mt-6 text-center text-[14px] text-[#6a6a6a]">
-              Kom du ihåg lösenordet?{' '}
               <Link href="/signup?intent=planner" className="font-medium text-[#FF6B35] hover:underline">
-                Logga in
+                Tillbaka till inloggning
               </Link>
             </p>
           </>

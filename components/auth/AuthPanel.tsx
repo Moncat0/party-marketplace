@@ -1,17 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import {
   parseAuthIntent,
-  resolvePostAuthDestination,
   setIntentCookie,
-  clearIntentCookie,
   type AuthIntent,
 } from '@/lib/auth-intent'
-import { ensureAppUser, AUTH_INTENT_METADATA_KEY } from '@/lib/ensure-user'
-import { needsDisplayName } from '@/lib/profile-completeness'
+import { AUTH_INTENT_METADATA_KEY } from '@/lib/ensure-user'
 import {
   formatLastLogin,
   getRememberedAccounts,
@@ -22,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-export type AuthView = 'welcome' | 'fresh' | 'password'
+export type AuthView = 'welcome' | 'fresh' | 'check-email'
 
 type Props = {
   intent?: AuthIntent | null
@@ -56,10 +52,10 @@ export default function AuthPanel({
   const [accounts, setAccounts] = useState<RememberedAccount[]>([])
   const [hydrated, setHydrated] = useState(false)
   const [view, setView] = useState<AuthView>(initialView ?? 'fresh')
-  const [passwordReturnView, setPasswordReturnView] = useState<AuthView>('fresh')
-  const [mode, setMode] = useState<'login' | 'signup'>('login')
+  const [mode, setMode] = useState<'login' | 'signup'>(() =>
+    defaultIntent === 'provider' ? 'signup' : 'login'
+  )
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -73,7 +69,6 @@ export default function AuthPanel({
     setHydrated(true)
   }, [initialView])
 
-  // Re-read when returning to welcome (e.g. after signup message then reopening)
   useEffect(() => {
     if (view === 'welcome') {
       setAccounts(getRememberedAccounts())
@@ -86,43 +81,6 @@ export default function AuthPanel({
 
   function effectiveIntent(): AuthIntent {
     return intentParam ?? defaultIntent
-  }
-
-  function destinationAfterAuth(opts?: {
-    hasProviderProfile?: boolean
-    isPublished?: boolean | null
-    missingDisplayName?: boolean
-  }): string {
-    return resolvePostAuthDestination({
-      intent: effectiveIntent(),
-      next,
-      hasProviderProfile: !!opts?.hasProviderProfile,
-      isPublished: !!opts?.isPublished,
-      needsDisplayName: !!opts?.missingDisplayName,
-    })
-  }
-
-  async function finishAuth(userId: string) {
-    const supabase = createClient()
-    const [{ data: profile }, { data: appUser }] = await Promise.all([
-      supabase
-        .from('provider_profiles')
-        .select('id, services(is_published)')
-        .eq('user_id', userId)
-        .maybeSingle(),
-      supabase.from('users').select('name, first_name').eq('id', userId).maybeSingle(),
-    ])
-    const service = profile
-      ? Array.isArray(profile.services)
-        ? profile.services[0]
-        : profile.services
-      : null
-    clearIntentCookie()
-    window.location.href = destinationAfterAuth({
-      hasProviderProfile: !!profile,
-      isPublished: !!service?.is_published,
-      missingDisplayName: needsDisplayName(appUser),
-    })
   }
 
   function callbackUrl() {
@@ -158,127 +116,60 @@ export default function AuthPanel({
     }
   }
 
-  function goToPassword(
-    prefillEmail?: string,
-    from: AuthView = 'fresh',
-    preferredMode?: 'login' | 'signup'
+  async function sendMagicLink(
+    targetEmail: string,
+    preferredMode: 'login' | 'signup' = mode
   ) {
+    setLoading(true)
     resetMessages()
-    if (prefillEmail) setEmail(prefillEmail)
-    setPassword('')
-    // Remembered account → log in. New email ("Inte du?" / Fortsätt) → sign up,
-    // so first-time providers aren't stuck on a failing login.
-    setMode(preferredMode ?? (from === 'welcome' ? 'login' : 'signup'))
-    setPasswordReturnView(from)
-    setView('password')
+    const normalized = targetEmail.trim().toLowerCase()
+    if (!isValidEmail(normalized)) {
+      setError('Ange en giltig e-postadress.')
+      setLoading(false)
+      return
+    }
+
+    const intent = effectiveIntent()
+    setIntentCookie(intent)
+    setEmail(normalized)
+    setMode(preferredMode)
+
+    const { error: otpError } = await createClient().auth.signInWithOtp({
+      email: normalized,
+      options: {
+        shouldCreateUser: preferredMode === 'signup',
+        emailRedirectTo: callbackUrl(),
+        data: { [AUTH_INTENT_METADATA_KEY]: intent },
+      },
+    })
+
+    if (otpError) {
+      const msg = otpError.message?.toLowerCase() ?? ''
+      if (msg.includes('signups not allowed') || msg.includes('user not found')) {
+        setError('Inget konto med den e-postadressen. Välj Skapa konto istället.')
+      } else if (msg.includes('rate') || msg.includes('security')) {
+        setError('För många försök. Vänta en stund och försök igen.')
+      } else {
+        setError('Kunde inte skicka inloggningslänken. Kontrollera e-postadressen och försök igen.')
+      }
+      setLoading(false)
+      return
+    }
+
+    rememberAccount({ email: normalized })
+    setView('check-email')
+    setMessage(null)
+    setLoading(false)
   }
 
   function handleContinue(e: React.FormEvent) {
     e.preventDefault()
-    resetMessages()
-    const value = email.trim()
-    if (!isValidEmail(value)) {
-      setError('Ange en giltig e-postadress.')
-      return
-    }
-    const normalized = value.toLowerCase()
-    setEmail(normalized)
-    const isRemembered = accounts.some(a => a.email.toLowerCase() === normalized)
-    goToPassword(normalized, 'fresh', isRemembered ? 'login' : 'signup')
+    void sendMagicLink(email, mode)
   }
 
-  async function handlePasswordAuth(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+  function switchAuthMode(nextMode: 'login' | 'signup') {
+    setMode(nextMode)
     resetMessages()
-    const supabase = createClient()
-    const intent = effectiveIntent()
-    setIntentCookie(intent)
-    const normalizedEmail = email.trim().toLowerCase()
-
-    if (mode === 'signup') {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: normalizedEmail,
-        password,
-        options: {
-          emailRedirectTo: callbackUrl(),
-          // Survives email confirmation even if the intent cookie expires
-          data: { [AUTH_INTENT_METADATA_KEY]: intent },
-        },
-      })
-      if (signUpError) {
-        setError('Det gick inte att skapa kontot. Kontrollera din e-post och ditt lösenord.')
-        setLoading(false)
-        return
-      }
-
-      // Always remember the email so Welcome back shows this account next time
-      const signedUser = signUpData.user
-      rememberAccount({
-        email: signedUser?.email ?? normalizedEmail,
-        name: signedUser?.user_metadata?.full_name ?? signedUser?.user_metadata?.name ?? null,
-        avatarUrl: signedUser?.user_metadata?.avatar_url ?? null,
-      })
-
-      // Session present = email confirm disabled / auto-login
-      if (signUpData.session && signedUser) {
-        await ensureAppUser(supabase, signedUser, { intent })
-        await finishAuth(signedUser.id)
-        return
-      }
-
-      // Fallback: session may already exist even if signUpData.session is null
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        await ensureAppUser(supabase, user, { intent })
-        rememberAccount({
-          email: user.email ?? normalizedEmail,
-          name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-          avatarUrl: user.user_metadata?.avatar_url ?? null,
-        })
-        await finishAuth(user.id)
-        return
-      }
-
-      // Keep intent cookie for when they confirm / log in later
-      setIntentCookie(intent)
-      setMessage('Vi har skickat en bekräftelse till din e-post. Kolla inkorgen!')
-      setLoading(false)
-      return
-    }
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password,
-    })
-    if (signInError) {
-      setError(
-        'Fel e-post eller lösenord. Om du är ny på FESTEN., välj Registrera dig nedan.'
-      )
-      setLoading(false)
-      return
-    }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (user) {
-      await ensureAppUser(supabase, user, { intent })
-      rememberAccount({
-        email: user.email ?? normalizedEmail,
-        name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
-        avatarUrl: user.user_metadata?.avatar_url ?? null,
-      })
-      await finishAuth(user.id)
-      return
-    }
-
-    // Session established but getUser raced — still remember the email used
-    rememberAccount({ email: normalizedEmail })
-    clearIntentCookie()
-    window.location.href = destinationAfterAuth({ missingDisplayName: true })
   }
 
   const intentHint = intentParam === 'provider' ? 'Du är på väg att erbjuda en tjänst' : null
@@ -342,7 +233,7 @@ export default function AuthPanel({
             Välkommen tillbaka
           </h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-            Välj ett konto att logga in med. Vi kan skicka en kod via e-post.
+            Välj ett konto — vi skickar en inloggningslänk till din e-post.
           </p>
 
           <ul className="mt-6 divide-y divide-border/60">
@@ -350,8 +241,9 @@ export default function AuthPanel({
               <li key={account.email}>
                 <button
                   type="button"
-                  onClick={() => goToPassword(account.email, 'welcome')}
-                  className="flex w-full items-center gap-3 py-4 text-left transition-colors hover:bg-accent/50 -mx-2 px-2 rounded-xl"
+                  disabled={loading}
+                  onClick={() => void sendMagicLink(account.email, 'login')}
+                  className="flex w-full items-center gap-3 py-4 text-left transition-colors hover:bg-accent/50 -mx-2 px-2 rounded-xl disabled:opacity-50"
                 >
                   <AccountAvatar account={account} />
                   <span className="min-w-0 flex-1">
@@ -373,7 +265,6 @@ export default function AuthPanel({
               type="button"
               onClick={() => {
                 setEmail('')
-                setPassword('')
                 setMode('signup')
                 resetMessages()
                 setView('fresh')
@@ -391,18 +282,14 @@ export default function AuthPanel({
           <div className="mb-6 text-center">
             <p className="text-[28px] font-bold tracking-tight text-primary">FESTEN.</p>
             <h2 className="mt-3 text-[26px] font-semibold tracking-tight text-foreground">
-              {effectiveIntent() === 'provider'
-                ? 'Skapa konto eller logga in'
-                : 'Logga in eller skapa konto'}
+              {mode === 'signup' ? 'Skapa konto' : 'Logga in'}
             </h2>
-            {intentHint && (
+            {intentHint && mode === 'signup' ? (
               <p className="mt-2 text-[13px] text-muted-foreground">{intentHint}</p>
-            )}
-            {effectiveIntent() === 'provider' && (
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                Nytt konto? Ange din e-post så hjälper vi dig komma igång.
-              </p>
-            )}
+            ) : null}
+            <p className="mt-2 text-[14px] text-muted-foreground">
+              Vi skickar en länk till din e-post — inget lösenord behövs.
+            </p>
           </div>
 
           <form onSubmit={handleContinue} className="flex flex-col gap-4">
@@ -424,9 +311,20 @@ export default function AuthPanel({
               disabled={loading}
               className="h-12 w-full rounded-xl text-[16px] font-semibold"
             >
-              Fortsätt
+              {loading ? 'Skickar…' : 'Skicka inloggningslänk'}
             </Button>
           </form>
+
+          <p className="mt-4 text-center text-[14px] text-muted-foreground">
+            {mode === 'signup' ? 'Har du redan ett konto?' : 'Ny på FESTEN.?'}{' '}
+            <button
+              type="button"
+              onClick={() => switchAuthMode(mode === 'signup' ? 'login' : 'signup')}
+              className="font-medium text-foreground underline-offset-2 hover:underline"
+            >
+              {mode === 'signup' ? 'Logga in' : 'Skapa konto'}
+            </button>
+          </p>
 
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
@@ -438,76 +336,40 @@ export default function AuthPanel({
         </div>
       )}
 
-      {view === 'password' && (
-        <div className="pt-1">
+      {view === 'check-email' && (
+        <div className="pt-1 text-center">
+          <p className="text-[28px] font-bold tracking-tight text-primary">FESTEN.</p>
+          <h2 className="mt-3 text-[26px] font-semibold tracking-tight text-foreground">
+            Kolla din e-post
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            Vi har skickat en inloggningslänk till{' '}
+            <span className="font-medium text-foreground">{email}</span>.
+            Öppna länken för att fortsätta.
+          </p>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            Ser du inget? Kolla skräppost — länken gäller en begränsad tid.
+          </p>
+
+          <Button
+            type="button"
+            disabled={loading}
+            onClick={() => void sendMagicLink(email, mode)}
+            className="mt-8 h-12 w-full rounded-xl text-[16px] font-semibold"
+          >
+            {loading ? 'Skickar…' : 'Skicka länken igen'}
+          </Button>
+
           <button
             type="button"
             onClick={() => {
               resetMessages()
-              setPassword('')
-              setView(passwordReturnView)
+              setView('fresh')
             }}
-            className="mb-4 text-[14px] font-medium text-foreground/70 hover:text-foreground"
+            className="mt-4 text-[14px] font-medium text-foreground/70 hover:text-foreground"
           >
-            ← Tillbaka
+            ← Byt e-postadress
           </button>
-
-          <h2 className="text-[26px] font-semibold tracking-tight text-foreground">
-            {mode === 'signup' ? 'Skapa konto' : 'Logga in'}
-          </h2>
-          <p className="mt-2 text-[15px] text-muted-foreground">{email}</p>
-          {mode === 'signup' && intentHint ? (
-            <p className="mt-1 text-[13px] text-muted-foreground">{intentHint}</p>
-          ) : null}
-
-          <form onSubmit={handlePasswordAuth} className="mt-6 flex flex-col gap-4">
-            <div>
-              <div className="mb-1.5 flex items-center justify-between">
-                <label htmlFor="auth-password" className="text-[14px] font-medium text-foreground">
-                  Lösenord
-                </label>
-                {mode === 'login' && (
-                  <Link href="/forgot-password" className="text-[13px] text-primary hover:underline">
-                    Glömt lösenordet?
-                  </Link>
-                )}
-              </div>
-              <input
-                id="auth-password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Minst 8 tecken"
-                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                required
-                minLength={8}
-                className="h-14 w-full rounded-xl border border-border bg-background px-4 text-[16px] text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="h-12 w-full rounded-xl text-[16px] font-semibold"
-            >
-              {loading ? 'Laddar...' : mode === 'signup' ? 'Skapa konto' : 'Logga in'}
-            </Button>
-          </form>
-
-          <p className="mt-6 text-center text-[14px] text-muted-foreground">
-            {mode === 'signup' ? 'Har du redan ett konto?' : 'Har du inget konto?'}{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setMode(mode === 'login' ? 'signup' : 'login')
-                setPassword('')
-                resetMessages()
-              }}
-              className="font-medium text-foreground underline-offset-2 hover:underline"
-            >
-              {mode === 'signup' ? 'Logga in' : 'Registrera dig'}
-            </button>
-          </p>
 
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />

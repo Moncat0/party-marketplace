@@ -19,10 +19,12 @@ function safeNext(raw: string | null): string | null {
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
+  const tokenHash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
   const nextParam = safeNext(searchParams.get('next'))
   const intentFromQuery = parseAuthIntent(searchParams.get('intent'))
 
-  if (code) {
+  if (code || (tokenHash && type)) {
     const cookieStore = await cookies()
     const intentFromCookie = parseAuthIntent(cookieStore.get(INTENT_COOKIE)?.value)
     let intent: AuthIntent | null = intentFromQuery ?? intentFromCookie
@@ -44,9 +46,15 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error } = code
+      ? await supabase.auth.exchangeCodeForSession(code)
+      : await supabase.auth.verifyOtp({
+          token_hash: tokenHash!,
+          type: type as 'email' | 'magiclink' | 'signup' | 'invite' | 'recovery' | 'email_change',
+        })
+
     if (error) {
-      console.error('[auth/callback] exchangeCodeForSession failed:', error.message, error)
+      console.error('[auth/callback] session exchange failed:', error.message, error)
       return NextResponse.redirect(`${origin}/signup?error=auth`)
     }
 

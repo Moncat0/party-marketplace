@@ -28,9 +28,11 @@ export default function AuthModal({ open, onOpenChange, intent = null, next = nu
           root?.querySelector<HTMLElement>('input, button')?.focus()
         }}
       >
-        <DialogTitle className="sr-only">Logga in eller skapa konto</DialogTitle>
+        <DialogTitle className="sr-only">
+          {intent === 'provider' ? 'Skapa konto' : 'Logga in'}
+        </DialogTitle>
         <DialogDescription className="sr-only">
-          Välj ett sparat konto eller logga in med e-post och sociala konton.
+          Ange e-post för en inloggningslänk, eller fortsätt med Google eller Apple.
         </DialogDescription>
         <AuthPanel
           key={`${intent ?? ''}-${next ?? ''}-${open}`}
