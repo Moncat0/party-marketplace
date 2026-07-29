@@ -23,6 +23,17 @@ export const SERVICE_WIZARD_STEPS = [
 
 export type ServiceWizardStep = (typeof SERVICE_WIZARD_STEPS)[number]
 
+/** Account steps prepended for first-time provider publish. */
+export const ACCOUNT_WIZARD_STEPS = ['name', 'bio'] as const
+export type AccountWizardStep = (typeof ACCOUNT_WIZARD_STEPS)[number]
+
+export type FirstPublishStep = AccountWizardStep | ServiceWizardStep
+
+export const FIRST_PUBLISH_STEPS: FirstPublishStep[] = [
+  ...ACCOUNT_WIZARD_STEPS,
+  ...SERVICE_WIZARD_STEPS,
+]
+
 export type ServiceWizardDraft = {
   title: string
   categorySlug: CategorySlug | null
@@ -32,6 +43,12 @@ export type ServiceWizardDraft = {
   photos: string[]
   priceMin: string
   priceMax: string
+}
+
+export type AccountWizardDraft = {
+  firstName: string
+  lastName: string
+  bio: string
 }
 
 export const EMPTY_WIZARD_DRAFT: ServiceWizardDraft = {
@@ -45,8 +62,22 @@ export const EMPTY_WIZARD_DRAFT: ServiceWizardDraft = {
   priceMax: '',
 }
 
-/** Three Airbnb-style phases for the footer progress bar. */
+export const EMPTY_ACCOUNT_DRAFT: AccountWizardDraft = {
+  firstName: '',
+  lastName: '',
+  bio: '',
+}
+
+/** Three Airbnb-style phases for returning providers (new listing). */
 export const WIZARD_PHASES: ServiceWizardStep[][] = [
+  ['intro1', 'title', 'category', 'occasions', 'location'],
+  ['intro2', 'description', 'photos'],
+  ['intro3', 'price', 'publish'],
+]
+
+/** Four phases for first publish: Konto → Tjänst → Synlighet → Publicera. */
+export const FIRST_PUBLISH_PHASES: FirstPublishStep[][] = [
+  ['name', 'bio'],
   ['intro1', 'title', 'category', 'occasions', 'location'],
   ['intro2', 'description', 'photos'],
   ['intro3', 'price', 'publish'],
@@ -56,16 +87,40 @@ export function stepIndex(step: ServiceWizardStep): number {
   return SERVICE_WIZARD_STEPS.indexOf(step)
 }
 
-export function phaseProgress(step: ServiceWizardStep): number[] {
-  const idx = stepIndex(step)
-  return WIZARD_PHASES.map(phase => {
-    const first = stepIndex(phase[0])
-    const last = stepIndex(phase[phase.length - 1])
+export function firstPublishStepIndex(step: FirstPublishStep): number {
+  return FIRST_PUBLISH_STEPS.indexOf(step)
+}
+
+export function isAccountWizardStep(step: string): step is AccountWizardStep {
+  return (ACCOUNT_WIZARD_STEPS as readonly string[]).includes(step)
+}
+
+export function isServiceWizardStep(step: string): step is ServiceWizardStep {
+  return (SERVICE_WIZARD_STEPS as readonly string[]).includes(step)
+}
+
+function phaseProgressFrom(
+  phases: readonly (readonly string[])[],
+  allSteps: readonly string[],
+  step: string
+): number[] {
+  const idx = allSteps.indexOf(step)
+  return phases.map(phase => {
+    const first = allSteps.indexOf(phase[0])
+    const last = allSteps.indexOf(phase[phase.length - 1])
     if (idx < first) return 0
     if (idx > last) return 1
     const local = idx - first
     return (local + 1) / phase.length
   })
+}
+
+export function phaseProgress(step: ServiceWizardStep): number[] {
+  return phaseProgressFrom(WIZARD_PHASES, SERVICE_WIZARD_STEPS, step)
+}
+
+export function firstPublishPhaseProgress(step: FirstPublishStep): number[] {
+  return phaseProgressFrom(FIRST_PUBLISH_PHASES, FIRST_PUBLISH_STEPS, step)
 }
 
 export function nextStep(step: ServiceWizardStep): ServiceWizardStep | null {
@@ -78,6 +133,18 @@ export function prevStep(step: ServiceWizardStep): ServiceWizardStep | null {
   const i = stepIndex(step)
   if (i <= 0) return null
   return SERVICE_WIZARD_STEPS[i - 1]
+}
+
+export function nextFirstPublishStep(step: FirstPublishStep): FirstPublishStep | null {
+  const i = firstPublishStepIndex(step)
+  if (i < 0 || i >= FIRST_PUBLISH_STEPS.length - 1) return null
+  return FIRST_PUBLISH_STEPS[i + 1]
+}
+
+export function prevFirstPublishStep(step: FirstPublishStep): FirstPublishStep | null {
+  const i = firstPublishStepIndex(step)
+  if (i <= 0) return null
+  return FIRST_PUBLISH_STEPS[i - 1]
 }
 
 export function isStepValid(step: ServiceWizardStep, draft: ServiceWizardDraft): boolean {
@@ -114,6 +181,20 @@ export function isStepValid(step: ServiceWizardStep, draft: ServiceWizardDraft):
   }
 }
 
+export function isAccountStepValid(
+  step: AccountWizardStep,
+  draft: AccountWizardDraft
+): boolean {
+  switch (step) {
+    case 'name':
+      return draft.firstName.trim().length > 0
+    case 'bio':
+      return true // optional
+    default:
+      return false
+  }
+}
+
 /** Resume at first incomplete content step (skip completed intros when possible). */
 export function resumeStep(draft: ServiceWizardDraft): ServiceWizardStep {
   if (!draft.title.trim()) return 'intro1'
@@ -124,6 +205,19 @@ export function resumeStep(draft: ServiceWizardDraft): ServiceWizardStep {
   if (draft.photos.length < 1) return 'photos'
   if (!draft.priceMin || !draft.priceMax) return 'intro3'
   return 'publish'
+}
+
+/** First-time publish: start at name/bio if needed, else resume listing draft. */
+export function resumeFirstPublishStep(opts: {
+  needsName: boolean
+  needsBio: boolean
+  draft: ServiceWizardDraft
+  resumeListing: boolean
+}): FirstPublishStep {
+  if (opts.needsName) return 'name'
+  if (opts.needsBio) return 'bio'
+  if (opts.resumeListing) return resumeStep(opts.draft)
+  return 'intro1'
 }
 
 /** @deprecated use categoryTagsFromSlug from lib/categories */

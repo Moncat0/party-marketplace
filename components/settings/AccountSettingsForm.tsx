@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase'
+import { PASSWORD_SET_METADATA_KEY } from '@/lib/auth-password'
 import SettingsInput from './SettingsInput'
 import SettingsToggle from './SettingsToggle'
 import SettingsButton from './SettingsButton'
@@ -341,7 +342,10 @@ export default function AccountSettingsForm({
     }
     setSaving(true)
     setMsg(null)
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+      data: { [PASSWORD_SET_METADATA_KEY]: true },
+    })
     if (error) {
       setMsg({ type: 'error', text: 'Kunde inte uppdatera lösenordet. Försök igen.' })
     } else {

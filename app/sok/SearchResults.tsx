@@ -18,6 +18,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { CATEGORIES, getCategoryBySlug, resolveCategorySlug } from '@/lib/categories'
 import { getLocationLabel, locationIdFromCity, DEFAULT_LOCATION_ID } from '@/lib/locations'
+import { formatOccasion, isOccasionSlug } from '@/lib/occasions'
 import { track } from '@/lib/posthog'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ type Provider = {
   photos: string[]
   category_slug?: string | null
   category_tags: string[]
+  occasions?: string[]
   created_at: string
   reviewCount: number
   avgRating: number | null
@@ -42,6 +44,7 @@ type Props = {
   plannerId: string | null
   initialLocationId: string
   initialCategory: string | null
+  initialOccasion: string | null
   initialQuery: string
   initialSort: string
 }
@@ -61,12 +64,16 @@ export default function SearchResults({
   plannerId,
   initialLocationId,
   initialCategory,
+  initialOccasion,
   initialQuery,
   initialSort,
 }: Props) {
   const router = useRouter()
   const [locationId, setLocationId] = useState(initialLocationId)
   const [category, setCategory] = useState<string | null>(initialCategory)
+  const [occasion, setOccasion] = useState<string | null>(
+    initialOccasion && isOccasionSlug(initialOccasion) ? initialOccasion : null
+  )
   const [query, setQuery] = useState(initialQuery)
   const [sort, setSort] = useState<SortKey>(
     (['relevant', 'rating', 'price_asc', 'price_desc'].includes(initialSort)
@@ -117,8 +124,11 @@ export default function SearchResults({
   useEffect(() => {
     setLocationId(initialLocationId)
     setCategory(initialCategory)
+    setOccasion(
+      initialOccasion && isOccasionSlug(initialOccasion) ? initialOccasion : null
+    )
     setQuery(initialQuery)
-  }, [initialLocationId, initialCategory, initialQuery])
+  }, [initialLocationId, initialCategory, initialOccasion, initialQuery])
 
   const filtered = useMemo(() => {
     let list = [...providers]
@@ -138,6 +148,10 @@ export default function SearchResults({
             category_tags: p.category_tags,
           }) === category
       )
+    }
+
+    if (occasion) {
+      list = list.filter(p => (p.occasions ?? []).includes(occasion))
     }
 
     if (query.trim()) {
@@ -175,7 +189,7 @@ export default function SearchResults({
     }
 
     return list
-  }, [providers, locationId, category, query, sort, priceMin, priceMax])
+  }, [providers, locationId, category, occasion, query, sort, priceMin, priceMax])
 
   useEffect(() => {
     if (tracked.current) return
@@ -184,6 +198,7 @@ export default function SearchResults({
       query,
       city: locationId,
       category,
+      occasion,
       results_count: filtered.length,
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -191,16 +206,19 @@ export default function SearchResults({
   function pushSearch(next?: {
     locationId?: string
     category?: string | null
+    occasion?: string | null
     query?: string
     sort?: SortKey
   }) {
     const loc = next?.locationId ?? locationId
     const cat = next?.category === undefined ? category : next.category
+    const occ = next?.occasion === undefined ? occasion : next.occasion
     const q = next?.query ?? query
     const s = next?.sort ?? sort
     const params = new URLSearchParams()
     if (loc) params.set('location', loc)
     if (cat) params.set('category', cat)
+    if (occ) params.set('occasion', occ)
     if (q.trim()) params.set('q', q.trim())
     if (s && s !== 'relevant') params.set('sort', s)
     router.push(`/sok?${params.toString()}`)
@@ -230,6 +248,7 @@ export default function SearchResults({
 
   const catMeta = category ? getCategoryBySlug(category) : null
   const locationLabel = getLocationLabel(locationId || DEFAULT_LOCATION_ID)
+  const occasionLabel = occasion ? formatOccasion(occasion) : null
   const serviceLabel = catMeta?.chipLabel ?? catMeta?.label ?? 'All services'
   const headingNoun = catMeta
     ? `${catMeta.chipLabel ?? catMeta.label}`.toLowerCase()
@@ -478,6 +497,7 @@ export default function SearchResults({
       <div className={`${RESULTS_SHELL} py-6 md:py-8`}>
         <h1 className="mb-6 text-[20px] font-semibold tracking-[-0.02em] text-foreground md:text-[22px]">
           Utforska {filtered.length} {headingNoun}
+          {occasionLabel ? ` till ${occasionLabel.toLowerCase()}` : ''}
           {locationLabel ? ` i ${locationLabel}` : ''}
         </h1>
 

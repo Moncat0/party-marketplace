@@ -32,7 +32,7 @@ export default function AuthModal({ open, onOpenChange, intent = null, next = nu
           {intent === 'provider' ? 'Skapa konto' : 'Logga in'}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          Ange e-post för en inloggningslänk, eller fortsätt med Google eller Apple.
+          Skapa konto med e-postlänk, logga in med lösenord, eller fortsätt med Google eller Apple.
         </DialogDescription>
         <AuthPanel
           key={`${intent ?? ''}-${next ?? ''}-${open}`}

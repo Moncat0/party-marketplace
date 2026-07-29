@@ -9,18 +9,32 @@ import { CATEGORIES, categoryTagsFromSlug, type CategorySlug } from '@/lib/categ
 import { LOCATIONS, getLocationLabel } from '@/lib/locations'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import ServiceWizardChrome from '@/components/service-wizard/ServiceWizardChrome'
 import PublishSuccessScreen from '@/components/service-wizard/PublishSuccessScreen'
 import OccasionMultiSelect from '@/components/ui/OccasionMultiSelect'
 import { formatOccasions } from '@/lib/occasions'
+import { buildDisplayName } from '@/lib/profile-completeness'
 import {
+  type AccountWizardDraft,
+  type FirstPublishStep,
   type ServiceWizardDraft,
   type ServiceWizardStep,
   draftFromService,
+  EMPTY_ACCOUNT_DRAFT,
+  firstPublishPhaseProgress,
+  isAccountStepValid,
+  isAccountWizardStep,
+  isServiceWizardStep,
   isStepValid,
+  nextFirstPublishStep,
   nextStep,
   phaseProgress,
+  prevFirstPublishStep,
   prevStep,
+  resumeFirstPublishStep,
   resumeStep,
 } from '@/lib/service-wizard'
 
@@ -49,6 +63,15 @@ type Props = {
   afterPublishPath?: string
   /** Override first-step Tillbaka (onboarding exits instead of looping hub→flow) */
   firstBackPath?: string
+  /**
+   * First-time provider publish: prepend name + bio and use 4 progress phases.
+   * Dashboard “new listing” leaves this false (3 phases).
+   */
+  includeAccountSteps?: boolean
+  initialAccount?: Partial<AccountWizardDraft>
+  /** Prefer DB truth over prefilled OAuth name for skipping steps */
+  accountNeedsName?: boolean
+  accountNeedsBio?: boolean
 }
 
 export default function ServiceWizard({
@@ -59,6 +82,10 @@ export default function ServiceWizard({
   afterSavePath = '/dashboard/listings',
   afterPublishPath = '/dashboard/listings',
   firstBackPath,
+  includeAccountSteps = false,
+  initialAccount,
+  accountNeedsName,
+  accountNeedsBio,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -66,17 +93,53 @@ export default function ServiceWizard({
 
   const initialDraft = useMemo(() => draftFromService(service), [service])
   const [draft, setDraft] = useState<ServiceWizardDraft>(initialDraft)
-  const [step, setStep] = useState<ServiceWizardStep>(() =>
-    resume ? resumeStep(initialDraft) : 'intro1'
-  )
+  const [account, setAccount] = useState<AccountWizardDraft>(() => ({
+    ...EMPTY_ACCOUNT_DRAFT,
+    ...initialAccount,
+  }))
+  const needsName =
+    accountNeedsName ?? !(initialAccount?.firstName ?? '').trim()
+  const needsBio = accountNeedsBio ?? !(initialAccount?.bio ?? '').trim()
+  const [step, setStep] = useState<FirstPublishStep>(() => {
+    if (includeAccountSteps) {
+      return resumeFirstPublishStep({
+        needsName,
+        needsBio,
+        draft: initialDraft,
+        resumeListing: resume,
+      })
+    }
+    return resume ? resumeStep(initialDraft) : 'intro1'
+  })
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [photoModalOpen, setPhotoModalOpen] = useState(false)
   const [published, setPublished] = useState(false)
 
-  const fills = published ? [1, 1, 1] : phaseProgress(step)
-  const canNext = isStepValid(step, draft)
+  const fills = published
+    ? includeAccountSteps
+      ? [1, 1, 1, 1]
+      : [1, 1, 1]
+    : includeAccountSteps
+      ? firstPublishPhaseProgress(step)
+      : isServiceWizardStep(step)
+        ? phaseProgress(step)
+        : [0, 0, 0]
+
+  const canNext = isAccountWizardStep(step)
+    ? isAccountStepValid(step, account)
+    : isServiceWizardStep(step)
+      ? isStepValid(step, draft)
+      : false
+
+  const firstStep: FirstPublishStep = includeAccountSteps
+    ? needsName
+      ? 'name'
+      : needsBio
+        ? 'bio'
+        : 'intro1'
+    : 'intro1'
 
   const persist = useCallback(
     async (opts?: { publish?: boolean }) => {
@@ -103,11 +166,55 @@ export default function ServiceWizard({
     [draft, service.id, supabase]
   )
 
+  async function persistAccountName(): Promise<void> {
+    const first = account.firstName.trim()
+    const last = account.lastName.trim()
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        first_name: first,
+        last_name: last || null,
+        name: buildDisplayName(first, last),
+        preferred_first_name: first,
+      })
+      .eq('id', userId)
+    if (updateError) throw updateError
+    track('profile_details_completed', { fields: ['name'], role: 'provider' })
+  }
+
+  async function persistAccountBio(): Promise<void> {
+    const trimmed = account.bio.trim()
+    const { data: existing } = await supabase
+      .from('provider_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (existing) {
+      const { error: bioError } = await supabase
+        .from('provider_profiles')
+        .update({ bio: trimmed || null })
+        .eq('user_id', userId)
+      if (bioError) throw bioError
+    } else if (trimmed) {
+      const { error: insertError } = await supabase.from('provider_profiles').insert({
+        user_id: userId,
+        bio: trimmed,
+      })
+      if (insertError) throw insertError
+    }
+    if (trimmed) {
+      track('profile_details_completed', { fields: ['bio'], role: 'provider' })
+    }
+  }
+
   async function handleSaveExit() {
     setSaving(true)
     setError(null)
     try {
-      await persist({ publish: false })
+      if (isServiceWizardStep(step)) {
+        await persist({ publish: false })
+      }
       router.push(afterSavePath)
       router.refresh()
     } catch {
@@ -139,6 +246,34 @@ export default function ServiceWizard({
     if (!canNext || saving) return
     setError(null)
 
+    if (step === 'name') {
+      setSaving(true)
+      try {
+        await persistAccountName()
+        const n = includeAccountSteps ? nextFirstPublishStep(step) : null
+        if (n) setStep(n)
+      } catch {
+        setError('Kunde inte spara. Försök igen.')
+      } finally {
+        setSaving(false)
+      }
+      return
+    }
+
+    if (step === 'bio') {
+      setSaving(true)
+      try {
+        await persistAccountBio()
+        const n = includeAccountSteps ? nextFirstPublishStep(step) : null
+        if (n) setStep(n)
+      } catch {
+        setError('Kunde inte spara. Försök igen.')
+      } finally {
+        setSaving(false)
+      }
+      return
+    }
+
     if (step === 'publish') {
       setSaving(true)
       try {
@@ -156,7 +291,11 @@ export default function ServiceWizard({
     setSaving(true)
     try {
       await persist({ publish: false })
-      const n = nextStep(step)
+      const n = includeAccountSteps
+        ? nextFirstPublishStep(step)
+        : isServiceWizardStep(step)
+          ? nextStep(step)
+          : null
       if (n) setStep(n)
     } catch {
       setError('Kunde inte spara. Försök igen.')
@@ -166,7 +305,11 @@ export default function ServiceWizard({
   }
 
   function handleBack() {
-    const p = prevStep(step)
+    const p = includeAccountSteps
+      ? prevFirstPublishStep(step)
+      : isServiceWizardStep(step)
+        ? prevStep(step)
+        : null
     if (p) setStep(p)
     else router.push(firstBackPath ?? hubPath)
   }
@@ -214,7 +357,15 @@ export default function ServiceWizard({
   }
 
   const nextLabel =
-    step === 'publish' ? 'Publicera tjänst' : step.startsWith('intro') ? 'Nästa' : 'Nästa'
+    step === 'publish'
+      ? 'Publicera tjänst'
+      : step === 'bio'
+        ? 'Nästa'
+        : step.startsWith('intro')
+          ? 'Nästa'
+          : 'Nästa'
+
+  const listingPhaseOffset = includeAccountSteps ? 1 : 0
 
   if (published) {
     return (
@@ -238,11 +389,11 @@ export default function ServiceWizard({
       <ServiceWizardChrome
         phaseFills={fills}
         onBack={handleBack}
-        onNext={handleNext}
+        onNext={() => void handleNext()}
         nextLabel={nextLabel}
         nextDisabled={!canNext || uploading}
         nextLoading={saving}
-        showBack={step !== 'intro1'}
+        showBack={step !== firstStep}
         onSaveExit={handleSaveExit}
         savingExit={saving && step !== 'publish'}
         exitHref={afterSavePath}
@@ -254,7 +405,23 @@ export default function ServiceWizard({
               {error}
             </p>
           )}
-          {step === 'intro1' && <Intro1 />}
+          {step === 'name' && (
+            <ProviderNameStep
+              firstName={account.firstName}
+              lastName={account.lastName}
+              onFirstName={firstName => setAccount(a => ({ ...a, firstName }))}
+              onLastName={lastName => setAccount(a => ({ ...a, lastName }))}
+            />
+          )}
+          {step === 'bio' && (
+            <ProviderBioStep
+              firstName={account.firstName.trim() || 'dig'}
+              bio={account.bio}
+              onBio={bio => setAccount(a => ({ ...a, bio }))}
+              onSkip={() => void handleNext()}
+            />
+          )}
+          {step === 'intro1' && <Intro1 phaseNumber={1 + listingPhaseOffset} />}
           {step === 'title' && (
             <TitleStep
               value={draft.title}
@@ -279,7 +446,7 @@ export default function ServiceWizard({
               onChange={locationId => setDraft(prev => ({ ...prev, locationId }))}
             />
           )}
-          {step === 'intro2' && <Intro2 />}
+          {step === 'intro2' && <Intro2 phaseNumber={2 + listingPhaseOffset} />}
           {step === 'description' && (
             <DescriptionStep
               value={draft.description}
@@ -298,7 +465,7 @@ export default function ServiceWizard({
               onAddClick={() => fileInputRef.current?.click()}
             />
           )}
-          {step === 'intro3' && <Intro3 />}
+          {step === 'intro3' && <Intro3 phaseNumber={3 + listingPhaseOffset} />}
           {step === 'price' && (
             <PriceStep
               priceMin={draft.priceMin}
@@ -339,10 +506,109 @@ export default function ServiceWizard({
   )
 }
 
-function Intro1() {
+function ProviderNameStep({
+  firstName,
+  lastName,
+  onFirstName,
+  onLastName,
+}: {
+  firstName: string
+  lastName: string
+  onFirstName: (v: string) => void
+  onLastName: (v: string) => void
+}) {
+  return (
+    <div>
+      <p className="text-[16px] font-medium text-[#222222]">Steg 1</p>
+      <h1 className="mt-3 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+        Vad ska gäster kalla dig?
+      </h1>
+      <p className="mt-2 text-[15px] text-[#6a6a6a]">
+        Ditt namn syns på dina tjänster under “Träffa din leverantör” och i meddelanden.
+      </p>
+      <div className="mt-8 space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="wizard-first-name" className="text-[14px] font-medium text-[#222222]">
+            Förnamn
+          </Label>
+          <Input
+            id="wizard-first-name"
+            autoComplete="given-name"
+            autoFocus
+            value={firstName}
+            onChange={e => onFirstName(e.target.value)}
+            placeholder="Anna"
+            className="h-14 rounded-xl border-[#b0b0b0] text-[16px] text-[#222222] shadow-none focus-visible:ring-[#222222]"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="wizard-last-name" className="text-[14px] font-medium text-[#222222]">
+            Efternamn <span className="font-normal text-[#6a6a6a]">(valfritt)</span>
+          </Label>
+          <Input
+            id="wizard-last-name"
+            autoComplete="family-name"
+            value={lastName}
+            onChange={e => onLastName(e.target.value)}
+            placeholder="Andersson"
+            className="h-14 rounded-xl border-[#b0b0b0] text-[16px] text-[#222222] shadow-none focus-visible:ring-[#222222]"
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ProviderBioStep({
+  firstName,
+  bio,
+  onBio,
+  onSkip,
+}: {
+  firstName: string
+  bio: string
+  onBio: (v: string) => void
+  onSkip: () => void
+}) {
+  return (
+    <div>
+      <p className="text-[16px] font-medium text-[#222222]">Steg 1</p>
+      <h1 className="mt-3 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+        Berätta kort om dig
+      </h1>
+      <p className="mt-2 text-[15px] text-[#6a6a6a]">
+        Visas under “Träffa din leverantör” på dina tjänster. Du kan ändra det senare.
+      </p>
+      <div className="mt-8 space-y-3">
+        <Label htmlFor="wizard-bio" className="text-[14px] font-medium text-[#222222]">
+          Om {firstName}
+        </Label>
+        <Textarea
+          id="wizard-bio"
+          value={bio}
+          onChange={e => onBio(e.target.value.slice(0, 600))}
+          placeholder="T.ex. DJ med 10 års erfarenhet av bröllop och företagsfester i Stockholm…"
+          rows={5}
+          maxLength={600}
+          className="min-h-[140px] rounded-xl border-[#b0b0b0] text-[16px] text-[#222222] shadow-none focus-visible:ring-[#222222]"
+        />
+        <p className="text-[13px] text-[#6a6a6a]">{bio.trim().length}/600</p>
+        <button
+          type="button"
+          onClick={onSkip}
+          className="pt-2 text-[14px] font-semibold text-[#222222] underline underline-offset-2 hover:text-[#6a6a6a]"
+        >
+          Hoppa över just nu
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function Intro1({ phaseNumber }: { phaseNumber: number }) {
   return (
     <div className="max-w-xl">
-      <p className="text-[16px] font-medium text-[#222222]">Steg 1</p>
+      <p className="text-[16px] font-medium text-[#222222]">Steg {phaseNumber}</p>
       <h1 className="mt-3 text-[32px] font-semibold leading-tight tracking-[-0.6px] text-[#222222] sm:text-[48px]">
         Berätta om din tjänst
       </h1>
@@ -354,10 +620,10 @@ function Intro1() {
   )
 }
 
-function Intro2() {
+function Intro2({ phaseNumber }: { phaseNumber: number }) {
   return (
     <div className="max-w-xl">
-      <p className="text-[16px] font-medium text-[#222222]">Steg 2</p>
+      <p className="text-[16px] font-medium text-[#222222]">Steg {phaseNumber}</p>
       <h1 className="mt-3 text-[32px] font-semibold leading-tight tracking-[-0.6px] text-[#222222] sm:text-[48px]">
         Gör din tjänst synlig
       </h1>
@@ -369,10 +635,10 @@ function Intro2() {
   )
 }
 
-function Intro3() {
+function Intro3({ phaseNumber }: { phaseNumber: number }) {
   return (
     <div className="max-w-xl">
-      <p className="text-[16px] font-medium text-[#222222]">Steg 3</p>
+      <p className="text-[16px] font-medium text-[#222222]">Steg {phaseNumber}</p>
       <h1 className="mt-3 text-[32px] font-semibold leading-tight tracking-[-0.6px] text-[#222222] sm:text-[48px]">
         Avsluta och publicera
       </h1>

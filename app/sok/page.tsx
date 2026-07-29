@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import SearchResults from './SearchResults'
 import { getCategoryBySlug } from '@/lib/categories'
 import { getLocationLabel } from '@/lib/locations'
+import { formatOccasion } from '@/lib/occasions'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,7 @@ type Props = {
   searchParams: {
     location?: string
     category?: string
+    occasion?: string
     q?: string
     sort?: string
   }
@@ -18,12 +20,14 @@ type Props = {
 export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
   const cat = searchParams.category ? getCategoryBySlug(searchParams.category) : null
   const loc = searchParams.location ? getLocationLabel(searchParams.location) : null
+  const occasion = searchParams.occasion ? formatOccasion(searchParams.occasion) : null
   const parts = [
     cat?.label ?? 'Tjänster',
+    occasion,
     loc ? `i ${loc}` : null,
   ].filter(Boolean)
   return {
-    title: `${parts.join(' ')} — FESTEN.`,
+    title: `${parts.join(' · ')} — FESTEN.`,
     description: cat?.description ?? 'Hitta lokala talanger till ditt kalas.',
   }
 }
@@ -37,7 +41,7 @@ export default async function SokPage({ searchParams }: Props) {
   const { data: services } = await supabase
     .from('services')
     .select(
-      'id, title, city, location_id, photos, category_slug, category_tags, created_at, price_range_min, provider_profiles(users(name, avatar_url)), reviews(rating)'
+      'id, title, city, location_id, photos, category_slug, category_tags, occasions, created_at, price_range_min, provider_profiles(users(name, avatar_url)), reviews(rating)'
     )
     .eq('is_published', true)
     .eq('is_disabled', false)
@@ -62,6 +66,7 @@ export default async function SokPage({ searchParams }: Props) {
       photos: s.photos ?? [],
       category_slug: s.category_slug ?? null,
       category_tags: s.category_tags ?? [],
+      occasions: (s.occasions as string[] | null) ?? [],
       created_at: s.created_at,
       price_range_min: s.price_range_min,
       users,
@@ -77,6 +82,7 @@ export default async function SokPage({ searchParams }: Props) {
       plannerId={user?.id ?? null}
       initialLocationId={searchParams.location ?? ''}
       initialCategory={searchParams.category ?? null}
+      initialOccasion={searchParams.occasion ?? null}
       initialQuery={searchParams.q ?? ''}
       initialSort={searchParams.sort ?? 'relevant'}
     />

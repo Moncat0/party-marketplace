@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
+import { PASSWORD_SET_METADATA_KEY } from '@/lib/auth-password'
 import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsInput from '@/components/settings/SettingsInput'
 import SettingsButton from '@/components/settings/SettingsButton'
@@ -29,7 +30,10 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true)
-    const { error } = await createClient().auth.updateUser({ password })
+    const { error } = await createClient().auth.updateUser({
+      password,
+      data: { [PASSWORD_SET_METADATA_KEY]: true },
+    })
     if (error) {
       setError('Något gick fel. Länken kan ha gått ut — begär en ny återställningslänk.')
     } else {

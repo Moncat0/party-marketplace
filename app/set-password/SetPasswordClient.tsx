@@ -1,0 +1,215 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
+import {
+  needsPasswordSetup,
+  parseSetPasswordNext,
+  PASSWORD_SET_METADATA_KEY,
+} from '@/lib/auth-password'
+import { setIntentCookie, type AuthIntent } from '@/lib/auth-intent'
+import { Button } from '@/components/ui/button'
+
+export default function SetPasswordClient() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const nextPath = parseSetPasswordNext(searchParams.get('next')) ?? '/'
+
+  const [checking, setChecking] = useState(true)
+  const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [oauthLoading, setOauthLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        router.replace(`/?auth=1&next=${encodeURIComponent('/set-password')}`)
+        return
+      }
+      if (!needsPasswordSetup(user)) {
+        router.replace(nextPath)
+        return
+      }
+      if (!cancelled) {
+        setEmail(user.email ?? null)
+        setChecking(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [router, nextPath])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    if (password.length < 8) {
+      setError('Lösenordet måste vara minst 8 tecken.')
+      return
+    }
+    if (password !== confirm) {
+      setError('Lösenorden matchar inte.')
+      return
+    }
+
+    setLoading(true)
+    const { error: updateError } = await createClient().auth.updateUser({
+      password,
+      data: { [PASSWORD_SET_METADATA_KEY]: true },
+    })
+    if (updateError) {
+      setError('Kunde inte spara lösenordet. Försök igen.')
+      setLoading(false)
+      return
+    }
+    router.replace(nextPath)
+  }
+
+  async function continueWithGoogle() {
+    setOauthLoading(true)
+    setError(null)
+    const intent: AuthIntent =
+      nextPath.startsWith('/onboarding') || nextPath.startsWith('/dashboard')
+        ? 'provider'
+        : 'planner'
+    setIntentCookie(intent)
+    const origin = window.location.origin
+    const params = new URLSearchParams({ next: nextPath, intent })
+    const redirectTo = `${origin}/auth/callback?${params.toString()}`
+
+    const supabase = createClient()
+    const { error: linkError } = await supabase.auth.linkIdentity({
+      provider: 'google',
+      options: { redirectTo },
+    })
+    if (linkError) {
+      const { error: signInError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      })
+      if (signInError) {
+        setError(
+          'Kunde inte koppla Google. Skapa ett lösenord istället, eller försök igen.'
+        )
+        setOauthLoading(false)
+      }
+    }
+  }
+
+  if (checking) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-white px-4">
+        <p className="text-[14px] text-[#6a6a6a]">Laddar…</p>
+      </main>
+    )
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-10">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
+            FESTEN.
+          </Link>
+          <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-[#222222]">
+            Säkra ditt konto
+          </h1>
+          <p className="mt-2 text-[15px] leading-relaxed text-[#6a6a6a]">
+            Skapa ett lösenord så du enkelt kan logga in nästa gång
+            {email ? (
+              <>
+                {' '}
+                med <span className="font-medium text-[#222222]">{email}</span>
+              </>
+            ) : null}
+            .
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label
+              htmlFor="set-password"
+              className="mb-1.5 block text-[14px] font-medium text-[#222222]"
+            >
+              Lösenord
+            </label>
+            <input
+              id="set-password"
+              type="password"
+              autoComplete="new-password"
+              autoFocus
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Minst 8 tecken"
+              required
+              minLength={8}
+              className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="set-password-confirm"
+              className="mb-1.5 block text-[14px] font-medium text-[#222222]"
+            >
+              Bekräfta lösenord
+            </label>
+            <input
+              id="set-password-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              placeholder="Upprepa lösenordet"
+              required
+              minLength={8}
+              className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={loading || oauthLoading}
+            className="h-12 w-full rounded-xl text-[16px] font-semibold"
+          >
+            {loading ? 'Sparar…' : 'Spara lösenord och fortsätt'}
+          </Button>
+        </form>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-[#ebebeb]" />
+          <span className="text-[12px] text-[#6a6a6a]">eller</span>
+          <div className="h-px flex-1 bg-[#ebebeb]" />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          disabled={loading || oauthLoading}
+          onClick={() => void continueWithGoogle()}
+          className="h-12 w-full rounded-xl border-[#222222] text-[16px] font-semibold text-[#222222]"
+        >
+          {oauthLoading ? 'Öppnar Google…' : 'Fortsätt med Google'}
+        </Button>
+        <p className="mt-3 text-center text-[13px] text-[#6a6a6a]">
+          Då behöver du inte skapa ett lösenord.
+        </p>
+      </div>
+    </main>
+  )
+}

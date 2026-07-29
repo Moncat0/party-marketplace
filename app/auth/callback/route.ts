@@ -7,6 +7,7 @@ import {
   resolvePostAuthDestination,
   type AuthIntent,
 } from '@/lib/auth-intent'
+import { needsPasswordSetup } from '@/lib/auth-password'
 import { ensureAppUser, intentFromUserMetadata } from '@/lib/ensure-user'
 import { needsDisplayName } from '@/lib/profile-completeness'
 
@@ -58,7 +59,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/signup?error=auth`)
     }
 
-    const { data: { user } } = await supabase.auth.getUser()
+    // Password recovery always lands on reset form
+    if (type === 'recovery' || nextParam === '/reset-password') {
+      const response = NextResponse.redirect(`${origin}/reset-password`)
+      response.cookies.set(INTENT_COOKIE, '', { path: '/', maxAge: 0 })
+      return response
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!intent && user) {
       intent = intentFromUserMetadata(user)
     }
@@ -66,7 +76,7 @@ export async function GET(request: NextRequest) {
     let hasProviderProfile = false
     let isPublished = false
     let missingDisplayName = false
-    let needsProviderBio = false
+    let missingPassword = false
 
     if (user) {
       const signupSource = cookieStore.get('signup_source')?.value ?? 'organic'
@@ -84,12 +94,12 @@ export async function GET(request: NextRequest) {
       const [{ data: profile }, { data: appUser }] = await Promise.all([
         supabase
           .from('provider_profiles')
-          .select('id, bio, services(is_published)')
+          .select('id, services(is_published)')
           .eq('user_id', user.id)
           .maybeSingle(),
         supabase
           .from('users')
-          .select('name, first_name, user_type')
+          .select('name, first_name')
           .eq('id', user.id)
           .maybeSingle(),
       ])
@@ -103,15 +113,7 @@ export async function GET(request: NextRequest) {
       hasProviderProfile = !!profile
       isPublished = !!service?.is_published
       missingDisplayName = needsDisplayName(appUser)
-
-      const providerSide =
-        intent === 'provider' ||
-        appUser?.user_type === 'provider' ||
-        appUser?.user_type === 'both'
-      // Only nudge unpublished / onboarding providers — don’t interrupt published hosts every login
-      if (providerSide && !isPublished && !(profile?.bio ?? '').trim()) {
-        needsProviderBio = true
-      }
+      missingPassword = needsPasswordSetup(user)
     }
 
     const destination = resolvePostAuthDestination({
@@ -120,11 +122,10 @@ export async function GET(request: NextRequest) {
       hasProviderProfile,
       isPublished,
       needsDisplayName: missingDisplayName,
-      needsProviderBio,
+      needsPasswordSetup: missingPassword,
     })
 
     const response = NextResponse.redirect(`${origin}${destination}`)
-    // Clear intent cookie after use
     response.cookies.set(INTENT_COOKIE, '', { path: '/', maxAge: 0 })
     return response
   }

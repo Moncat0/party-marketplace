@@ -1,6 +1,8 @@
 /** Auth entry intent — planner (demand) vs provider (supply). */
 
 import { welcomeUrl } from '@/lib/profile-completeness'
+import { isPlannerDiscoveryNext } from '@/lib/planner-search-wizard'
+import { setPasswordUrl } from '@/lib/auth-password'
 
 export type AuthIntent = 'planner' | 'provider'
 
@@ -42,13 +44,22 @@ function safePath(raw: string | null | undefined): string | null {
   return raw
 }
 
+function isProviderPath(path: string): boolean {
+  return (
+    path === '/onboarding' ||
+    path.startsWith('/onboarding/') ||
+    path.startsWith('/onboarding?') ||
+    path === '/dashboard' ||
+    path.startsWith('/dashboard/')
+  )
+}
+
 /**
  * Resolve where to send the user after auth.
- * Provider intent → onboarding (unless next is already onboarding-safe).
- * Planner → honour next, else homepage browse (discovery).
- * Existing published providers → /dashboard when next is generic.
- * Missing first_name → /welcome first (preserves the real destination).
- * Provider destination + empty bio → /welcome for optional “about” step when name is done.
+ * Provider intent → onboarding flow (name+bio live inside that wizard).
+ * Planner missing name → /welcome (discovery or soft-gate name).
+ * Planner cold login with name → homepage.
+ * Email users without a password → /set-password first (preserves destination).
  */
 export function resolvePostAuthDestination(opts: {
   intent: AuthIntent | null
@@ -59,8 +70,8 @@ export function resolvePostAuthDestination(opts: {
   isPublished?: boolean
   /** True when first_name is empty */
   needsDisplayName?: boolean
-  /** True when provider-side and bio is empty (optional about step) */
-  needsProviderBio?: boolean
+  /** True when email user must create a password */
+  needsPasswordSetup?: boolean
 }): string {
   const next = safePath(opts.next)
 
@@ -73,45 +84,48 @@ export function resolvePostAuthDestination(opts: {
     next === '/onboarding' ||
     next.startsWith('/onboarding?') ||
     next === '/welcome' ||
-    next.startsWith('/welcome?')
+    next.startsWith('/welcome?') ||
+    next === '/set-password' ||
+    next.startsWith('/set-password?')
 
   let destination: string
 
   if (opts.isPublished && isGenericNext) {
     destination = '/dashboard'
   } else if (opts.hasProviderProfile && !opts.isPublished && isGenericNext) {
-    // Existing draft profile + provider intent or generic next → resume onboarding
     destination = '/onboarding'
   } else if (opts.intent === 'provider') {
     destination =
-      next === '/onboarding' || next?.startsWith('/onboarding?')
+      next === '/onboarding' ||
+      next?.startsWith('/onboarding?') ||
+      next?.startsWith('/onboarding/')
         ? next
         : '/onboarding'
   } else if (next && !isGenericNext) {
-    // Planner (or unknown): honour specific next
     destination = next
   } else if (next === '/onboarding' || next?.startsWith('/onboarding?')) {
     destination = next
   } else {
-    // Cold planner login → browse / discover talent
     destination = '/'
   }
 
+  // Password gate first (email/magic signup) — before welcome or onboarding
+  if (opts.needsPasswordSetup) {
+    return setPasswordUrl(destination)
+  }
+
+  // Providers collect name/bio inside the listing wizard — never bounce through /welcome
+  if (isProviderPath(destination)) {
+    return destination
+  }
+
+  // Planners: missing name → welcome (full discovery if next is browse/sok)
   if (opts.needsDisplayName) {
     return welcomeUrl(destination)
   }
 
-  // Name done, but provider still needs an about blurb for “Träffa din leverantör”
-  if (opts.needsProviderBio) {
-    const path = destination
-    if (
-      path === '/onboarding' ||
-      path.startsWith('/onboarding') ||
-      path === '/dashboard' ||
-      path.startsWith('/dashboard/')
-    ) {
-      return welcomeUrl(destination)
-    }
+  if (isPlannerDiscoveryNext(destination) && opts.intent === 'planner') {
+    return destination
   }
 
   return destination

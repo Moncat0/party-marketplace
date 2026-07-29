@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import {
   parseAuthIntent,
@@ -8,6 +9,7 @@ import {
   type AuthIntent,
 } from '@/lib/auth-intent'
 import { AUTH_INTENT_METADATA_KEY } from '@/lib/ensure-user'
+import { PASSWORD_SET_METADATA_KEY } from '@/lib/auth-password'
 import {
   formatLastLogin,
   getRememberedAccounts,
@@ -56,9 +58,12 @@ export default function AuthPanel({
     defaultIntent === 'provider' ? 'signup' : 'login'
   )
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  /** Why check-email was shown — affects copy + resend */
+  const [magicPurpose, setMagicPurpose] = useState<'signup' | 'login'>('signup')
 
   useEffect(() => {
     const remembered = getRememberedAccounts()
@@ -79,6 +84,50 @@ export default function AuthPanel({
     setIntentCookie(intentParam ?? defaultIntent)
   }, [intentParam, defaultIntent])
 
+  // Magic link often opens in a new tab. When this tab regains focus (or
+  // cookies sync), continue the journey so “check inbox” doesn’t strand them.
+  useEffect(() => {
+    if (view !== 'check-email') return
+
+    const supabase = createClient()
+    let cancelled = false
+
+    async function continueIfSignedIn() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (cancelled || !session?.user) return
+      window.location.href = postAuthHref()
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+        window.location.href = postAuthHref()
+      }
+    })
+
+    function onVisible() {
+      if (document.visibilityState === 'visible') void continueIfSignedIn()
+    }
+
+    window.addEventListener('focus', onVisible)
+    document.addEventListener('visibilitychange', onVisible)
+    const poll = window.setInterval(() => void continueIfSignedIn(), 2500)
+    void continueIfSignedIn()
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+      window.removeEventListener('focus', onVisible)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.clearInterval(poll)
+    }
+    // postAuthHref reads intent/next from closure — rebuild when those change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, next, intentParam, defaultIntent])
+
   function effectiveIntent(): AuthIntent {
     return intentParam ?? defaultIntent
   }
@@ -94,6 +143,18 @@ export default function AuthPanel({
           : '/'
     const params = new URLSearchParams({ next: destHint, intent })
     return `${origin}/auth/callback?${params.toString()}`
+  }
+
+  function postAuthHref(): string {
+    const intent = effectiveIntent()
+    const destHint =
+      next && next.startsWith('/') && !next.startsWith('//')
+        ? next
+        : intent === 'provider'
+          ? '/onboarding'
+          : '/'
+    const params = new URLSearchParams({ next: destHint, intent })
+    return `/auth/continue?${params.toString()}`
   }
 
   function resetMessages() {
@@ -116,10 +177,7 @@ export default function AuthPanel({
     }
   }
 
-  async function sendMagicLink(
-    targetEmail: string,
-    preferredMode: 'login' | 'signup' = mode
-  ) {
+  async function sendSignupMagicLink(targetEmail: string) {
     setLoading(true)
     resetMessages()
     const normalized = targetEmail.trim().toLowerCase()
@@ -132,12 +190,60 @@ export default function AuthPanel({
     const intent = effectiveIntent()
     setIntentCookie(intent)
     setEmail(normalized)
-    setMode(preferredMode)
+    setMode('signup')
 
     const { error: otpError } = await createClient().auth.signInWithOtp({
       email: normalized,
       options: {
-        shouldCreateUser: preferredMode === 'signup',
+        shouldCreateUser: true,
+        emailRedirectTo: callbackUrl(),
+        data: {
+          [AUTH_INTENT_METADATA_KEY]: intent,
+          [PASSWORD_SET_METADATA_KEY]: false,
+        },
+      },
+    })
+
+    if (otpError) {
+      const msg = otpError.message?.toLowerCase() ?? ''
+      if (msg.includes('already') || msg.includes('registered')) {
+        setError('Det finns redan ett konto med den e-postadressen. Logga in istället.')
+        setMode('login')
+      } else if (msg.includes('rate') || msg.includes('security')) {
+        setError('För många försök. Vänta en stund och försök igen.')
+      } else {
+        setError('Kunde inte skicka länken. Kontrollera e-postadressen och försök igen.')
+      }
+      setLoading(false)
+      return
+    }
+
+    rememberAccount({ email: normalized })
+    setMagicPurpose('signup')
+    setView('check-email')
+    setLoading(false)
+  }
+
+  /** Escape hatch for accounts that never set a password after magic signup. */
+  async function sendLoginMagicLink(targetEmail: string) {
+    setLoading(true)
+    resetMessages()
+    const normalized = targetEmail.trim().toLowerCase()
+    if (!isValidEmail(normalized)) {
+      setError('Ange en giltig e-postadress.')
+      setLoading(false)
+      return
+    }
+
+    const intent = effectiveIntent()
+    setIntentCookie(intent)
+    setEmail(normalized)
+    setMode('login')
+
+    const { error: otpError } = await createClient().auth.signInWithOtp({
+      email: normalized,
+      options: {
+        shouldCreateUser: false,
         emailRedirectTo: callbackUrl(),
         data: { [AUTH_INTENT_METADATA_KEY]: intent },
       },
@@ -147,29 +253,94 @@ export default function AuthPanel({
       const msg = otpError.message?.toLowerCase() ?? ''
       if (msg.includes('signups not allowed') || msg.includes('user not found')) {
         setError('Inget konto med den e-postadressen. Välj Skapa konto istället.')
+        setMode('signup')
       } else if (msg.includes('rate') || msg.includes('security')) {
         setError('För många försök. Vänta en stund och försök igen.')
       } else {
-        setError('Kunde inte skicka inloggningslänken. Kontrollera e-postadressen och försök igen.')
+        setError('Kunde inte skicka länken. Kontrollera e-postadressen och försök igen.')
       }
       setLoading(false)
       return
     }
 
     rememberAccount({ email: normalized })
+    setMagicPurpose('login')
     setView('check-email')
-    setMessage(null)
     setLoading(false)
   }
 
-  function handleContinue(e: React.FormEvent) {
+  async function loginWithPassword(targetEmail: string, targetPassword: string) {
+    setLoading(true)
+    resetMessages()
+    const normalized = targetEmail.trim().toLowerCase()
+    if (!isValidEmail(normalized)) {
+      setError('Ange en giltig e-postadress.')
+      setLoading(false)
+      return
+    }
+    if (!targetPassword) {
+      setError('Ange ditt lösenord.')
+      setLoading(false)
+      return
+    }
+
+    setIntentCookie(effectiveIntent())
+    const supabase = createClient()
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({
+      email: normalized,
+      password: targetPassword,
+    })
+
+    if (signInError) {
+      const msg = signInError.message?.toLowerCase() ?? ''
+      if (msg.includes('invalid') || msg.includes('credentials')) {
+        setError('Fel e-post eller lösenord. Försök igen eller återställ lösenordet.')
+      } else if (msg.includes('email not confirmed')) {
+        setError('Bekräfta din e-post via länken vi skickade innan du loggar in.')
+      } else {
+        setError('Kunde inte logga in. Försök igen.')
+      }
+      setLoading(false)
+      return
+    }
+
+    rememberAccount({
+      email: normalized,
+      name: data.user?.user_metadata?.full_name ?? data.user?.user_metadata?.name,
+      avatarUrl: data.user?.user_metadata?.avatar_url,
+    })
+
+    // Lazy-mark password users who never got the metadata flag
+    if (data.user && data.user.user_metadata?.[PASSWORD_SET_METADATA_KEY] !== true) {
+      await supabase.auth.updateUser({
+        data: { [PASSWORD_SET_METADATA_KEY]: true },
+      })
+    }
+
+    window.location.href = postAuthHref()
+  }
+
+  function handleFreshSubmit(e: React.FormEvent) {
     e.preventDefault()
-    void sendMagicLink(email, mode)
+    if (mode === 'signup') {
+      void sendSignupMagicLink(email)
+    } else {
+      void loginWithPassword(email, password)
+    }
   }
 
   function switchAuthMode(nextMode: 'login' | 'signup') {
     setMode(nextMode)
+    setPassword('')
     resetMessages()
+  }
+
+  function pickRememberedAccount(account: RememberedAccount) {
+    setEmail(account.email)
+    setPassword('')
+    setMode('login')
+    resetMessages()
+    setView('fresh')
   }
 
   const intentHint = intentParam === 'provider' ? 'Du är på väg att erbjuda en tjänst' : null
@@ -233,7 +404,7 @@ export default function AuthPanel({
             Välkommen tillbaka
           </h2>
           <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
-            Välj ett konto — vi skickar en inloggningslänk till din e-post.
+            Välj ett konto och logga in med lösenord eller Google.
           </p>
 
           <ul className="mt-6 divide-y divide-border/60">
@@ -242,7 +413,7 @@ export default function AuthPanel({
                 <button
                   type="button"
                   disabled={loading}
-                  onClick={() => void sendMagicLink(account.email, 'login')}
+                  onClick={() => pickRememberedAccount(account)}
                   className="flex w-full items-center gap-3 py-4 text-left transition-colors hover:bg-accent/50 -mx-2 px-2 rounded-xl disabled:opacity-50"
                 >
                   <AccountAvatar account={account} />
@@ -265,6 +436,7 @@ export default function AuthPanel({
               type="button"
               onClick={() => {
                 setEmail('')
+                setPassword('')
                 setMode('signup')
                 resetMessages()
                 setView('fresh')
@@ -288,11 +460,13 @@ export default function AuthPanel({
               <p className="mt-2 text-[13px] text-muted-foreground">{intentHint}</p>
             ) : null}
             <p className="mt-2 text-[14px] text-muted-foreground">
-              Vi skickar en länk till din e-post — inget lösenord behövs.
+              {mode === 'signup'
+                ? 'Vi skickar en länk till din e-post för att komma igång.'
+                : 'Logga in med e-post och lösenord.'}
             </p>
           </div>
 
-          <form onSubmit={handleContinue} className="flex flex-col gap-4">
+          <form onSubmit={handleFreshSubmit} className="flex flex-col gap-4">
             <label className="sr-only" htmlFor="auth-email">
               E-postadress
             </label>
@@ -306,12 +480,55 @@ export default function AuthPanel({
               required
               className="h-14 w-full rounded-xl border border-border bg-background px-4 text-[16px] text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
             />
+            {mode === 'login' && (
+              <>
+                <label className="sr-only" htmlFor="auth-password">
+                  Lösenord
+                </label>
+                <input
+                  id="auth-password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Lösenord"
+                  autoComplete="current-password"
+                  required
+                  className="h-14 w-full rounded-xl border border-border bg-background px-4 text-[16px] text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
+                />
+                <div className="flex flex-col gap-1 -mt-1">
+                  <div className="text-right">
+                    <Link
+                      href="/forgot-password"
+                      className="text-[13px] font-medium text-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
+                    >
+                      Glömt lösenord?
+                    </Link>
+                  </div>
+                  <div className="text-center pt-1">
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => void sendLoginMagicLink(email)}
+                      className="text-[13px] font-medium text-foreground/70 underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
+                    >
+                      Logga in med e-postlänk istället
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
             <Button
               type="submit"
               disabled={loading}
               className="h-12 w-full rounded-xl text-[16px] font-semibold"
             >
-              {loading ? 'Skickar…' : 'Skicka inloggningslänk'}
+              {loading
+                ? mode === 'signup'
+                  ? 'Skickar…'
+                  : 'Loggar in…'
+                : mode === 'signup'
+                  ? 'Skicka bekräftelselänk'
+                  : 'Logga in'}
             </Button>
           </form>
 
@@ -338,24 +555,63 @@ export default function AuthPanel({
 
       {view === 'check-email' && (
         <div className="pt-1 text-center">
-          <p className="text-[28px] font-bold tracking-tight text-primary">FESTEN.</p>
-          <h2 className="mt-3 text-[26px] font-semibold tracking-tight text-foreground">
-            Kolla din e-post
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF0EB]">
+            <MailIcon />
+          </div>
+          <h2 className="text-[26px] font-semibold tracking-tight text-foreground">
+            Öppna din e-post
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            Vi har skickat en inloggningslänk till{' '}
+            Vi har skickat en länk till{' '}
             <span className="font-medium text-foreground">{email}</span>.
-            Öppna länken för att fortsätta.
+            Öppna den i den här webbläsaren om du kan — annars fortsätter du i
+            fliken som länken öppnar, och den här stängs automatiskt när du är inloggad.
           </p>
-          <p className="mt-2 text-[13px] text-muted-foreground">
-            Ser du inget? Kolla skräppost — länken gäller en begränsad tid.
+
+          <div className="mt-6 flex flex-col gap-3">
+            <Button
+              type="button"
+              asChild
+              className="h-12 w-full rounded-xl text-[16px] font-semibold"
+            >
+              <a href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noreferrer">
+                Öppna Gmail
+              </a>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              asChild
+              className="h-12 w-full rounded-xl border-[#222222] text-[16px] font-semibold text-[#222222]"
+            >
+              <a href="https://outlook.live.com/mail/0/" target="_blank" rel="noreferrer">
+                Öppna Outlook
+              </a>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              asChild
+              className="h-12 w-full rounded-xl border-[#222222] text-[16px] font-semibold text-[#222222]"
+            >
+              <a href={`mailto:${encodeURIComponent(email)}`}>Öppna e-postappen</a>
+            </Button>
+          </div>
+
+          <p className="mt-5 text-[13px] text-muted-foreground">
+            Ser du inget? Kolla skräppost. Väntar på att du klickar på länken…
           </p>
 
           <Button
             type="button"
             disabled={loading}
-            onClick={() => void sendMagicLink(email, mode)}
-            className="mt-8 h-12 w-full rounded-xl text-[16px] font-semibold"
+            variant="ghost"
+            onClick={() =>
+              void (magicPurpose === 'signup'
+                ? sendSignupMagicLink(email)
+                : sendLoginMagicLink(email))
+            }
+            className="mt-4 h-10 w-full text-[14px] font-semibold text-foreground/80"
           >
             {loading ? 'Skickar…' : 'Skicka länken igen'}
           </Button>
@@ -366,21 +622,32 @@ export default function AuthPanel({
               resetMessages()
               setView('fresh')
             }}
-            className="mt-4 text-[14px] font-medium text-foreground/70 hover:text-foreground"
+            className="mt-2 text-[14px] font-medium text-foreground/70 hover:text-foreground"
           >
             ← Byt e-postadress
           </button>
-
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-[12px] text-muted-foreground">eller</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
-          {socialButtons}
         </div>
       )}
     </div>
+  )
+}
+
+function MailIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden className="text-[#FF6B35]">
+      <path
+        d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11Z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path
+        d="m5.5 7.5 6.5 5 6.5-5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 

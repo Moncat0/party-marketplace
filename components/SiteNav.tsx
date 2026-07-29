@@ -12,6 +12,7 @@ const EXCLUDED = [
   '/reset-password',
   '/booking/sent',
   '/welcome',
+  '/set-password',
 ]
 
 function isExcluded(pathname: string): boolean {
