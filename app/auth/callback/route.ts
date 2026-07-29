@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
     let hasProviderProfile = false
     let isPublished = false
     let missingDisplayName = false
+    let needsProviderBio = false
 
     if (user) {
       const signupSource = cookieStore.get('signup_source')?.value ?? 'organic'
@@ -83,12 +84,12 @@ export async function GET(request: NextRequest) {
       const [{ data: profile }, { data: appUser }] = await Promise.all([
         supabase
           .from('provider_profiles')
-          .select('id, services(is_published)')
+          .select('id, bio, services(is_published)')
           .eq('user_id', user.id)
           .maybeSingle(),
         supabase
           .from('users')
-          .select('name, first_name')
+          .select('name, first_name, user_type')
           .eq('id', user.id)
           .maybeSingle(),
       ])
@@ -102,6 +103,15 @@ export async function GET(request: NextRequest) {
       hasProviderProfile = !!profile
       isPublished = !!service?.is_published
       missingDisplayName = needsDisplayName(appUser)
+
+      const providerSide =
+        intent === 'provider' ||
+        appUser?.user_type === 'provider' ||
+        appUser?.user_type === 'both'
+      // Only nudge unpublished / onboarding providers — don’t interrupt published hosts every login
+      if (providerSide && !isPublished && !(profile?.bio ?? '').trim()) {
+        needsProviderBio = true
+      }
     }
 
     const destination = resolvePostAuthDestination({
@@ -110,6 +120,7 @@ export async function GET(request: NextRequest) {
       hasProviderProfile,
       isPublished,
       needsDisplayName: missingDisplayName,
+      needsProviderBio,
     })
 
     const response = NextResponse.redirect(`${origin}${destination}`)

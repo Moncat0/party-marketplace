@@ -13,7 +13,7 @@ export default async function RequestsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/signup?intent=planner')
+  if (!user) redirect('/signup?intent=provider&next=/dashboard/requests')
 
   const result = await getServicesForUser(supabase, user.id)
   if (!result) return await redirectWithoutProviderProfile(supabase, user.id)

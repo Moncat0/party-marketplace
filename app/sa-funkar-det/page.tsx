@@ -67,7 +67,7 @@ export default function HowItWorksPage() {
         </p>
         <div className="flex items-center justify-center gap-4">
           <Link
-            href="/signup?intent=planner"
+            href="/signup?intent=planner&next=/"
             className="rounded-xl bg-[#FF6B35] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
           >
             Skapa konto gratis
@@ -114,7 +114,7 @@ export default function HowItWorksPage() {
               Bläddra direkt →
             </Link>
             <Link
-              href="/signup?intent=planner"
+              href="/signup?intent=planner&next=/"
               className="rounded-xl bg-[#FF6B35] px-6 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors whitespace-nowrap"
             >
               Skapa konto gratis

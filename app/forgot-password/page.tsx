@@ -29,8 +29,8 @@ export default function ForgotPasswordPage() {
     const normalized = email.trim().toLowerCase()
     const redirectTo =
       typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback?next=/planner/dashboard&intent=planner`
-        : '/auth/callback?next=/planner/dashboard&intent=planner'
+        ? `${window.location.origin}/auth/callback?next=/&intent=planner`
+        : '/auth/callback?next=/&intent=planner'
 
     const { error: otpError } = await createClient().auth.signInWithOtp({
       email: normalized,

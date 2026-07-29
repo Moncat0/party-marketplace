@@ -20,5 +20,5 @@ export async function redirectWithoutProviderProfile(
   if (type === 'provider' || type === 'both') {
     redirect('/onboarding')
   }
-  redirect('/planner/dashboard')
+  redirect('/')
 }

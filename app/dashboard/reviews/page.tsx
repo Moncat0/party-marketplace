@@ -13,7 +13,7 @@ export default async function ReviewsPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/signup?intent=planner')
+  if (!user) redirect('/signup?intent=provider&next=/dashboard/reviews')
 
   const result = await getServicesForUser(supabase, user.id)
   if (!result) return await redirectWithoutProviderProfile(supabase, user.id)

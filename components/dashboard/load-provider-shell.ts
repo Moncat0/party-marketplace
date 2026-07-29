@@ -19,7 +19,7 @@ export async function loadProviderShellData(): Promise<ProviderShellData> {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/signup?intent=planner')
+  if (!user) redirect('/signup?intent=provider&next=/dashboard')
 
   const [{ data: userData }, result] = await Promise.all([
     supabase.from('users').select('name').eq('id', user.id).single(),

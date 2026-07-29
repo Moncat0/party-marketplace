@@ -21,7 +21,7 @@ export default async function EditProfilePage({ searchParams }: Props) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/signup?intent=planner')
+  if (!user) redirect('/signup?intent=provider&next=/dashboard/profile')
 
   const { data: existingProvider } = await supabase
     .from('provider_profiles')

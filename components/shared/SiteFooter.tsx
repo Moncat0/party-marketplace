@@ -167,7 +167,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
               <li>
                 <button
                   type="button"
-                  onClick={() => openAuth({ intent: 'planner' })}
+                  onClick={() => openAuth({ intent: 'planner', next: '/' })}
                   className="text-sm text-white/60 hover:text-white transition-colors"
                 >
                   Logga in

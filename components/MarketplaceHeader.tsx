@@ -365,7 +365,7 @@ export default function MarketplaceHeader({
                   role="menuitem"
                   onClick={() => {
                     setOpen(false)
-                    openAuth({ intent: 'planner' })
+                    openAuth({ intent: 'planner', next: '/' })
                   }}
                   className={menuItemClass}
                 >

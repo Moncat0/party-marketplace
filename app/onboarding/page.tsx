@@ -29,7 +29,7 @@ export default async function OnboardingPage() {
 
   const ensured = await ensureProviderAndService(supabase, user.id)
   if (ensured.error) {
-    redirect('/planner/dashboard')
+    redirect('/')
   }
 
   const result = await getServicesForUser(supabase, user.id)

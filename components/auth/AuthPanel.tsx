@@ -91,7 +91,7 @@ export default function AuthPanel({
         ? next
         : intent === 'provider'
           ? '/onboarding'
-          : '/planner/dashboard'
+          : '/'
     const params = new URLSearchParams({ next: destHint, intent })
     return `${origin}/auth/callback?${params.toString()}`
   }

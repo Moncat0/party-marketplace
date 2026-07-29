@@ -19,7 +19,7 @@ export default async function DashboardOverviewPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/signup?intent=planner')
+  if (!user) redirect('/signup?intent=provider&next=/dashboard')
 
   const { data: userData } = await supabase
     .from('users')

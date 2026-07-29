@@ -11,11 +11,15 @@ export type PhoneFields = {
   phone?: string | null
 }
 
+/**
+ * Require a structured first name (not only OAuth full_name).
+ * Prefill welcome from `name` when first_name is missing.
+ */
 export function needsDisplayName(
   user: DisplayNameFields | null | undefined
 ): boolean {
   if (!user) return true
-  return !(user.name ?? '').trim() && !(user.first_name ?? '').trim()
+  return !(user.first_name ?? '').trim()
 }
 
 export function needsPhone(user: PhoneFields | null | undefined): boolean {
@@ -43,4 +47,17 @@ export function welcomeUrl(next: string | null | undefined): string {
 
 export function parseWelcomeNext(raw: string | null | undefined): string | null {
   return safePath(raw)
+}
+
+/** True when post-auth destination is supply-side (provider onboarding / host dashboard). */
+export function isProviderDestination(next: string | null | undefined): boolean {
+  const path = safePath(next)
+  if (!path) return false
+  return (
+    path === '/onboarding' ||
+    path.startsWith('/onboarding/') ||
+    path.startsWith('/onboarding?') ||
+    path === '/dashboard' ||
+    path.startsWith('/dashboard/')
+  )
 }

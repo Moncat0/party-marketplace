@@ -45,9 +45,10 @@ function safePath(raw: string | null | undefined): string | null {
 /**
  * Resolve where to send the user after auth.
  * Provider intent → onboarding (unless next is already onboarding-safe).
- * Planner → honour next, else planner dashboard.
+ * Planner → honour next, else homepage browse (discovery).
  * Existing published providers → /dashboard when next is generic.
- * Missing display name → /welcome first (preserves the real destination).
+ * Missing first_name → /welcome first (preserves the real destination).
+ * Provider destination + empty bio → /welcome for optional “about” step when name is done.
  */
 export function resolvePostAuthDestination(opts: {
   intent: AuthIntent | null
@@ -56,8 +57,10 @@ export function resolvePostAuthDestination(opts: {
   hasProviderProfile?: boolean
   /** True when that profile is published */
   isPublished?: boolean
-  /** True when name / first_name are both empty */
+  /** True when first_name is empty */
   needsDisplayName?: boolean
+  /** True when provider-side and bio is empty (optional about step) */
+  needsProviderBio?: boolean
 }): string {
   const next = safePath(opts.next)
 
@@ -85,16 +88,30 @@ export function resolvePostAuthDestination(opts: {
         ? next
         : '/onboarding'
   } else if (next && !isGenericNext) {
-    // Planner (or unknown): honour specific next, else planner home
+    // Planner (or unknown): honour specific next
     destination = next
   } else if (next === '/onboarding' || next?.startsWith('/onboarding?')) {
     destination = next
   } else {
-    destination = '/planner/dashboard'
+    // Cold planner login → browse / discover talent
+    destination = '/'
   }
 
   if (opts.needsDisplayName) {
     return welcomeUrl(destination)
+  }
+
+  // Name done, but provider still needs an about blurb for “Träffa din leverantör”
+  if (opts.needsProviderBio) {
+    const path = destination
+    if (
+      path === '/onboarding' ||
+      path.startsWith('/onboarding') ||
+      path === '/dashboard' ||
+      path.startsWith('/dashboard/')
+    ) {
+      return welcomeUrl(destination)
+    }
   }
 
   return destination

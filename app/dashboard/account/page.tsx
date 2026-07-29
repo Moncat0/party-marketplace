@@ -30,7 +30,7 @@ export default async function AccountPage({
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect('/signup?intent=planner')
+  if (!user) redirect('/signup?intent=provider&next=/dashboard/account')
 
   const { data: userData } = await supabase
     .from('users')
