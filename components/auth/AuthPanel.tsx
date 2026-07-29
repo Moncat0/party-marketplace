@@ -192,7 +192,32 @@ export default function AuthPanel({
     setEmail(normalized)
     setMode('signup')
 
-    const { error: otpError } = await createClient().auth.signInWithOtp({
+    const supabase = createClient()
+
+    // Magic-link OTP does not error when the email already exists — it silently
+    // re-authenticates. Block “Skapa konto” and steer them to login instead.
+    try {
+      const res = await fetch('/api/auth/email-exists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalized }),
+      })
+      if (res.ok) {
+        const json = (await res.json()) as { exists?: boolean }
+        if (json.exists) {
+          setError(
+            'Det finns redan ett konto med den e-postadressen. Logga in istället.'
+          )
+          setMode('login')
+          setLoading(false)
+          return
+        }
+      }
+    } catch (e) {
+      console.warn('[AuthPanel] email-exists check failed:', e)
+    }
+
+    const { error: otpError } = await supabase.auth.signInWithOtp({
       email: normalized,
       options: {
         shouldCreateUser: true,
