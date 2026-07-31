@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import AuthPasswordInput, { authInputClass } from '@/components/auth/AuthPasswordInput'
 
-export const authInputClass =
-  'h-14 w-full rounded-xl border border-border bg-background px-4 text-[16px] leading-none text-foreground outline-none transition-shadow placeholder:text-muted-foreground focus:border-foreground focus:ring-1 focus:ring-foreground'
+export { authInputClass }
 
 /** Airbnb-style legal copy above “Godkänn och fortsätt” — no checkboxes. */
 export function AgreeAndContinueLegal() {
@@ -123,28 +123,24 @@ export default function FinishSignupFields({
             <label htmlFor="finish-password" className="mb-1.5 block text-[13px] font-medium text-foreground">
               Lösenord
             </label>
-            <input
+            <AuthPasswordInput
               id="finish-password"
-              type="password"
               value={password}
               onChange={e => onPassword?.(e.target.value)}
               autoComplete="new-password"
               required
-              className={authInputClass}
             />
           </div>
           <div>
             <label htmlFor="finish-confirm" className="mb-1.5 block text-[13px] font-medium text-foreground">
               Bekräfta lösenord
             </label>
-            <input
+            <AuthPasswordInput
               id="finish-confirm"
-              type="password"
               value={confirmPassword}
               onChange={e => onConfirmPassword?.(e.target.value)}
               autoComplete="new-password"
               required
-              className={authInputClass}
             />
           </div>
           {passwordHint}

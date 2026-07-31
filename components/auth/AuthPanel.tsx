@@ -36,6 +36,7 @@ import FinishSignupFields, {
   authInputClass,
   isAtLeast18,
 } from '@/components/auth/FinishSignupFields'
+import AuthPasswordInput from '@/components/auth/AuthPasswordInput'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -60,12 +61,16 @@ type Props = {
 
 /**
  * Airbnb-style auth:
- * 1) Log in or sign up — phone/email Continue + Google (no terms)
+ * 1) Log in or sign up — email Continue + Google (no terms)
  * 2a) Existing email → password
  * 2b) New email → Finish signing up (name, DOB, password, Agree and continue)
- * 2c) Phone → SMS code, then /auth/continue (complete-signup if new)
+ * 2c) Phone → SMS code (kept below; gated by PHONE_AUTH_ENABLED)
  * Google new users finish on /complete-signup after OAuth.
+ *
+ * Set PHONE_AUTH_ENABLED to true to restore phone/OTP on the identify screen.
  */
+const PHONE_AUTH_ENABLED = false
+
 export default function AuthPanel({
   intent: intentProp = null,
   next = null,
@@ -99,7 +104,8 @@ export default function AuthPanel({
   const [message, setMessage] = useState<string | null>(null)
 
   const identifierKind: IdentifierKind = detectIdentifierKind(identifier)
-  const showPhoneCountry = identifierKind === 'phone'
+  // TEMP: email-only identify — country code UI restored when PHONE_AUTH_ENABLED
+  const showPhoneCountry = PHONE_AUTH_ENABLED && identifierKind === 'phone'
 
   useEffect(() => {
     const remembered = getRememberedAccounts()
@@ -191,9 +197,46 @@ export default function AuthPanel({
 
   async function handleIdentifyContinue(e: React.FormEvent) {
     e.preventDefault()
-    const kind = detectIdentifierKind(identifier)
     resetMessages()
     setIntentCookie(effectiveIntent())
+
+    // --- Email-only identify (phone gated by PHONE_AUTH_ENABLED below) ---
+    if (!PHONE_AUTH_ENABLED) {
+      const normalized = identifier.trim().toLowerCase()
+      if (!isValidEmail(normalized)) {
+        setError('Ange en giltig e-postadress.')
+        return
+      }
+
+      setLoading(true)
+      setEmail(normalized)
+      setPhoneE164('')
+
+      try {
+        const exists = await lookupExists({ email: normalized })
+        if (exists === true) {
+          setAccountExists(true)
+          setPassword('')
+          setView('password')
+          setLoading(false)
+          return
+        }
+        if (exists === false) {
+          setAccountExists(false)
+        }
+      } catch (err) {
+        console.warn('[AuthPanel] identifier-exists check failed:', err)
+      }
+
+      setPassword('')
+      setConfirmPassword('')
+      setView('finish-signup')
+      setLoading(false)
+      return
+    }
+
+    // --- Combined phone | email identify (restore when PHONE_AUTH_ENABLED) ---
+    const kind = detectIdentifierKind(identifier)
 
     if (kind === 'email' || (kind === 'unknown' && identifier.includes('@'))) {
       const normalized = identifier.trim().toLowerCase()
@@ -633,10 +676,10 @@ export default function AuthPanel({
                       : 'top-1/2 -translate-y-1/2 text-[15px]'
                   )}
                 >
-                  Telefonnummer eller e-post
+                  {PHONE_AUTH_ENABLED ? 'Telefonnummer eller e-post' : 'E-postadress'}
                 </span>
                 <input
-                  type={showPhoneCountry ? 'tel' : 'text'}
+                  type={showPhoneCountry ? 'tel' : 'email'}
                   inputMode={showPhoneCountry ? 'tel' : 'email'}
                   autoComplete={showPhoneCountry ? 'tel-national' : 'email'}
                   value={identifier}
@@ -654,8 +697,14 @@ export default function AuthPanel({
 
             {identifierFocused && (
               <p className="text-[12px] leading-snug text-muted-foreground">
-                Vi skickar en bekräftelsekod via SMS eller e-post. Vanliga SMS-avgifter kan
-                tillkomma.{' '}
+                {PHONE_AUTH_ENABLED ? (
+                  <>
+                    Vi skickar en bekräftelsekod via SMS eller e-post. Vanliga SMS-avgifter kan
+                    tillkomma.{' '}
+                  </>
+                ) : (
+                  <>Vi använder din e-post för att logga in eller skapa konto. </>
+                )}
                 <Link href="/privacy" className="underline underline-offset-2">
                   Integritetspolicy
                 </Link>
@@ -690,7 +739,8 @@ export default function AuthPanel({
         </div>
       )}
 
-      {view === 'confirm-code' && (
+      {/* Phone OTP confirm — hidden while PHONE_AUTH_ENABLED is false */}
+      {PHONE_AUTH_ENABLED && view === 'confirm-code' && (
         <div className="pt-1">
           <button
             type="button"
@@ -766,15 +816,13 @@ export default function AuthPanel({
           </p>
 
           <form onSubmit={e => void loginWithPassword(e)} className="mt-6 flex flex-col gap-4">
-            <input
-              type="password"
+            <AuthPasswordInput
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Lösenord"
               autoComplete="current-password"
               autoFocus
               required
-              className={authInputClass}
             />
             <div className="text-right -mt-1">
               <Link
@@ -827,16 +875,14 @@ export default function AuthPanel({
             onPassword={setPassword}
             onConfirmPassword={setConfirmPassword}
             passwordHint={
-              password.length > 0 ? (
-                <PasswordHint
-                  checks={pwChecks}
-                  match={
-                    confirmPassword.length > 0
-                      ? passwordsMatch(password, confirmPassword)
-                      : null
-                  }
-                />
-              ) : null
+              <PasswordHint
+                checks={pwChecks}
+                match={
+                  confirmPassword.length > 0
+                    ? passwordsMatch(password, confirmPassword)
+                    : null
+                }
+              />
             }
             error={error}
             loading={loading}
@@ -859,48 +905,31 @@ export default function AuthPanel({
             för att aktivera kontot, sedan kan du logga in.
           </p>
 
-          <div className="mt-6 flex flex-col gap-3">
-            <Button type="button" asChild className="h-12 w-full rounded-xl text-[16px] font-semibold">
-              <a href="https://mail.google.com/mail/u/0/#inbox" target="_blank" rel="noreferrer">
-                Öppna Gmail
-              </a>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              asChild
-              className="h-12 w-full rounded-xl border-[#222222] text-[16px] font-semibold text-[#222222]"
-            >
-              <a href="https://outlook.live.com/mail/0/" target="_blank" rel="noreferrer">
-                Öppna Outlook
-              </a>
-            </Button>
-          </div>
-
-          <p className="mt-5 text-[13px] text-muted-foreground">
+          <p className="mt-6 text-[13px] text-muted-foreground">
             Ser du inget? Kolla skräppost.
           </p>
 
-          <Button
-            type="button"
-            disabled={loading}
-            variant="ghost"
-            onClick={() => void resendConfirmation()}
-            className="mt-4 h-10 w-full text-[14px] font-semibold text-foreground/80"
-          >
-            {loading ? 'Skickar…' : 'Skicka länken igen'}
-          </Button>
-
           <button
             type="button"
-            onClick={() => {
-              resetMessages()
-              setView('fresh')
-            }}
-            className="mt-2 text-[14px] font-medium text-foreground/70 hover:text-foreground"
+            disabled={loading}
+            onClick={() => void resendConfirmation()}
+            className="mt-5 text-[14px] font-semibold text-foreground underline-offset-2 hover:underline disabled:opacity-50"
           >
-            ← Byt e-postadress
+            {loading ? 'Skickar…' : 'Skicka länken igen'}
           </button>
+
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                resetMessages()
+                setView('fresh')
+              }}
+              className="text-[14px] font-medium text-foreground/70 hover:text-foreground"
+            >
+              ← Byt e-postadress
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -914,23 +943,50 @@ function PasswordHint({
   checks: PasswordChecks
   match: boolean | null
 }) {
-  const missing: string[] = []
-  if (!checks.minLength) missing.push('8+ tecken')
-  if (!checks.hasUpper) missing.push('versal')
-  if (!checks.hasLower) missing.push('gemen')
-  if (!checks.hasNumber) missing.push('siffra')
-  if (match === false) missing.push('matchar inte')
+  const rules: { key: string; label: string; met: boolean }[] = [
+    { key: 'length', label: 'Minst 8 tecken', met: checks.minLength },
+    { key: 'upper', label: 'En versal (A–Z)', met: checks.hasUpper },
+    { key: 'lower', label: 'En gemen (a–z)', met: checks.hasLower },
+    { key: 'number', label: 'En siffra (0–9)', met: checks.hasNumber },
+  ]
 
-  if (missing.length === 0) {
-    return (
-      <p className="text-[12px] font-medium text-[#1D9E75]">Lösenordet uppfyller kraven</p>
-    )
+  if (match !== null) {
+    rules.push({ key: 'match', label: 'Lösenorden matchar', met: match })
   }
 
   return (
-    <p className="text-[12px] leading-snug text-muted-foreground">
-      Saknas: {missing.join(' · ')}
-    </p>
+    <ul className="mt-1 flex flex-col gap-1.5" aria-live="polite">
+      {rules.map(rule => (
+        <li
+          key={rule.key}
+          className={cn(
+            'flex items-center gap-2 text-[13px] leading-snug',
+            rule.met ? 'text-[#1D9E75]' : 'text-muted-foreground'
+          )}
+        >
+          <span
+            className={cn(
+              'flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full',
+              rule.met ? 'bg-[#1D9E75] text-white' : 'border border-border bg-background'
+            )}
+            aria-hidden
+          >
+            {rule.met ? (
+              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                <path
+                  d="M2.5 6.2 4.8 8.5 9.5 3.5"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : null}
+          </span>
+          <span>{rule.label}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
 

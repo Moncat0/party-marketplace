@@ -22,6 +22,7 @@ export default function AuthPreviewClient() {
         </p>
         <h1 className="mt-1 text-[22px] font-semibold text-white">Auth modal (Airbnb-style)</h1>
         <p className="mt-1 text-[13px] text-white/70">
+          Email + Google for now (phone OTP gated off).{' '}
           <Link href="/dev/onboarding" className="underline underline-offset-2">
             All flows
           </Link>
