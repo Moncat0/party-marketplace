@@ -3,9 +3,10 @@
 import type { FormEvent } from 'react'
 import DatePickerField from '@/components/ui/DatePickerField'
 import OccasionMultiSelect from '@/components/ui/OccasionMultiSelect'
+import AddressAutocomplete from '@/components/ui/AddressAutocomplete'
 import { Button } from '@/components/ui/button'
 import type { BookingFormData } from '@/lib/booking-draft'
-import type { OccasionSlug } from '@/lib/occasions'
+import { normalizeOccasions } from '@/lib/occasions'
 
 type Props = {
   priceLabel: string | null
@@ -18,7 +19,7 @@ type Props = {
   error: string | null
   loggedIn: boolean
   onRequireLogin: () => void
-  /** Occasions this service supports — when set, only those are offered. */
+  /** Occasions this service supports — booking only offers these. */
   serviceOccasions?: string[] | null
 }
 
@@ -36,10 +37,9 @@ export default function ListingReservation({
   onRequireLogin,
   serviceOccasions,
 }: Props) {
-  const optionSlugs =
-    serviceOccasions && serviceOccasions.length > 0
-      ? (serviceOccasions as OccasionSlug[])
-      : undefined
+  // Never fall back to the full occasion catalog — only this listing's tillfällen.
+  const optionSlugs = normalizeOccasions(serviceOccasions)
+  const hasListingOccasions = optionSlugs.length > 0
 
   return (
     <div
@@ -96,44 +96,62 @@ export default function ListingReservation({
             <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-[#222222]">
               Tillfälle
             </p>
-            <OccasionMultiSelect
-              value={bookingData.occasions}
-              options={optionSlugs}
-              size="sm"
-              onChange={occasions => onChange({ ...bookingData, occasions })}
-            />
-            <p className="mt-2 text-[12px] text-[#6a6a6a]">Välj ett eller flera.</p>
+            {hasListingOccasions ? (
+              <>
+                <OccasionMultiSelect
+                  value={bookingData.occasions.filter(o =>
+                    optionSlugs.includes(o as (typeof optionSlugs)[number])
+                  )}
+                  options={optionSlugs}
+                  size="sm"
+                  onChange={occasions => onChange({ ...bookingData, occasions })}
+                />
+                <p className="mt-2 text-[12px] text-[#6a6a6a]">
+                  {optionSlugs.length === 1
+                    ? 'Välj tillfället för ditt event.'
+                    : 'Välj ett eller flera som passar tjänsten.'}
+                </p>
+              </>
+            ) : (
+              <p className="text-[13px] leading-snug text-[#6a6a6a]">
+                Värden har inte angett tillfällen för den här tjänsten. Berätta gärna i
+                meddelandet vilken typ av event det är.
+              </p>
+            )}
           </div>
-          <div className="grid grid-cols-2">
-            <div className="px-3 py-2.5 border-r border-[#b0b0b0]">
-              <label className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
-                Plats
-              </label>
-              <input
-                type="text"
-                value={bookingData.event_location}
-                onChange={e =>
-                  onChange({ ...bookingData, event_location: e.target.value })
-                }
-                placeholder="Stockholm"
-                className="w-full text-[14px] text-[#222222] placeholder-[#717171] focus:outline-none bg-transparent mt-0.5"
-              />
-            </div>
-            <div className="px-3 py-2.5">
-              <label className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
-                Gäster
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={bookingData.guest_count}
-                onChange={e =>
-                  onChange({ ...bookingData, guest_count: e.target.value })
-                }
-                placeholder="30"
-                className="w-full text-[14px] text-[#222222] placeholder-[#717171] focus:outline-none bg-transparent mt-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
+          <div className="border-b border-[#b0b0b0] px-3 py-2.5">
+            <label className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
+              Plats
+            </label>
+            <AddressAutocomplete
+              value={bookingData.event_location}
+              placeholder="Gatuadress eller lokal"
+              inputClassName="mt-0.5"
+              onChange={({ address, placeId, lat, lng }) =>
+                onChange({
+                  ...bookingData,
+                  event_location: address,
+                  event_place_id: placeId,
+                  event_lat: lat,
+                  event_lng: lng,
+                })
+              }
+            />
+          </div>
+          <div className="px-3 py-2.5">
+            <label className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
+              Gäster
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={bookingData.guest_count}
+              onChange={e =>
+                onChange({ ...bookingData, guest_count: e.target.value })
+              }
+              placeholder="30"
+              className="w-full text-[14px] text-[#222222] placeholder-[#717171] focus:outline-none bg-transparent mt-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
           </div>
         </div>
 

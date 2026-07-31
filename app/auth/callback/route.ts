@@ -10,6 +10,7 @@ import {
 import { needsTermsAndAge } from '@/lib/auth-compliance'
 import { ensureAppUser, intentFromUserMetadata } from '@/lib/ensure-user'
 import { needsDisplayName } from '@/lib/profile-completeness'
+import { fetchGoogleBirthDate } from '@/lib/google-birthday'
 
 function safeNext(raw: string | null): string | null {
   if (!raw) return null
@@ -57,6 +58,28 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('[auth/callback] session exchange failed:', error.message, error)
       return NextResponse.redirect(`${origin}/?auth=1&mode=login&error=auth`)
+    }
+
+    // Google OAuth: optional DOB via People API (scope may be denied / year hidden)
+    if (code) {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      const provider = session?.user?.app_metadata?.provider
+      const identities = session?.user?.identities ?? []
+      const isGoogle =
+        provider === 'google' || identities.some(i => i.provider === 'google')
+      if (isGoogle && session?.provider_token) {
+        const existingDob = session.user.user_metadata?.date_of_birth
+        if (typeof existingDob !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(existingDob)) {
+          const dob = await fetchGoogleBirthDate(session.provider_token)
+          if (dob) {
+            await supabase.auth.updateUser({
+              data: { date_of_birth: dob },
+            })
+          }
+        }
+      }
     }
 
     if (type === 'recovery' || nextParam === '/reset-password') {

@@ -165,6 +165,9 @@ create table booking_requests (
   service_id                  uuid not null references services (id) on delete cascade,
   event_date                  date,
   event_location              text,
+  event_place_id              text,
+  event_lat                   double precision,
+  event_lng                   double precision,
   guest_count                 integer,
   event_type                  text
                                 check (event_type in (

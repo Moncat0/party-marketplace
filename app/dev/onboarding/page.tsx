@@ -14,12 +14,13 @@ export default function DevOnboardingIndexPage() {
     {
       href: '/dev/onboarding/auth',
       title: 'Auth modal',
-      blurb: 'Airbnb-style: identify → password or finish signup → confirm email',
+      blurb:
+        'Email-only identify → password or compact finish signup (full checklist) → confirm email',
     },
     {
       href: '/dev/onboarding/complete-signup',
       title: 'Finish signup (Google)',
-      blurb: 'Agree and continue after Google OAuth',
+      blurb: 'Agree and continue after Google OAuth (no password)',
     },
     {
       href: '/dev/onboarding/planner',

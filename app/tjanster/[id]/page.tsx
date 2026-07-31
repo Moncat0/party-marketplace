@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import type { ListingCardData } from '@/components/listings/ListingCard'
 import { formatCategoryFromSlug, resolveCategorySlug } from '@/lib/categories'
 import { formatEventType } from '@/lib/event-types'
+import { normalizeOccasions } from '@/lib/occasions'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const supabase = await createClient()
@@ -125,7 +126,7 @@ export default async function ServicePage({
     description: service.description,
     category_slug: categorySlug,
     category_tags: service.category_tags ?? [],
-    occasions: Array.isArray(service.occasions) ? service.occasions : [],
+    occasions: normalizeOccasions(service.occasions),
     city: service.city,
     price_range_min: service.price_range_min,
     price_range_max: service.price_range_max,

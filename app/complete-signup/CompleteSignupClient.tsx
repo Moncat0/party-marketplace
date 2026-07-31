@@ -65,6 +65,10 @@ export default function CompleteSignupClient({
       const names = namesFromAuthUser(user)
       setFirstName(row?.first_name?.trim() || names.firstName)
       setLastName(row?.last_name?.trim() || names.lastName)
+      const metaDob = user.user_metadata?.date_of_birth
+      if (typeof metaDob === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(metaDob)) {
+        setBirthDate(metaDob)
+      }
       setChecking(false)
     })()
     return () => {

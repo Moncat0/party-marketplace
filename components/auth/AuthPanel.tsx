@@ -32,6 +32,7 @@ import {
   type PasswordChecks,
 } from '@/lib/auth-compliance'
 import { buildDisplayName } from '@/lib/profile-completeness'
+import { GOOGLE_OAUTH_SCOPES } from '@/lib/google-birthday'
 import FinishSignupFields, {
   authInputClass,
   isAtLeast18,
@@ -57,6 +58,11 @@ type Props = {
   initialView?: AuthView
   /** @deprecated Airbnb uses one door — kept for openAuth callers */
   initialMode?: 'login' | 'signup'
+  /**
+   * `/dev/onboarding` previews — seed demo data, show gated SMS UI,
+   * and skip live Supabase / API calls (navigate between views only).
+   */
+  previewMode?: boolean
 }
 
 /**
@@ -78,23 +84,56 @@ export default function AuthPanel({
   showClose = false,
   className,
   initialView,
+  previewMode = false,
 }: Props) {
   const intentParam = parseAuthIntent(intentProp)
   const defaultIntent: AuthIntent =
     intentParam ??
     (next === '/onboarding' || next?.startsWith('/onboarding') ? 'provider' : 'planner')
 
-  const [accounts, setAccounts] = useState<RememberedAccount[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const [accounts, setAccounts] = useState<RememberedAccount[]>(() =>
+    previewMode && initialView === 'welcome'
+      ? [
+          {
+            email: 'demo@festen.se',
+            name: 'Demo Användare',
+            lastLoginAt: new Date().toISOString(),
+          },
+          {
+            email: 'host@festen.se',
+            name: 'Fest Host',
+            lastLoginAt: new Date(Date.now() - 86_400_000).toISOString(),
+          },
+        ]
+      : []
+  )
+  /** Preview / forced views can paint immediately — no localStorage gate. */
+  const [hydrated, setHydrated] = useState(() => Boolean(previewMode || initialView))
   const [view, setView] = useState<AuthView>(initialView ?? 'fresh')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [birthDate, setBirthDate] = useState('')
-  const [identifier, setIdentifier] = useState('')
+  const [firstName, setFirstName] = useState(() =>
+    previewMode && initialView === 'finish-signup' ? 'Gonzalo' : ''
+  )
+  const [lastName, setLastName] = useState(() =>
+    previewMode && initialView === 'finish-signup' ? 'Escudero' : ''
+  )
+  const [birthDate, setBirthDate] = useState(() =>
+    previewMode && initialView === 'finish-signup' ? '1988-07-20' : ''
+  )
+  const [identifier, setIdentifier] = useState(() => {
+    if (initialView === 'password') return 'demo@festen.se'
+    if (initialView === 'finish-signup' || initialView === 'check-email') return 'ny@festen.se'
+    return ''
+  })
   const [identifierFocused, setIdentifierFocused] = useState(false)
   const [countryDial, setCountryDial] = useState(COUNTRY_DIALS[0].dial)
-  const [email, setEmail] = useState('')
-  const [phoneE164, setPhoneE164] = useState('')
+  const [email, setEmail] = useState(() => {
+    if (initialView === 'password') return 'demo@festen.se'
+    if (initialView === 'finish-signup' || initialView === 'check-email') return 'ny@festen.se'
+    return ''
+  })
+  const [phoneE164, setPhoneE164] = useState(() =>
+    initialView === 'confirm-code' ? '+46768513119' : ''
+  )
   const [otpCode, setOtpCode] = useState('')
   const [accountExists, setAccountExists] = useState(false)
   const [password, setPassword] = useState('')
@@ -109,7 +148,22 @@ export default function AuthPanel({
 
   useEffect(() => {
     const remembered = getRememberedAccounts()
-    setAccounts(remembered)
+    if (previewMode && initialView === 'welcome') {
+      setAccounts([
+        {
+          email: 'demo@festen.se',
+          name: 'Demo Användare',
+          lastLoginAt: new Date().toISOString(),
+        },
+        {
+          email: 'host@festen.se',
+          name: 'Fest Host',
+          lastLoginAt: new Date(Date.now() - 86_400_000).toISOString(),
+        },
+      ])
+    } else {
+      setAccounts(remembered)
+    }
     if (!initialView) {
       setView(remembered.length > 0 ? 'welcome' : 'fresh')
     }
@@ -120,17 +174,25 @@ export default function AuthPanel({
       setEmail('demo@festen.se')
       setIdentifier('demo@festen.se')
     }
-    if (initialView === 'finish-signup' && !email) {
+    if (
+      (initialView === 'finish-signup' || initialView === 'check-email') &&
+      !email
+    ) {
       setEmail('ny@festen.se')
       setIdentifier('ny@festen.se')
     }
+    if (previewMode && initialView === 'finish-signup') {
+      setFirstName('Gonzalo')
+      setLastName('Escudero')
+      setBirthDate('1988-07-20')
+    }
     setHydrated(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps -- hydrate once from initialView
-  }, [initialView])
+  }, [initialView, previewMode])
 
   useEffect(() => {
-    if (view === 'welcome') setAccounts(getRememberedAccounts())
-  }, [view])
+    if (view === 'welcome' && !previewMode) setAccounts(getRememberedAccounts())
+  }, [view, previewMode])
 
   useEffect(() => {
     setIntentCookie(intentParam ?? defaultIntent)
@@ -171,12 +233,21 @@ export default function AuthPanel({
   }
 
   async function startGoogle() {
+    if (previewMode) {
+      resetMessages()
+      setMessage('Preview — Google OAuth hoppas över här.')
+      return
+    }
     setLoading(true)
     resetMessages()
     setIntentCookie(effectiveIntent())
     const { error: oauthError } = await createClient().auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: callbackUrl() },
+      options: {
+        redirectTo: callbackUrl(),
+        scopes: GOOGLE_OAUTH_SCOPES,
+        queryParams: { include_granted_scopes: 'true' },
+      },
     })
     if (oauthError) {
       setError('Det gick inte att fortsätta med Google. Försök igen.')
@@ -185,6 +256,11 @@ export default function AuthPanel({
   }
 
   async function lookupExists(body: { email?: string; phone?: string }) {
+    if (previewMode) {
+      const tip = (body.email ?? body.phone ?? '').toLowerCase()
+      // Use demo@ / exists@ in the identify field to preview the password path
+      return tip.startsWith('demo@') || tip.includes('exists')
+    }
     const res = await fetch('/api/auth/identifier-exists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -340,6 +416,11 @@ export default function AuthPanel({
       return
     }
 
+    if (previewMode) {
+      setMessage('Preview — SMS-kod godkänd, skulle vidarebefordra.')
+      return
+    }
+
     setLoading(true)
     resetMessages()
     setIntentCookie(effectiveIntent())
@@ -361,6 +442,10 @@ export default function AuthPanel({
 
   async function resendPhoneOtp() {
     if (!phoneE164) return
+    if (previewMode) {
+      setMessage('Preview — ny SMS-kod skickad.')
+      return
+    }
     setLoading(true)
     resetMessages()
     const { error: otpError } = await createClient().auth.signInWithOtp({
@@ -404,6 +489,12 @@ export default function AuthPanel({
     }
     if (!passwordsMatch(password, confirmPassword)) {
       setError('Lösenorden matchar inte.')
+      setLoading(false)
+      return
+    }
+
+    if (previewMode) {
+      setView('check-email')
       setLoading(false)
       return
     }
@@ -477,6 +568,12 @@ export default function AuthPanel({
       return
     }
 
+    if (previewMode) {
+      setMessage('Preview — skulle logga in och vidarebefordra.')
+      setLoading(false)
+      return
+    }
+
     setIntentCookie(effectiveIntent())
     const supabase = createClient()
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -517,6 +614,11 @@ export default function AuthPanel({
   async function resendConfirmation() {
     setLoading(true)
     resetMessages()
+    if (previewMode) {
+      setMessage('Preview — bekräftelselänk skickad.')
+      setLoading(false)
+      return
+    }
     const normalized = email.trim().toLowerCase()
     const { error: resendError } = await createClient().auth.resend({
       type: 'signup',
@@ -739,8 +841,8 @@ export default function AuthPanel({
         </div>
       )}
 
-      {/* Phone OTP confirm — hidden while PHONE_AUTH_ENABLED is false */}
-      {PHONE_AUTH_ENABLED && view === 'confirm-code' && (
+      {/* Phone OTP confirm — gated in prod; always available in /dev preview */}
+      {(PHONE_AUTH_ENABLED || previewMode) && view === 'confirm-code' && (
         <div className="pt-1">
           <button
             type="button"

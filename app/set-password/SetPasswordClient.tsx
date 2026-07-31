@@ -10,6 +10,7 @@ import {
   PASSWORD_SET_METADATA_KEY,
 } from '@/lib/auth-password'
 import { setIntentCookie, type AuthIntent } from '@/lib/auth-intent'
+import { GOOGLE_OAUTH_SCOPES } from '@/lib/google-birthday'
 import { Button } from '@/components/ui/button'
 
 export default function SetPasswordClient({
@@ -108,12 +109,20 @@ export default function SetPasswordClient({
     const supabase = createClient()
     const { error: linkError } = await supabase.auth.linkIdentity({
       provider: 'google',
-      options: { redirectTo },
+      options: {
+        redirectTo,
+        scopes: GOOGLE_OAUTH_SCOPES,
+        queryParams: { include_granted_scopes: 'true' },
+      },
     })
     if (linkError) {
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo },
+        options: {
+          redirectTo,
+          scopes: GOOGLE_OAUTH_SCOPES,
+          queryParams: { include_granted_scopes: 'true' },
+        },
       })
       if (signInError) {
         setError(

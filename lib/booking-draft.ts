@@ -7,6 +7,10 @@ export type BookingFormData = {
   /** Selected occasions (multi). */
   occasions: string[]
   event_location: string
+  /** Google Places place id when selected from autocomplete */
+  event_place_id: string | null
+  event_lat: number | null
+  event_lng: number | null
   guest_count: string
   description: string
 }
@@ -28,12 +32,21 @@ export const EMPTY_BOOKING_FORM: BookingFormData = {
   event_date: '',
   occasions: [],
   event_location: '',
+  event_place_id: null,
+  event_lat: null,
+  event_lng: null,
   guest_count: '',
   description: '',
 }
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof sessionStorage !== 'undefined'
+}
+
+function asNullableNumber(v: unknown): number | null {
+  if (typeof v === 'number' && Number.isFinite(v)) return v
+  if (typeof v === 'string' && v.trim() && Number.isFinite(Number(v))) return Number(v)
+  return null
 }
 
 function normalizeFormData(
@@ -47,6 +60,12 @@ function normalizeFormData(
     event_date: raw.event_date ?? '',
     occasions: normalizeOccasions(fromLegacy),
     event_location: raw.event_location ?? '',
+    event_place_id:
+      typeof raw.event_place_id === 'string' && raw.event_place_id.trim()
+        ? raw.event_place_id.trim()
+        : null,
+    event_lat: asNullableNumber(raw.event_lat),
+    event_lng: asNullableNumber(raw.event_lng),
     guest_count: raw.guest_count ?? '',
     description: raw.description ?? '',
   }

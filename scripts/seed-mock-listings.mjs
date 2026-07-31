@@ -84,6 +84,7 @@ const NEW_PROVIDERS = [
     description:
       'Vi spelar akustisk pop, indie och svenska klassiker på bröllop, privata middagar och företagsevent. Diskret setup, trevlig stämning och spellista som anpassas efter dig.',
     tags: ['musik', 'artist', 'sångare', 'bröllop'],
+    occasions: ['wedding', 'birthday', 'corporate', 'anniversary'],
     city: 'Stockholm',
     min: 3500,
     max: 9000,
@@ -97,6 +98,7 @@ const NEW_PROVIDERS = [
     description:
       'Säsongsbaserade menyer hemma hos dig — från intim middag för 8 till mingelbuffé för 40. Jag tar med allt utom köket. Populär för födelsedagar och företagsmiddagar.',
     tags: ['catering', 'kock', 'mat'],
+    occasions: ['birthday', 'corporate', 'anniversary', 'housewarming'],
     city: 'Stockholm',
     min: 4000,
     max: 12000,
@@ -110,6 +112,7 @@ const NEW_PROVIDERS = [
     description:
       'Interaktiv magi som får gästerna att skratta och häpna. Perfekt för mingel, barnkalas och företagsfester. 45–90 minuter, helt utan teknikstrul.',
     tags: ['underhållning', 'trollkonstnär', 'barnkalas'],
+    occasions: ['kids', 'birthday', 'corporate'],
     city: 'Stockholm',
     min: 2500,
     max: 5500,
@@ -123,6 +126,7 @@ const NEW_PROVIDERS = [
     description:
       'Jag tar hand om hela barnprogrammet: lekar, ansiktsmålning och en kort show. Föräldrarna kan njuta — barnen har fullt upp. Åldrar 4–10 år.',
     tags: ['barnkalas', 'barn', 'barnunderhållning', 'underhållning'],
+    occasions: ['kids', 'birthday'],
     city: 'Stockholm',
     min: 2000,
     max: 4500,
@@ -136,6 +140,7 @@ const NEW_PROVIDERS = [
     description:
       'Från tidslinje till blomsterleverans — jag håller ihop dagen så ni kan vara närvarande. Specialiserad på intima bröllop i Stockholm och skärgården.',
     tags: ['bröllop', 'wedding'],
+    occasions: ['wedding'],
     city: 'Stockholm',
     min: 8000,
     max: 25000,
@@ -149,6 +154,7 @@ const NEW_PROVIDERS = [
     description:
       'Live-saxofon till DJ, brunch eller ceremoni. Smooth jazz, soul och moderna hits. Jag anpassar volym och stil efter stämningen i rummet.',
     tags: ['musik', 'artist', 'bröllop'],
+    occasions: ['wedding', 'corporate', 'birthday', 'anniversary'],
     city: 'Stockholm',
     min: 3000,
     max: 7000,
@@ -162,6 +168,7 @@ const NEW_PROVIDERS = [
     description:
       'Dokumentär stil med fokuslig färg. Jag jobbar snabbt i trånga lokaler och levererar ett urval samma kväll plus fullt galleri inom en vecka.',
     tags: ['fotografi', 'fotograf', 'företagsevent', 'födelsedag'],
+    occasions: ['wedding', 'corporate', 'birthday', 'anniversary'],
     city: 'Stockholm',
     min: 2800,
     max: 7500,
@@ -175,6 +182,7 @@ const NEW_PROVIDERS = [
     description:
       'Från gången till dansgolvet. Jag tar med trådlös mick, speglade ljus och en spellista ni godkänt i förväg. Inga döda zoner på dansgolvet.',
     tags: ['dj', 'DJ', 'bröllop', 'musik'],
+    occasions: ['wedding', 'anniversary', 'hen_stag'],
     city: 'Stockholm',
     min: 4500,
     max: 11000,
@@ -188,6 +196,7 @@ const NEW_PROVIDERS = [
     description:
       'Brudmakeup, brudtärnor och trial ingår i de flesta paket. Naturligt glow eller glam — alltid fotovänligt och hållbart hela natten.',
     tags: ['makeup', 'makeupartist', 'styling', 'bröllop'],
+    occasions: ['wedding', 'hen_stag'],
     city: 'Stockholm',
     min: 2200,
     max: 6500,
@@ -201,6 +210,7 @@ const NEW_PROVIDERS = [
     description:
       'Smårätter, dryckesstation och serveringsteam. Populärt för vernissage, kickoff och stora födelsedagar. Vegetariskt och allergenvänligt utan krångel.',
     tags: ['catering', 'mat', 'företagsevent'],
+    occasions: ['corporate', 'birthday', 'housewarming', 'anniversary'],
     city: 'Stockholm',
     min: 5000,
     max: 18000,
@@ -267,6 +277,25 @@ function mergePhotos(existing, extras, max = 5) {
     if (!out.includes(url)) out.push(url)
   }
   return out
+}
+
+
+function occasionsForTags(tags = [], title = '') {
+  const t = [...tags, title].map(x => String(x).toLowerCase())
+  if (t.some(x => x.includes('barn') || x.includes('kids'))) return ['kids', 'birthday']
+  if (t.some(x => x.includes('bröllop') || x.includes('bridal') || x.includes('wedding')))
+    return ['wedding', 'anniversary']
+  if (t.some(x => x.includes('företag') || x.includes('corporate')))
+    return ['corporate', 'birthday', 'anniversary']
+  if (t.some(x => x.includes('makeup') || x.includes('smink')))
+    return ['wedding', 'birthday', 'hen_stag']
+  if (t.some(x => x.includes('dj'))) return ['wedding', 'birthday', 'corporate', 'hen_stag']
+  if (t.some(x => x.includes('foto'))) return ['wedding', 'birthday', 'corporate']
+  if (t.some(x => x.includes('catering') || x.includes('kock') || x.includes('mat')))
+    return ['birthday', 'corporate', 'housewarming']
+  if (t.some(x => x.includes('musik') || x.includes('artist') || x.includes('sång')))
+    return ['wedding', 'birthday', 'corporate']
+  return ['birthday', 'other']
 }
 
 function photoSetForTags(tags = []) {
@@ -391,6 +420,7 @@ async function main() {
       title: p.title,
       description: p.description,
       category_tags: p.tags,
+      occasions: p.occasions,
       city: p.city,
       price_range_min: p.min,
       price_range_max: p.max,
@@ -427,6 +457,22 @@ async function main() {
       if (error) throw new Error(`photos update: ${error.message}`)
       console.log(`Photos → ${merged.length}: ${service.title}`)
     }
+  }
+
+
+  // 3b) Ensure every published service has ≥1 occasion
+  const { data: needOccasions, error: oErr } = await sb
+    .from('services')
+    .select('id, title, category_tags, occasions')
+    .eq('is_published', true)
+  if (oErr) throw new Error(oErr.message)
+
+  for (const service of needOccasions || []) {
+    if (Array.isArray(service.occasions) && service.occasions.length > 0) continue
+    const occasions = occasionsForTags(service.category_tags, service.title || '')
+    const { error } = await sb.from('services').update({ occasions }).eq('id', service.id)
+    if (error) throw new Error(`occasions update: ${error.message}`)
+    console.log(`Occasions → ${occasions.join(',')}: ${service.title}`)
   }
 
   // 4) ~10 reviews per published service

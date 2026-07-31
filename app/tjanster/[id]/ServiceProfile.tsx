@@ -225,6 +225,9 @@ export default function ServiceProfile({
       occasions: data.occasions,
       event_type: data.occasions[0] ?? null,
       event_location: data.event_location || null,
+      event_place_id: data.event_place_id || null,
+      event_lat: data.event_lat,
+      event_lng: data.event_lng,
       guest_count: data.guest_count ? Number(data.guest_count) : null,
       description: data.description || null,
       status: 'pending',
@@ -290,8 +293,11 @@ export default function ServiceProfile({
       return
     }
     if (bookingData.occasions.length < 1) {
-      setBookingError('Välj minst ett tillfälle.')
-      return
+      const listingOccasions = (profile.occasions ?? []).filter(Boolean)
+      if (listingOccasions.length > 0) {
+        setBookingError('Välj minst ett tillfälle.')
+        return
+      }
     }
     await prepareAndSubmitBooking(currentUserId, bookingData)
   }
