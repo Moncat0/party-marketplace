@@ -844,21 +844,21 @@ export default function AuthPanel({
       )}
 
       {view === 'finish-signup' && (
-        <div className="pt-1">
+        <div className="pt-0">
           <button
             type="button"
             onClick={() => {
               resetMessages()
               setView('fresh')
             }}
-            className="mb-4 text-[14px] font-medium text-foreground/70 hover:text-foreground"
+            className="mb-2 text-[14px] font-medium text-foreground/70 hover:text-foreground"
           >
             ← Tillbaka
           </button>
-          <h2 className="text-[26px] font-semibold tracking-tight text-foreground">
+          <h2 className="text-[22px] font-semibold tracking-tight text-foreground">
             Slutför registreringen
           </h2>
-          <p className="mt-2 mb-5 text-[15px] text-muted-foreground">
+          <p className="mt-1 mb-3 truncate text-[14px] text-muted-foreground">
             <span className="font-medium text-foreground">{email}</span>
           </p>
 
@@ -880,7 +880,7 @@ export default function AuthPanel({
                 match={
                   confirmPassword.length > 0
                     ? passwordsMatch(password, confirmPassword)
-                    : null
+                    : false
                 }
               />
             }
@@ -941,38 +941,40 @@ function PasswordHint({
   match,
 }: {
   checks: PasswordChecks
-  match: boolean | null
+  /** Always passed so the “match” row is reserved from first paint (avoids mid-step height jump). */
+  match: boolean
 }) {
   const rules: { key: string; label: string; met: boolean }[] = [
     { key: 'length', label: 'Minst 8 tecken', met: checks.minLength },
     { key: 'upper', label: 'En versal (A–Z)', met: checks.hasUpper },
     { key: 'lower', label: 'En gemen (a–z)', met: checks.hasLower },
     { key: 'number', label: 'En siffra (0–9)', met: checks.hasNumber },
+    { key: 'match', label: 'Lösenorden matchar', met: match },
   ]
 
-  if (match !== null) {
-    rules.push({ key: 'match', label: 'Lösenorden matchar', met: match })
-  }
-
   return (
-    <ul className="mt-1 flex flex-col gap-1.5" aria-live="polite">
+    <ul
+      className="mt-0.5 grid grid-cols-2 gap-x-2 gap-y-1"
+      aria-live="polite"
+    >
       {rules.map(rule => (
         <li
           key={rule.key}
           className={cn(
-            'flex items-center gap-2 text-[13px] leading-snug',
+            'flex items-center gap-1.5 text-[12px] leading-tight',
+            rule.key === 'match' && 'col-span-2',
             rule.met ? 'text-[#1D9E75]' : 'text-muted-foreground'
           )}
         >
           <span
             className={cn(
-              'flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full',
+              'flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full',
               rule.met ? 'bg-[#1D9E75] text-white' : 'border border-border bg-background'
             )}
             aria-hidden
           >
             {rule.met ? (
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+              <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
                 <path
                   d="M2.5 6.2 4.8 8.5 9.5 3.5"
                   stroke="currentColor"

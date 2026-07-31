@@ -7,10 +7,12 @@ import AuthPasswordInput, { authInputClass } from '@/components/auth/AuthPasswor
 
 export { authInputClass }
 
+const finishInputClass = cn(authInputClass, 'h-11')
+
 /** Airbnb-style legal copy above “Godkänn och fortsätt” — no checkboxes. */
 export function AgreeAndContinueLegal() {
   return (
-    <p className="text-[12px] leading-relaxed text-muted-foreground">
+    <p className="text-[11px] leading-snug text-muted-foreground">
       Genom att välja <span className="font-medium text-foreground">Godkänn och fortsätt</span>{' '}
       godkänner du FESTEN:s{' '}
       <Link href="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-2">
@@ -70,10 +72,10 @@ export default function FinishSignupFields({
   className,
 }: FinishSignupFieldsProps) {
   return (
-    <form onSubmit={onSubmit} className={cn('flex flex-col gap-3', className)}>
-      <div className="grid grid-cols-2 gap-3">
+    <form onSubmit={onSubmit} className={cn('flex flex-col gap-2.5', className)}>
+      <div className="grid grid-cols-2 gap-2.5">
         <div>
-          <label htmlFor="finish-first" className="mb-1.5 block text-[13px] font-medium text-foreground">
+          <label htmlFor="finish-first" className="mb-1 block text-[12px] font-medium text-foreground">
             Förnamn
           </label>
           <input
@@ -82,11 +84,11 @@ export default function FinishSignupFields({
             onChange={e => onFirstName(e.target.value)}
             autoComplete="given-name"
             required
-            className={authInputClass}
+            className={finishInputClass}
           />
         </div>
         <div>
-          <label htmlFor="finish-last" className="mb-1.5 block text-[13px] font-medium text-foreground">
+          <label htmlFor="finish-last" className="mb-1 block text-[12px] font-medium text-foreground">
             Efternamn
           </label>
           <input
@@ -94,13 +96,13 @@ export default function FinishSignupFields({
             value={lastName}
             onChange={e => onLastName(e.target.value)}
             autoComplete="family-name"
-            className={authInputClass}
+            className={finishInputClass}
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="finish-birth" className="mb-1.5 block text-[13px] font-medium text-foreground">
+        <label htmlFor="finish-birth" className="mb-1 block text-[12px] font-medium text-foreground">
           Födelsedatum
         </label>
         <input
@@ -110,17 +112,17 @@ export default function FinishSignupFields({
           onChange={e => onBirthDate(e.target.value)}
           required
           max={new Date().toISOString().slice(0, 10)}
-          className={authInputClass}
+          className={finishInputClass}
         />
-        <p className="mt-1.5 text-[12px] text-muted-foreground">
-          Du måste vara minst 18 år. Vi visar inte ditt födelsedatum publikt.
+        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+          Minst 18 år. Visas inte publikt.
         </p>
       </div>
 
       {showPassword && (
         <>
           <div>
-            <label htmlFor="finish-password" className="mb-1.5 block text-[13px] font-medium text-foreground">
+            <label htmlFor="finish-password" className="mb-1 block text-[12px] font-medium text-foreground">
               Lösenord
             </label>
             <AuthPasswordInput
@@ -129,10 +131,11 @@ export default function FinishSignupFields({
               onChange={e => onPassword?.(e.target.value)}
               autoComplete="new-password"
               required
+              className="h-11"
             />
           </div>
           <div>
-            <label htmlFor="finish-confirm" className="mb-1.5 block text-[13px] font-medium text-foreground">
+            <label htmlFor="finish-confirm" className="mb-1 block text-[12px] font-medium text-foreground">
               Bekräfta lösenord
             </label>
             <AuthPasswordInput
@@ -141,6 +144,7 @@ export default function FinishSignupFields({
               onChange={e => onConfirmPassword?.(e.target.value)}
               autoComplete="new-password"
               required
+              className="h-11"
             />
           </div>
           {passwordHint}
@@ -148,7 +152,7 @@ export default function FinishSignupFields({
       )}
 
       {error && (
-        <div className="rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
+        <div className="rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-3 py-2.5 text-[13px] text-[#C13515]">
           {error}
         </div>
       )}
@@ -158,7 +162,7 @@ export default function FinishSignupFields({
       <Button
         type="submit"
         disabled={loading}
-        className="mt-1 h-12 w-full rounded-xl text-[16px] font-semibold"
+        className="h-11 w-full rounded-xl text-[15px] font-semibold"
       >
         {loading ? 'Sparar…' : submitLabel}
       </Button>

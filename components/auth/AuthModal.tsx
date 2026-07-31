@@ -27,7 +27,7 @@ export default function AuthModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showClose={false}
-        className="max-h-[min(96dvh,820px)] max-w-[440px] gap-0 overflow-y-auto rounded-3xl border-0 p-6 shadow-[0_8px_28px_rgba(0,0,0,0.28)] sm:rounded-3xl sm:p-8"
+        className="top-4 max-h-[calc(100dvh-2rem)] max-w-[440px] translate-y-0 gap-0 overflow-y-auto rounded-3xl border-0 p-5 shadow-[0_8px_28px_rgba(0,0,0,0.28)] sm:top-[50%] sm:max-h-[calc(100dvh-2rem)] sm:translate-y-[-50%] sm:rounded-3xl sm:p-6"
         onOpenAutoFocus={e => {
           e.preventDefault()
           const root = e.currentTarget as HTMLElement | null
