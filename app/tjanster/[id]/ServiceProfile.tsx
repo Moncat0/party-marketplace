@@ -175,10 +175,6 @@ export default function ServiceProfile({
     openAuth({ intent: 'planner', next: `/tjanster/${profile.id}` })
   }
 
-  function scrollToBooking() {
-    document.getElementById('forfragan')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
   async function prepareAndSubmitBooking(plannerId: string, data: BookingFormData) {
     setSubmitting(true)
     setBookingError(null)
@@ -408,7 +404,6 @@ export default function ServiceProfile({
               <ListingInfo
                 hostName={profile.users?.name ?? null}
                 hostAvatar={profile.users?.avatar_url ?? null}
-                categorySlug={profile.category_slug}
                 occasions={profile.occasions}
                 description={profile.description}
                 city={profile.city}
@@ -459,7 +454,6 @@ export default function ServiceProfile({
               memberSince={profile.memberSince}
               reviewCount={reviewCount}
               avgRating={avgRating}
-              onContact={isPreview ? undefined : scrollToBooking}
             />
 
             <ListingReviews

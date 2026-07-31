@@ -1,8 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { Button } from '@/components/ui/button'
-
 type Props = {
   hostName: string | null
   hostAvatar: string | null
@@ -11,7 +9,6 @@ type Props = {
   memberSince: string | null
   reviewCount: number
   avgRating: number | null
-  onContact?: () => void
 }
 
 function yearsOnPlatform(iso: string | null): string {
@@ -34,7 +31,6 @@ export default function ListingMeetProvider({
   memberSince,
   reviewCount,
   avgRating,
-  onContact,
 }: Props) {
   const name = hostName ?? 'Talangen'
   const initial = name.charAt(0).toUpperCase()
@@ -119,17 +115,6 @@ export default function ListingMeetProvider({
               {city && <li>Verkar i {city}</li>}
             </ul>
           </div>
-
-          {onContact ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onContact}
-              className="w-fit rounded-lg border-[#222222] bg-[#f7f7f7] px-6 h-12 text-[16px] font-semibold text-[#222222] hover:bg-[#ebebeb]"
-            >
-              Kontakta {name.split(' ')[0]}
-            </Button>
-          ) : null}
 
           <div className="border-t border-[#ebebeb] pt-6 mt-auto">
             <p className="text-[12px] text-[#6a6a6a] leading-relaxed flex items-start gap-2">

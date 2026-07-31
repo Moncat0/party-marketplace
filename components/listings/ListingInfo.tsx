@@ -1,14 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import ListingCategory from './ListingCategory'
-import { formatCategoryFromSlug } from '@/lib/categories'
 import { formatOccasion } from '@/lib/occasions'
 
 type Props = {
   hostName: string | null
   hostAvatar: string | null
-  categorySlug: string | null
   occasions?: string[] | null
   description: string | null
   city: string | null
@@ -21,7 +18,6 @@ type Props = {
 export default function ListingInfo({
   hostName,
   hostAvatar,
-  categorySlug,
   occasions,
   description,
   city,
@@ -30,7 +26,6 @@ export default function ListingInfo({
   avgRating,
 }: Props) {
   const initial = (hostName ?? '?').charAt(0).toUpperCase()
-  const categoryLabel = formatCategoryFromSlug(categorySlug)
   const occasionLabels = (occasions ?? [])
     .map(v => formatOccasion(v))
     .filter(Boolean) as string[]
@@ -72,15 +67,6 @@ export default function ListingInfo({
           <div className="text-[14px] text-[#6a6a6a]">Talang på FESTEN.</div>
         </div>
       </div>
-
-      {categoryLabel && (
-        <>
-          <div className="flex flex-col gap-6">
-            <ListingCategory label={categoryLabel} description={`Tjänst · ${categoryLabel}`} />
-          </div>
-          <hr className="border-[#ebebeb]" />
-        </>
-      )}
 
       {occasionLabels.length > 0 && (
         <>

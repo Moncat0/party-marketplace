@@ -57,13 +57,22 @@ export default function ListingReservation({
           </span>
         </div>
         {reviewCount > 0 && avgRating != null && (
-          <div className="text-[14px] text-[#222222] whitespace-nowrap">
+          <a
+            href="#recensioner"
+            className="text-[14px] text-[#222222] whitespace-nowrap hover:opacity-80"
+            onClick={e => {
+              e.preventDefault()
+              document
+                .getElementById('recensioner')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
+          >
             <span className="font-semibold">★ {avgRating.toFixed(1)}</span>
             <span className="text-[#6a6a6a]"> · </span>
             <span className="underline text-[#6a6a6a]">
               {reviewCount} recensioner
             </span>
-          </div>
+          </a>
         )}
       </div>
 

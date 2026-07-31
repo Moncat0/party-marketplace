@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import AuthPasswordInput, { authInputClass } from '@/components/auth/AuthPasswordInput'
+import DatePickerField from '@/components/ui/DatePickerField'
 
 export { authInputClass }
 
@@ -71,6 +72,9 @@ export default function FinishSignupFields({
   onSubmit,
   className,
 }: FinishSignupFieldsProps) {
+  const today = new Date()
+  const dobDefaultView = new Date(today.getFullYear() - 25, today.getMonth(), 1)
+
   return (
     <form onSubmit={onSubmit} className={cn('flex flex-col gap-2.5', className)}>
       <div className="grid grid-cols-2 gap-2.5">
@@ -102,17 +106,17 @@ export default function FinishSignupFields({
       </div>
 
       <div>
-        <label htmlFor="finish-birth" className="mb-1 block text-[12px] font-medium text-foreground">
-          Födelsedatum
-        </label>
-        <input
-          id="finish-birth"
-          type="date"
+        <DatePickerField
+          label="Födelsedatum"
           value={birthDate}
-          onChange={e => onBirthDate(e.target.value)}
-          required
-          max={new Date().toISOString().slice(0, 10)}
-          className={finishInputClass}
+          onChange={onBirthDate}
+          placeholder="yyyy-mm-dd"
+          minDate={null}
+          maxDate={today}
+          defaultViewDate={dobDefaultView}
+          dialogLabel="Välj födelsedatum"
+          className="rounded-xl border border-input bg-background"
+          triggerClassName="rounded-xl px-3 py-2.5 hover:bg-transparent"
         />
         <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
           Minst 18 år. Visas inte publikt.
@@ -175,9 +179,9 @@ export function isAtLeast18(birthDate: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return false
   const born = new Date(`${birthDate}T12:00:00`)
   if (Number.isNaN(born.getTime())) return false
-  const today = new Date()
-  let age = today.getFullYear() - born.getFullYear()
-  const m = today.getMonth() - born.getMonth()
-  if (m < 0 || (m === 0 && today.getDate() < born.getDate())) age -= 1
+  const now = new Date()
+  let age = now.getFullYear() - born.getFullYear()
+  const m = now.getMonth() - born.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < born.getDate())) age -= 1
   return age >= 18
 }
