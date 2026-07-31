@@ -85,7 +85,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
               ) : (
                 <button
                   type="button"
-                  onClick={() => openAuth({ intent: 'provider', next: '/onboarding' })}
+                  onClick={() => openAuth({ intent: 'provider', next: '/onboarding', mode: 'signup' })}
                   className="text-[#FF6B35] hover:underline font-medium"
                 >
                   Erbjud din tjänst
@@ -167,7 +167,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
               <li>
                 <button
                   type="button"
-                  onClick={() => openAuth({ intent: 'planner', next: '/' })}
+                  onClick={() => openAuth({ intent: 'planner', next: '/', mode: 'login' })}
                   className="text-sm text-white/60 hover:text-white transition-colors"
                 >
                   Logga in

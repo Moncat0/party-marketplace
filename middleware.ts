@@ -54,6 +54,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // Dev-only UI previews — never ship to production
+  if (
+    process.env.NODE_ENV === 'production' &&
+    request.nextUrl.pathname.startsWith('/dev')
+  ) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
   return supabaseResponse
 }
 

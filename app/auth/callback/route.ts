@@ -7,7 +7,7 @@ import {
   resolvePostAuthDestination,
   type AuthIntent,
 } from '@/lib/auth-intent'
-import { needsPasswordSetup } from '@/lib/auth-password'
+import { needsTermsAndAge } from '@/lib/auth-compliance'
 import { ensureAppUser, intentFromUserMetadata } from '@/lib/ensure-user'
 import { needsDisplayName } from '@/lib/profile-completeness'
 
@@ -51,15 +51,14 @@ export async function GET(request: NextRequest) {
       ? await supabase.auth.exchangeCodeForSession(code)
       : await supabase.auth.verifyOtp({
           token_hash: tokenHash!,
-          type: type as 'email' | 'magiclink' | 'signup' | 'invite' | 'recovery' | 'email_change',
+          type: type as 'email' | 'signup' | 'invite' | 'recovery' | 'email_change' | 'magiclink',
         })
 
     if (error) {
       console.error('[auth/callback] session exchange failed:', error.message, error)
-      return NextResponse.redirect(`${origin}/signup?error=auth`)
+      return NextResponse.redirect(`${origin}/?auth=1&mode=login&error=auth`)
     }
 
-    // Password recovery always lands on reset form
     if (type === 'recovery' || nextParam === '/reset-password') {
       const response = NextResponse.redirect(`${origin}/reset-password`)
       response.cookies.set(INTENT_COOKIE, '', { path: '/', maxAge: 0 })
@@ -76,7 +75,7 @@ export async function GET(request: NextRequest) {
     let hasProviderProfile = false
     let isPublished = false
     let missingDisplayName = false
-    let missingPassword = false
+    let missingTermsAge = false
 
     if (user) {
       const signupSource = cookieStore.get('signup_source')?.value ?? 'organic'
@@ -99,7 +98,7 @@ export async function GET(request: NextRequest) {
           .maybeSingle(),
         supabase
           .from('users')
-          .select('name, first_name')
+          .select('name, first_name, terms_accepted_at, age_confirmed_at')
           .eq('id', user.id)
           .maybeSingle(),
       ])
@@ -113,7 +112,7 @@ export async function GET(request: NextRequest) {
       hasProviderProfile = !!profile
       isPublished = !!service?.is_published
       missingDisplayName = needsDisplayName(appUser)
-      missingPassword = needsPasswordSetup(user)
+      missingTermsAge = needsTermsAndAge(appUser)
     }
 
     const destination = resolvePostAuthDestination({
@@ -122,7 +121,7 @@ export async function GET(request: NextRequest) {
       hasProviderProfile,
       isPublished,
       needsDisplayName: missingDisplayName,
-      needsPasswordSetup: missingPassword,
+      needsTermsAndAge: missingTermsAge,
     })
 
     const response = NextResponse.redirect(`${origin}${destination}`)
@@ -130,5 +129,5 @@ export async function GET(request: NextRequest) {
     return response
   }
 
-  return NextResponse.redirect(`${origin}/signup?error=auth`)
+  return NextResponse.redirect(`${origin}/?auth=1&mode=login&error=auth`)
 }

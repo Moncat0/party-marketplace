@@ -9,7 +9,6 @@ import {
   isProviderDestination,
   needsDisplayName,
 } from '@/lib/profile-completeness'
-import { needsPasswordSetup, setPasswordUrl } from '@/lib/auth-password'
 import {
   buildSokUrl,
   EMPTY_PLANNER_SEARCH_DRAFT,
@@ -32,6 +31,13 @@ import { cn } from '@/lib/utils'
 type Props = {
   /** Where to go after the wizard finishes (soft gate) or fallback */
   nextPath: string
+  /**
+   * Local `/dev` previews — skip auth, skip DB writes, stay on-page.
+   * Never enable in production routes.
+   */
+  previewMode?: boolean
+  /** Optional starting step when previewMode is on */
+  previewStep?: PlannerSearchStep
 }
 
 /**
@@ -39,17 +45,28 @@ type Props = {
  * Soft-gate deep links: name only → nextPath.
  * Providers are redirected to the unified listing onboarding flow.
  */
-export default function AccountOnboarding({ nextPath }: Props) {
+export default function AccountOnboarding({
+  nextPath,
+  previewMode = false,
+  previewStep,
+}: Props) {
   const router = useRouter()
   const discovery = isPlannerDiscoveryNext(nextPath)
-  const [checking, setChecking] = useState(true)
-  const [step, setStep] = useState<PlannerSearchStep>('name')
+  const [checking, setChecking] = useState(!previewMode)
+  const [step, setStep] = useState<PlannerSearchStep>(
+    previewMode && previewStep ? previewStep : 'name'
+  )
   const [draft, setDraft] = useState<PlannerSearchDraft>(EMPTY_PLANNER_SEARCH_DRAFT)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [nameSaved, setNameSaved] = useState(false)
 
   useEffect(() => {
+    if (previewMode) {
+      setChecking(false)
+      return
+    }
+
     let cancelled = false
     ;(async () => {
       const supabase = createClient()
@@ -58,11 +75,6 @@ export default function AccountOnboarding({ nextPath }: Props) {
       } = await supabase.auth.getUser()
       if (!user) {
         router.replace(`/?auth=1&next=${encodeURIComponent('/welcome')}`)
-        return
-      }
-
-      if (needsPasswordSetup(user)) {
-        router.replace(setPasswordUrl(`/welcome?next=${encodeURIComponent(nextPath)}`))
         return
       }
 
@@ -120,7 +132,7 @@ export default function AccountOnboarding({ nextPath }: Props) {
     return () => {
       cancelled = true
     }
-  }, [router, nextPath, discovery])
+  }, [router, nextPath, discovery, previewMode])
 
   const phaseFills = discovery ? plannerSearchPhaseFills(step) : [1]
 
@@ -129,6 +141,11 @@ export default function AccountOnboarding({ nextPath }: Props) {
     if (!first) {
       setError('Ange ditt förnamn så vi vet vad vi ska kalla dig.')
       return false
+    }
+
+    if (previewMode) {
+      setNameSaved(true)
+      return true
     }
 
     setLoading(true)
@@ -173,6 +190,7 @@ export default function AccountOnboarding({ nextPath }: Props) {
       const ok = await saveName()
       if (!ok) return
       if (!discovery) {
+        if (previewMode) return
         router.replace(nextPath)
         return
       }
@@ -181,6 +199,7 @@ export default function AccountOnboarding({ nextPath }: Props) {
     }
 
     if (step === 'name' && !discovery) {
+      if (previewMode) return
       router.replace(nextPath)
       return
     }
@@ -192,6 +211,10 @@ export default function AccountOnboarding({ nextPath }: Props) {
     }
 
     // Finished discovery
+    if (previewMode) {
+      setError(null)
+      return
+    }
     track('planner_search_onboarding_completed', {
       location: draft.locationId,
       category: draft.categorySlug,
@@ -207,6 +230,7 @@ export default function AccountOnboarding({ nextPath }: Props) {
       setStep(p)
       return
     }
+    if (previewMode) return
     router.push(nextPath === '/' ? '/' : nextPath)
   }
 
@@ -243,7 +267,7 @@ export default function AccountOnboarding({ nextPath }: Props) {
       nextLoading={loading}
       showBack={step !== 'name'}
       exitHref={discovery ? '/' : nextPath}
-      contentClassName="max-w-xl mx-auto w-full justify-center"
+      contentClassName="max-w-xl mx-auto w-full justify-start"
     >
       {step === 'name' && (
         <NameStep
@@ -296,7 +320,7 @@ function NameStep({
   discovery: boolean
 }) {
   return (
-    <div className="w-full pt-4 sm:pt-10">
+    <div className="w-full">
       <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6a6a6a]">
         {discovery ? 'Steg 1 av 4' : 'Nästan klart'}
       </p>
@@ -359,7 +383,7 @@ function LocationStep({
   onChange: (id: string) => void
 }) {
   return (
-    <div className="w-full pt-4 sm:pt-10">
+    <div className="w-full">
       <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6a6a6a]">
         Steg 2 av 4
       </p>
@@ -408,7 +432,7 @@ function CategoryStep({
   onChange: (slug: CategorySlug) => void
 }) {
   return (
-    <div className="w-full pt-4 sm:pt-10">
+    <div className="w-full">
       <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6a6a6a]">
         Steg 3 av 4
       </p>
@@ -455,7 +479,7 @@ function OccasionStep({
   onChange: (slug: OccasionSlug) => void
 }) {
   return (
-    <div className="w-full pt-4 sm:pt-10">
+    <div className="w-full">
       <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6a6a6a]">
         Steg 4 av 4
       </p>

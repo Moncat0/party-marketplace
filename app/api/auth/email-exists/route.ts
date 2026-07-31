@@ -7,7 +7,7 @@ function isValidEmail(value: string): boolean {
 
 /**
  * Check whether an email already has a FESTEN account (public.users).
- * Used by “Skapa konto” so magic-link OTP does not silently re-login an existing user.
+ * Used before email signup to steer existing users to login.
  */
 export async function POST(request: NextRequest) {
   let body: { email?: string }

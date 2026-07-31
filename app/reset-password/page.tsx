@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { PASSWORD_SET_METADATA_KEY } from '@/lib/auth-password'
+import { isPasswordValid } from '@/lib/auth-compliance'
 import SettingsSection from '@/components/settings/SettingsSection'
 import SettingsInput from '@/components/settings/SettingsInput'
 import SettingsButton from '@/components/settings/SettingsButton'
@@ -20,8 +21,8 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError(null)
 
-    if (password.length < 8) {
-      setError('Lösenordet måste vara minst 8 tecken.')
+    if (!isPasswordValid(password)) {
+      setError('Lösenordet måste ha minst 8 tecken, versal, gemen och siffra.')
       return
     }
     if (password !== confirm) {

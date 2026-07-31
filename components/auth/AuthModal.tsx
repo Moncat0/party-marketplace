@@ -14,25 +14,29 @@ type Props = {
   onOpenChange: (open: boolean) => void
   intent?: AuthIntent | null
   next?: string | null
+  initialMode?: 'login' | 'signup'
 }
 
-export default function AuthModal({ open, onOpenChange, intent = null, next = null }: Props) {
+export default function AuthModal({
+  open,
+  onOpenChange,
+  intent = null,
+  next = null,
+}: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showClose={false}
-        className="max-w-[440px] gap-0 rounded-3xl border-0 p-8 shadow-[0_8px_28px_rgba(0,0,0,0.28)] sm:rounded-3xl"
+        className="max-h-[min(96dvh,820px)] max-w-[440px] gap-0 overflow-y-auto rounded-3xl border-0 p-6 shadow-[0_8px_28px_rgba(0,0,0,0.28)] sm:rounded-3xl sm:p-8"
         onOpenAutoFocus={e => {
           e.preventDefault()
           const root = e.currentTarget as HTMLElement | null
           root?.querySelector<HTMLElement>('input, button')?.focus()
         }}
       >
-        <DialogTitle className="sr-only">
-          {intent === 'provider' ? 'Skapa konto' : 'Logga in'}
-        </DialogTitle>
+        <DialogTitle className="sr-only">Logga in eller skapa konto</DialogTitle>
         <DialogDescription className="sr-only">
-          Skapa konto med e-postlänk, logga in med lösenord, eller fortsätt med Google eller Apple.
+          Fortsätt med e-post eller Google.
         </DialogDescription>
         <AuthPanel
           key={`${intent ?? ''}-${next ?? ''}-${open}`}

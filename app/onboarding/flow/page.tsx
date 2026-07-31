@@ -5,7 +5,7 @@ import {
   loadWizardFlowService,
   ONBOARDING_WIZARD_PATHS,
 } from '@/lib/service-wizard-server'
-import { needsPasswordSetup, setPasswordUrl } from '@/lib/auth-password'
+import { completeSignupUrl, needsTermsAndAge } from '@/lib/auth-compliance'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Skapa din tjänst' }
@@ -21,9 +21,16 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup?intent=provider&next=/onboarding/flow')
 
-  if (needsPasswordSetup(user)) {
-    redirect(setPasswordUrl('/onboarding/flow'))
+  const { data: appUser } = await supabase
+    .from('users')
+    .select('email_verified_at, terms_accepted_at, age_confirmed_at')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (needsTermsAndAge(appUser)) {
+    redirect(completeSignupUrl('/onboarding/flow'))
   }
+
   const paths = ONBOARDING_WIZARD_PATHS
   const service = await loadWizardFlowService(supabase, user.id, {
     resume: searchParams.resume === '1',
@@ -31,38 +38,6 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
     serviceId: searchParams.id ?? null,
     paths,
   })
-
-  const [{ data: appUser }, { data: provider }] = await Promise.all([
-    supabase
-      .from('users')
-      .select('first_name, last_name, name')
-      .eq('id', user.id)
-      .maybeSingle(),
-    supabase
-      .from('provider_profiles')
-      .select('bio')
-      .eq('user_id', user.id)
-      .maybeSingle(),
-  ])
-
-  let firstName = appUser?.first_name?.trim() ?? ''
-  let lastName = appUser?.last_name?.trim() ?? ''
-  if (!firstName && appUser?.name) {
-    const parts = appUser.name.trim().split(/\s+/)
-    firstName = parts[0] ?? ''
-    lastName = lastName || parts.slice(1).join(' ')
-  }
-  if (!firstName) {
-    const meta =
-      (user.user_metadata?.full_name as string | undefined) ??
-      (user.user_metadata?.name as string | undefined) ??
-      ''
-    if (meta.trim()) {
-      const parts = meta.trim().split(/\s+/)
-      firstName = parts[0] ?? ''
-      lastName = lastName || parts.slice(1).join(' ')
-    }
-  }
 
   return (
     <ServiceWizard
@@ -72,14 +47,7 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
       afterSavePath={paths.afterSave}
       afterPublishPath={paths.afterPublish}
       firstBackPath={paths.afterSave}
-      includeAccountSteps
-      accountNeedsName={!(appUser?.first_name ?? '').trim()}
-      accountNeedsBio={!(provider?.bio ?? '').trim()}
-      initialAccount={{
-        firstName,
-        lastName,
-        bio: provider?.bio ?? '',
-      }}
+      emailVerified={!!appUser?.email_verified_at}
       service={{
         id: service.id,
         title: service.title,

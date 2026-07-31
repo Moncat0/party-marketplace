@@ -12,20 +12,30 @@ import {
 import { setIntentCookie, type AuthIntent } from '@/lib/auth-intent'
 import { Button } from '@/components/ui/button'
 
-export default function SetPasswordClient() {
+export default function SetPasswordClient({
+  previewMode = false,
+  previewEmail = 'preview@festen.local',
+}: {
+  previewMode?: boolean
+  previewEmail?: string
+} = {}) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const nextPath = parseSetPasswordNext(searchParams.get('next')) ?? '/'
 
-  const [checking, setChecking] = useState(true)
+  const [checking, setChecking] = useState(!previewMode)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [email, setEmail] = useState<string | null>(null)
+  const [email, setEmail] = useState<string | null>(previewMode ? previewEmail : null)
 
   useEffect(() => {
+    if (previewMode) {
+      setChecking(false)
+      return
+    }
     let cancelled = false
     ;(async () => {
       const supabase = createClient()
@@ -48,10 +58,14 @@ export default function SetPasswordClient() {
     return () => {
       cancelled = true
     }
-  }, [router, nextPath])
+  }, [router, nextPath, previewMode])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (previewMode) {
+      setError('Preview only — lösenord sparas inte här.')
+      return
+    }
     setError(null)
     if (password.length < 8) {
       setError('Lösenordet måste vara minst 8 tecken.')
@@ -76,6 +90,10 @@ export default function SetPasswordClient() {
   }
 
   async function continueWithGoogle() {
+    if (previewMode) {
+      setError('Preview only — Google-koppling fungerar inte här.')
+      return
+    }
     setOauthLoading(true)
     setError(null)
     const intent: AuthIntent =
@@ -108,107 +126,119 @@ export default function SetPasswordClient() {
 
   if (checking) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-white px-4">
+      <main className="flex h-dvh items-center justify-center bg-white px-4">
         <p className="text-[14px] text-[#6a6a6a]">Laddar…</p>
       </main>
     )
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
-            FESTEN.
-          </Link>
-          <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-[#222222]">
-            Säkra ditt konto
-          </h1>
-          <p className="mt-2 text-[15px] leading-relaxed text-[#6a6a6a]">
-            Skapa ett lösenord så du enkelt kan logga in nästa gång
-            {email ? (
-              <>
-                {' '}
-                med <span className="font-medium text-[#222222]">{email}</span>
-              </>
-            ) : null}
-            .
+    <main className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-white">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-8">
+        <div className="mx-auto w-full max-w-md">
+          <div className="mb-8 text-center">
+            <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
+              FESTEN.
+            </Link>
+            <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-[#222222]">
+              Säkra ditt konto
+            </h1>
+            <p className="mt-2 text-[15px] leading-relaxed text-[#6a6a6a]">
+              Skapa ett lösenord så du enkelt kan logga in nästa gång
+              {email ? (
+                <>
+                  {' '}
+                  med <span className="font-medium text-[#222222]">{email}</span>
+                </>
+              ) : null}
+              .
+            </p>
+          </div>
+
+          {error && (
+            <div className="mb-4 rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
+              {error}
+            </div>
+          )}
+
+          <form
+            id="set-password-form"
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4"
+          >
+            <div>
+              <label
+                htmlFor="set-password"
+                className="mb-1.5 block text-[14px] font-medium text-[#222222]"
+              >
+                Lösenord
+              </label>
+              <input
+                id="set-password"
+                type="password"
+                autoComplete="new-password"
+                autoFocus
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Minst 8 tecken"
+                required
+                minLength={8}
+                className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="set-password-confirm"
+                className="mb-1.5 block text-[14px] font-medium text-[#222222]"
+              >
+                Bekräfta lösenord
+              </label>
+              <input
+                id="set-password-confirm"
+                type="password"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                placeholder="Upprepa lösenordet"
+                required
+                minLength={8}
+                className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
+              />
+            </div>
+          </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#ebebeb]" />
+            <span className="text-[12px] text-[#6a6a6a]">eller</span>
+            <div className="h-px flex-1 bg-[#ebebeb]" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            disabled={loading || oauthLoading}
+            onClick={() => void continueWithGoogle()}
+            className="h-12 w-full rounded-xl border-[#222222] text-[16px] font-semibold text-[#222222]"
+          >
+            {oauthLoading ? 'Öppnar Google…' : 'Fortsätt med Google'}
+          </Button>
+          <p className="mt-3 text-center text-[13px] text-[#6a6a6a]">
+            Då behöver du inte skapa ett lösenord.
           </p>
         </div>
+      </div>
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label
-              htmlFor="set-password"
-              className="mb-1.5 block text-[14px] font-medium text-[#222222]"
-            >
-              Lösenord
-            </label>
-            <input
-              id="set-password"
-              type="password"
-              autoComplete="new-password"
-              autoFocus
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Minst 8 tecken"
-              required
-              minLength={8}
-              className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="set-password-confirm"
-              className="mb-1.5 block text-[14px] font-medium text-[#222222]"
-            >
-              Bekräfta lösenord
-            </label>
-            <input
-              id="set-password-confirm"
-              type="password"
-              autoComplete="new-password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder="Upprepa lösenordet"
-              required
-              minLength={8}
-              className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
-            />
-          </div>
+      <div className="flex-shrink-0 border-t border-[#ebebeb] bg-white px-4 py-3.5">
+        <div className="mx-auto max-w-md">
           <Button
             type="submit"
+            form="set-password-form"
             disabled={loading || oauthLoading}
             className="h-12 w-full rounded-xl text-[16px] font-semibold"
           >
             {loading ? 'Sparar…' : 'Spara lösenord och fortsätt'}
           </Button>
-        </form>
-
-        <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#ebebeb]" />
-          <span className="text-[12px] text-[#6a6a6a]">eller</span>
-          <div className="h-px flex-1 bg-[#ebebeb]" />
         </div>
-
-        <Button
-          type="button"
-          variant="outline"
-          disabled={loading || oauthLoading}
-          onClick={() => void continueWithGoogle()}
-          className="h-12 w-full rounded-xl border-[#222222] text-[16px] font-semibold text-[#222222]"
-        >
-          {oauthLoading ? 'Öppnar Google…' : 'Fortsätt med Google'}
-        </Button>
-        <p className="mt-3 text-center text-[13px] text-[#6a6a6a]">
-          Då behöver du inte skapa ett lösenord.
-        </p>
       </div>
     </main>
   )

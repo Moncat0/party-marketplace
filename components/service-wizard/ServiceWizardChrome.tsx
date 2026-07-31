@@ -22,8 +22,13 @@ type Props = {
   contentClassName?: string
   /** Override Avsluta destination when not using onSaveExit */
   exitHref?: string
+  className?: string
 }
 
+/**
+ * Full-viewport wizard shell. Footer (Tillbaka / Nästa) stays pinned;
+ * only the main column scrolls when a step is taller than the remaining space.
+ */
 export default function ServiceWizardChrome({
   children,
   phaseFills = [0, 0, 0],
@@ -38,9 +43,16 @@ export default function ServiceWizardChrome({
   hideFooter = false,
   contentClassName,
   exitHref = '/dashboard/listings',
+  className,
 }: Props) {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div
+      data-wizard-chrome
+      className={cn(
+        'flex h-dvh max-h-dvh flex-col overflow-hidden bg-white',
+        className
+      )}
+    >
       <WizardNavHeader
         exitHref={exitHref}
         exitLabel={onSaveExit ? 'Spara & avsluta' : 'Avsluta'}
@@ -51,8 +63,8 @@ export default function ServiceWizardChrome({
 
       <main
         className={cn(
-          'flex flex-1 flex-col',
-          hideFooter ? 'px-6 pb-16 pt-6 sm:px-10' : 'overflow-y-auto px-6 py-8 sm:px-10',
+          'flex min-h-0 flex-1 flex-col',
+          hideFooter ? 'px-6 pb-16 pt-6 sm:px-10' : 'overflow-y-auto px-6 pb-6 pt-5 sm:px-10',
           contentClassName
         )}
       >
@@ -60,7 +72,7 @@ export default function ServiceWizardChrome({
       </main>
 
       {!hideFooter && (
-        <footer className="flex-shrink-0">
+        <footer className="flex-shrink-0 border-t border-transparent bg-white">
           <div className="flex w-full gap-1.5 px-0">
             {phaseFills.map((fill, i) => (
               <div key={i} className="h-1.5 flex-1 overflow-hidden bg-[#dddddd]">
@@ -71,7 +83,7 @@ export default function ServiceWizardChrome({
               </div>
             ))}
           </div>
-          <div className={cn(siteChromePad, 'flex items-center justify-between py-4')}>
+          <div className={cn(siteChromePad, 'flex items-center justify-between py-3.5')}>
             {showBack ? (
               <button
                 type="button"

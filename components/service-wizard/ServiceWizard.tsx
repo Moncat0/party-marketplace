@@ -65,13 +65,19 @@ type Props = {
   firstBackPath?: string
   /**
    * First-time provider publish: prepend name + bio and use 4 progress phases.
-   * Dashboard “new listing” leaves this false (3 phases).
+   * Deprecated for new signups — listing-only onboarding. Kept for legacy drafts.
    */
   includeAccountSteps?: boolean
   initialAccount?: Partial<AccountWizardDraft>
   /** Prefer DB truth over prefilled OAuth name for skipping steps */
   accountNeedsName?: boolean
   accountNeedsBio?: boolean
+  /** Required to publish — mirrors users.email_verified_at */
+  emailVerified?: boolean
+  /**
+   * Local `/dev` previews — no auth, no DB writes. Advances through UI only.
+   */
+  previewMode?: boolean
 }
 
 export default function ServiceWizard({
@@ -86,6 +92,8 @@ export default function ServiceWizard({
   initialAccount,
   accountNeedsName,
   accountNeedsBio,
+  emailVerified = false,
+  previewMode = false,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -114,8 +122,11 @@ export default function ServiceWizard({
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [photoModalOpen, setPhotoModalOpen] = useState(false)
   const [published, setPublished] = useState(false)
+  const [verified, setVerified] = useState(emailVerified || previewMode)
+  const [resendingConfirm, setResendingConfirm] = useState(false)
 
   const fills = published
     ? includeAccountSteps
@@ -127,11 +138,12 @@ export default function ServiceWizard({
         ? phaseProgress(step)
         : [0, 0, 0]
 
-  const canNext = isAccountWizardStep(step)
-    ? isAccountStepValid(step, account)
-    : isServiceWizardStep(step)
-      ? isStepValid(step, draft)
-      : false
+  const canNext = (() => {
+    if (isAccountWizardStep(step)) return isAccountStepValid(step, account)
+    if (!isServiceWizardStep(step)) return false
+    if (previewMode && step === 'photos') return true
+    return isStepValid(step, draft)
+  })()
 
   const firstStep: FirstPublishStep = includeAccountSteps
     ? needsName
@@ -143,6 +155,9 @@ export default function ServiceWizard({
 
   const persist = useCallback(
     async (opts?: { publish?: boolean }) => {
+      if (opts?.publish && !verified) {
+        throw new Error('Email not verified')
+      }
       const { error: updateError } = await supabase
         .from('services')
         .update({
@@ -163,7 +178,7 @@ export default function ServiceWizard({
 
       if (updateError) throw updateError
     },
-    [draft, service.id, supabase]
+    [draft, service.id, supabase, verified]
   )
 
   async function persistAccountName(): Promise<void> {
@@ -209,6 +224,7 @@ export default function ServiceWizard({
   }
 
   async function handleSaveExit() {
+    if (previewMode) return
     setSaving(true)
     setError(null)
     try {
@@ -224,6 +240,7 @@ export default function ServiceWizard({
   }
 
   async function handlePreview() {
+    if (previewMode) return
     if (saving) return
     setSaving(true)
     setError(null)
@@ -245,6 +262,21 @@ export default function ServiceWizard({
   async function handleNext() {
     if (!canNext || saving) return
     setError(null)
+    setInfo(null)
+
+    if (previewMode) {
+      if (step === 'publish') {
+        setPublished(true)
+        return
+      }
+      const n = includeAccountSteps
+        ? nextFirstPublishStep(step)
+        : isServiceWizardStep(step)
+          ? nextStep(step)
+          : null
+      if (n) setStep(n)
+      return
+    }
 
     if (step === 'name') {
       setSaving(true)
@@ -275,6 +307,12 @@ export default function ServiceWizard({
     }
 
     if (step === 'publish') {
+      if (!verified) {
+        setError(
+          'Bekräfta din e-postadress innan du publicerar. Kolla inkorgen eller skicka länken igen.'
+        )
+        return
+      }
       setSaving(true)
       try {
         await persist({ publish: true })
@@ -310,8 +348,15 @@ export default function ServiceWizard({
       : isServiceWizardStep(step)
         ? prevStep(step)
         : null
-    if (p) setStep(p)
-    else router.push(firstBackPath ?? hubPath)
+    if (p) {
+      setStep(p)
+      return
+    }
+    if (previewMode) {
+      router.push('/dev/onboarding')
+      return
+    }
+    router.push(firstBackPath ?? hubPath)
   }
 
   async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -358,12 +403,86 @@ export default function ServiceWizard({
 
   const nextLabel =
     step === 'publish'
-      ? 'Publicera tjänst'
+      ? verified
+        ? 'Publicera tjänst'
+        : 'Bekräfta e-post först'
       : step === 'bio'
         ? 'Nästa'
         : step.startsWith('intro')
           ? 'Nästa'
           : 'Nästa'
+
+  async function refreshEmailVerified() {
+    if (previewMode) return
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return
+    // Re-sync from auth → public.users
+    await supabase.auth.refreshSession()
+    const {
+      data: { user: fresh },
+    } = await supabase.auth.getUser()
+    if (fresh?.email_confirmed_at) {
+      await supabase
+        .from('users')
+        .update({ email_verified_at: fresh.email_confirmed_at })
+        .eq('id', user.id)
+      setVerified(true)
+      setError(null)
+      return
+    }
+    const { data: row } = await supabase
+      .from('users')
+      .select('email_verified_at')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (row?.email_verified_at) {
+      setVerified(true)
+      setError(null)
+    } else {
+      setError('E-posten är fortfarande obekräftad. Klicka på länken i mailet först.')
+    }
+  }
+
+  async function resendEmailConfirmation() {
+    if (previewMode || resendingConfirm) return
+    setResendingConfirm(true)
+    setError(null)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user?.email) {
+      setError('Ingen e-postadress hittades på kontot.')
+      setResendingConfirm(false)
+      return
+    }
+    const { data: row } = await supabase
+      .from('users')
+      .select('email_verified_at')
+      .eq('id', user.id)
+      .maybeSingle()
+    if (row?.email_verified_at) {
+      setVerified(true)
+      setResendingConfirm(false)
+      return
+    }
+    const origin = window.location.origin
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email: user.email,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent('/onboarding/flow')}&intent=provider`,
+      },
+    })
+    if (resendError) {
+      setError('Kunde inte skicka bekräftelsen. Vänta en stund och försök igen.')
+    } else {
+      setError(null)
+      setInfo('Bekräftelselänk skickad — kolla din inkorg (och skräppost).')
+    }
+    setResendingConfirm(false)
+  }
 
   const listingPhaseOffset = includeAccountSteps ? 1 : 0
 
@@ -391,18 +510,23 @@ export default function ServiceWizard({
         onBack={handleBack}
         onNext={() => void handleNext()}
         nextLabel={nextLabel}
-        nextDisabled={!canNext || uploading}
+        nextDisabled={!canNext || uploading || (step === 'publish' && !verified)}
         nextLoading={saving}
         showBack={step !== firstStep}
         onSaveExit={handleSaveExit}
         savingExit={saving && step !== 'publish'}
         exitHref={afterSavePath}
-        contentClassName="items-center justify-center"
+        contentClassName="items-center justify-start"
       >
         <div className="w-full max-w-[640px]">
           {error && (
             <p className="mb-4 rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
               {error}
+            </p>
+          )}
+          {info && (
+            <p className="mb-4 rounded-xl border border-[#b8e0d0] bg-[#f0faf6] px-4 py-3 text-[14px] text-[#1D9E75]">
+              {info}
             </p>
           )}
           {step === 'name' && (
@@ -478,6 +602,10 @@ export default function ServiceWizard({
               draft={draft}
               previewLoading={saving}
               onPreview={() => void handlePreview()}
+              emailVerified={verified}
+              resending={resendingConfirm}
+              onResendConfirm={() => void resendEmailConfirmation()}
+              onRefreshVerified={() => void refreshEmailVerified()}
             />
           )}
         </div>
@@ -1092,10 +1220,18 @@ function PublishStep({
   draft,
   onPreview,
   previewLoading,
+  emailVerified,
+  resending,
+  onResendConfirm,
+  onRefreshVerified,
 }: {
   draft: ServiceWizardDraft
   onPreview: () => void
   previewLoading: boolean
+  emailVerified: boolean
+  resending: boolean
+  onResendConfirm: () => void
+  onRefreshVerified: () => void
 }) {
   const cat = CATEGORIES.find(c => c.slug === draft.categorySlug)
   return (
@@ -1107,6 +1243,35 @@ function PublishStep({
         Kontrollera att allt ser bra ut. När du publicerar syns tjänsten för planerare i
         Stockholm.
       </p>
+
+      {!emailVerified && (
+        <div className="mt-6 rounded-2xl border border-[#f5c6c0] bg-[#fff5f3] px-5 py-4">
+          <p className="text-[15px] font-semibold text-[#C13515]">E-post inte bekräftad</p>
+          <p className="mt-1 text-[14px] leading-relaxed text-[#5F5E5A]">
+            Du kan spara utkast och förhandsgranska, men publicering kräver en bekräftad
+            e-postadress.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button
+              type="button"
+              disabled={resending}
+              onClick={onResendConfirm}
+              className="text-[14px] font-semibold text-[#222222] underline underline-offset-2 disabled:opacity-50"
+            >
+              {resending ? 'Skickar…' : 'Skicka bekräftelselänk igen'}
+            </button>
+            <button
+              type="button"
+              disabled={resending}
+              onClick={onRefreshVerified}
+              className="text-[14px] font-semibold text-[#222222] underline underline-offset-2 disabled:opacity-50"
+            >
+              Jag har bekräftat — kontrollera igen
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="mt-8 overflow-hidden rounded-2xl border border-[#dddddd]">
         {draft.photos[0] && (
           <div className="relative aspect-[16/10] bg-[#ebebeb]">

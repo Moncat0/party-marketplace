@@ -157,7 +157,7 @@ export default function MarketplaceHeader({
   const switchCta = (() => {
     if (!user) {
       return {
-        onClick: () => openAuth({ intent: 'provider', next: '/onboarding' }),
+        onClick: () => openAuth({ intent: 'provider', next: '/onboarding', mode: 'signup' }),
         label: 'Erbjud din tjänst',
       } as const
     }
@@ -343,7 +343,7 @@ export default function MarketplaceHeader({
                   role="menuitem"
                   onClick={() => {
                     setOpen(false)
-                    openAuth({ intent: 'provider', next: '/onboarding' })
+                    openAuth({ intent: 'provider', next: '/onboarding', mode: 'signup' })
                   }}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-accent transition-colors"
                 >
@@ -365,7 +365,7 @@ export default function MarketplaceHeader({
                   role="menuitem"
                   onClick={() => {
                     setOpen(false)
-                    openAuth({ intent: 'planner', next: '/' })
+                    openAuth({ intent: 'planner', next: '/', mode: 'login' })
                   }}
                   className={menuItemClass}
                 >

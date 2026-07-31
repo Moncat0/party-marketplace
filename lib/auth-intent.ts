@@ -2,12 +2,12 @@
 
 import { welcomeUrl } from '@/lib/profile-completeness'
 import { isPlannerDiscoveryNext } from '@/lib/planner-search-wizard'
-import { setPasswordUrl } from '@/lib/auth-password'
+import { completeSignupUrl } from '@/lib/auth-compliance'
 
 export type AuthIntent = 'planner' | 'provider'
 
 export const INTENT_COOKIE = 'festen_intent'
-/** Long enough for email confirmation clicks (was 10 minutes — too short). */
+/** Long enough for email confirmation clicks. */
 export const INTENT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
 export function parseAuthIntent(value: string | null | undefined): AuthIntent | null {
@@ -56,26 +56,18 @@ function isProviderPath(path: string): boolean {
 
 /**
  * Resolve where to send the user after auth.
- * Provider intent → onboarding flow (name+bio live inside that wizard).
- * Planner missing name → /welcome (discovery or soft-gate name).
- * Planner cold login with name → homepage.
- * Email users without a password → /set-password first (preserves destination).
+ * Airbnb-style: new Google users missing terms → /complete-signup (Agree and continue).
  */
 export function resolvePostAuthDestination(opts: {
   intent: AuthIntent | null
   next: string | null
-  /** True when user already has a provider_profiles row */
   hasProviderProfile?: boolean
-  /** True when that profile is published */
   isPublished?: boolean
-  /** True when first_name is empty */
   needsDisplayName?: boolean
-  /** True when email user must create a password */
-  needsPasswordSetup?: boolean
+  needsTermsAndAge?: boolean
 }): string {
   const next = safePath(opts.next)
 
-  // Explicit deep links (soft gate return, booking, etc.) always win
   const isGenericNext =
     !next ||
     next === '/' ||
@@ -86,7 +78,9 @@ export function resolvePostAuthDestination(opts: {
     next === '/welcome' ||
     next.startsWith('/welcome?') ||
     next === '/set-password' ||
-    next.startsWith('/set-password?')
+    next.startsWith('/set-password?') ||
+    next === '/complete-signup' ||
+    next.startsWith('/complete-signup?')
 
   let destination: string
 
@@ -109,17 +103,14 @@ export function resolvePostAuthDestination(opts: {
     destination = '/'
   }
 
-  // Password gate first (email/magic signup) — before welcome or onboarding
-  if (opts.needsPasswordSetup) {
-    return setPasswordUrl(destination)
+  if (opts.needsTermsAndAge) {
+    return completeSignupUrl(destination)
   }
 
-  // Providers collect name/bio inside the listing wizard — never bounce through /welcome
   if (isProviderPath(destination)) {
     return destination
   }
 
-  // Planners: missing name → welcome (full discovery if next is browse/sok)
   if (opts.needsDisplayName) {
     return welcomeUrl(destination)
   }

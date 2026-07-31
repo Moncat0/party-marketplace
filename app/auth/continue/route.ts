@@ -7,7 +7,7 @@ import {
   resolvePostAuthDestination,
   type AuthIntent,
 } from '@/lib/auth-intent'
-import { needsPasswordSetup } from '@/lib/auth-password'
+import { needsTermsAndAge } from '@/lib/auth-compliance'
 import { ensureAppUser, intentFromUserMetadata } from '@/lib/ensure-user'
 import { needsDisplayName } from '@/lib/profile-completeness'
 
@@ -19,7 +19,6 @@ function safeNext(raw: string | null): string | null {
 
 /**
  * Post-login redirect for password sign-in (session already established client-side).
- * Mirrors /auth/callback destination logic without exchanging a code.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -76,7 +75,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle(),
     supabase
       .from('users')
-      .select('name, first_name')
+      .select('name, first_name, terms_accepted_at, age_confirmed_at')
       .eq('id', user.id)
       .maybeSingle(),
   ])
@@ -93,7 +92,7 @@ export async function GET(request: NextRequest) {
     hasProviderProfile: !!profile,
     isPublished: !!service?.is_published,
     needsDisplayName: needsDisplayName(appUser),
-    needsPasswordSetup: needsPasswordSetup(user),
+    needsTermsAndAge: needsTermsAndAge(appUser),
   })
 
   const response = NextResponse.redirect(`${origin}${destination}`)

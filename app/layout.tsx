@@ -6,6 +6,7 @@ import CookieBanner from '@/components/CookieBanner'
 import SiteNav from '@/components/SiteNav'
 import AuthHost from '@/components/auth/AuthHost'
 import RememberAccountSync from '@/components/auth/RememberAccountSync'
+import GoogleOneTap from '@/components/auth/GoogleOneTap'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -75,6 +76,7 @@ export default function RootLayout({
           {children}
           <AuthHost />
           <RememberAccountSync />
+          <GoogleOneTap />
           <CookieBanner />
         </PostHogProvider>
       </body>

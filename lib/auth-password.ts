@@ -1,25 +1,16 @@
+/** Password metadata helpers — kept for settings / legacy accounts. */
+
 import type { User } from '@supabase/supabase-js'
 
-/** User metadata key — set when the user creates a password (signup gate or settings). */
+/** User metadata key — set when the user creates a password. */
 export const PASSWORD_SET_METADATA_KEY = 'password_set'
 
 /**
- * Email/magic-link accounts must set a password before using the app.
- * Google / Apple identities skip this gate.
+ * @deprecated Magic-link signup removed. Email users set a password at signup.
+ * Always returns false so post-auth no longer redirects to /set-password.
  */
-export function needsPasswordSetup(user: User | null | undefined): boolean {
-  if (!user) return false
-
-  const identities = user.identities ?? []
-  const hasOAuth = identities.some(
-    i => i.provider === 'google' || i.provider === 'apple'
-  )
-  if (hasOAuth) return false
-
-  if (user.user_metadata?.[PASSWORD_SET_METADATA_KEY] === true) return false
-
-  // Email identity (magic link / password) without password_set flag
-  return true
+export function needsPasswordSetup(_user: User | null | undefined): boolean {
+  return false
 }
 
 export function setPasswordUrl(next: string | null | undefined): string {

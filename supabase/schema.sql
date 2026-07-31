@@ -80,8 +80,18 @@ create table users (
 
   data_export_requested_at              timestamptz,
   deactivated_at                        timestamptz,
+
+  -- Auth compliance (email confirm + legal)
+  email_verified_at                     timestamptz,
+  terms_accepted_at                     timestamptz,
+  age_confirmed_at                      timestamptz,
+
   created_at                            timestamptz not null default now()
 );
+
+comment on column users.email_verified_at is 'When the user confirmed email (synced from auth; Google set on create)';
+comment on column users.terms_accepted_at is 'When the user accepted Användarvillkor';
+comment on column users.age_confirmed_at is 'When the user confirmed they are 18+';
 
 comment on column users.privacy_read_receipts is 'When true, others can see when this user has read their messages';
 comment on column users.privacy_review_show_city is 'When true, show home city on reviews written by this user';

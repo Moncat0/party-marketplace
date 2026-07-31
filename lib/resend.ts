@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = 'FESTEN. <onboarding@resend.dev>'
+const FROM = 'FESTEN. <auth@escuderostudio.se>'
 
 function siteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'

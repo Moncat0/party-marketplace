@@ -20,6 +20,12 @@ export default async function NewServiceFlowPage({ searchParams }: Props) {
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup?intent=provider&next=/dashboard/listings/new/flow')
 
+  const { data: appUser } = await supabase
+    .from('users')
+    .select('email_verified_at')
+    .eq('id', user.id)
+    .maybeSingle()
+
   const paths = DASHBOARD_WIZARD_PATHS
   const service = await loadWizardFlowService(supabase, user.id, {
     resume: searchParams.resume === '1',
@@ -35,6 +41,7 @@ export default async function NewServiceFlowPage({ searchParams }: Props) {
       hubPath={paths.hub}
       afterSavePath={paths.afterSave}
       afterPublishPath={paths.afterPublish}
+      emailVerified={!!appUser?.email_verified_at}
       service={{
         id: service.id,
         title: service.title,
