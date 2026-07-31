@@ -88,11 +88,6 @@ export default function AddressAutocomplete({
       return
     }
 
-    // Don't refetch while the value matches a committed selection
-    if (q === value.trim() && value.trim().length > 0) {
-      return
-    }
-
     const controller = new AbortController()
     const timer = window.setTimeout(async () => {
       setLoading(true)
@@ -129,7 +124,7 @@ export default function AddressAutocomplete({
       controller.abort()
       window.clearTimeout(timer)
     }
-  }, [query, value, placesAvailable, disabled])
+  }, [query, placesAvailable, disabled])
 
   async function selectSuggestion(s: Suggestion) {
     setLoading(true)
