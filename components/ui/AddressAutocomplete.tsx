@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 
 type Suggestion = {
@@ -38,6 +39,9 @@ function newSessionToken() {
 /**
  * Sweden-biased address field backed by Google Places Autocomplete (New)
  * via /api/places/*. Falls back to plain text if Places is not configured.
+ *
+ * Suggestions render in a portal so they are not clipped/covered by sibling
+ * form rows (Plats sits above Gäster in the booking card).
  */
 export default function AddressAutocomplete({
   value,
@@ -50,6 +54,8 @@ export default function AddressAutocomplete({
 }: Props) {
   const listId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
   const sessionRef = useRef(newSessionToken())
   const [query, setQuery] = useState(value)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
@@ -57,18 +63,53 @@ export default function AddressAutocomplete({
   const [loading, setLoading] = useState(false)
   const [placesAvailable, setPlacesAvailable] = useState(true)
   const [activeIndex, setActiveIndex] = useState(-1)
+  const [menuBox, setMenuBox] = useState<{
+    top: number
+    left: number
+    width: number
+  } | null>(null)
   const skipFetchRef = useRef(false)
+  const typingRef = useRef(false)
 
   useEffect(() => {
+    // Don't clobber in-progress typing when parent echoes the same string back.
+    if (typingRef.current) return
     setQuery(value)
   }, [value])
 
+  useLayoutEffect(() => {
+    if (!open || suggestions.length === 0) {
+      setMenuBox(null)
+      return
+    }
+
+    function updateBox() {
+      const el = inputRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      setMenuBox({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: Math.max(rect.width, 240),
+      })
+    }
+
+    updateBox()
+    window.addEventListener('scroll', updateBox, true)
+    window.addEventListener('resize', updateBox)
+    return () => {
+      window.removeEventListener('scroll', updateBox, true)
+      window.removeEventListener('resize', updateBox)
+    }
+  }, [open, suggestions.length, query])
+
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setOpen(false)
-        setActiveIndex(-1)
-      }
+      const target = e.target as Node
+      if (rootRef.current?.contains(target)) return
+      if (listRef.current?.contains(target)) return
+      setOpen(false)
+      setActiveIndex(-1)
     }
     document.addEventListener('mousedown', onDocClick)
     return () => document.removeEventListener('mousedown', onDocClick)
@@ -85,6 +126,7 @@ export default function AddressAutocomplete({
     if (q.length < 2) {
       setSuggestions([])
       setOpen(false)
+      typingRef.current = false
       return
     }
 
@@ -107,6 +149,13 @@ export default function AddressAutocomplete({
         }
         const data = (await res.json()) as {
           suggestions?: Suggestion[]
+          error?: string
+        }
+        if (!res.ok) {
+          console.warn('[AddressAutocomplete]', res.status, data.error)
+          setSuggestions([])
+          setOpen(false)
+          return
         }
         const next = data.suggestions ?? []
         setSuggestions(next)
@@ -114,11 +163,13 @@ export default function AddressAutocomplete({
         setActiveIndex(-1)
       } catch (err) {
         if ((err as Error).name === 'AbortError') return
+        console.warn('[AddressAutocomplete] fetch failed', err)
         setSuggestions([])
       } finally {
         setLoading(false)
+        typingRef.current = false
       }
-    }, 280)
+    }, 220)
 
     return () => {
       controller.abort()
@@ -130,6 +181,7 @@ export default function AddressAutocomplete({
     setLoading(true)
     setOpen(false)
     setSuggestions([])
+    typingRef.current = false
     try {
       const params = new URLSearchParams({
         placeId: s.placeId,
@@ -154,7 +206,6 @@ export default function AddressAutocomplete({
         lat: place?.lat ?? null,
         lng: place?.lng ?? null,
       })
-      // New session after a completed selection (billed as one Autocomplete session)
       sessionRef.current = newSessionToken()
     } catch {
       skipFetchRef.current = true
@@ -180,13 +231,52 @@ export default function AddressAutocomplete({
     })
   }
 
+  const menu =
+    open && suggestions.length > 0 && menuBox && typeof document !== 'undefined'
+      ? createPortal(
+          <ul
+            ref={listRef}
+            id={listId}
+            role="listbox"
+            style={{
+              position: 'fixed',
+              top: menuBox.top,
+              left: menuBox.left,
+              width: menuBox.width,
+            }}
+            className="z-[200] max-h-56 overflow-auto rounded-xl border border-[#dddddd] bg-white py-1 shadow-[0_8px_28px_rgba(0,0,0,0.18)]"
+          >
+            {suggestions.map((s, index) => (
+              <li key={s.placeId} role="option" aria-selected={index === activeIndex}>
+                <button
+                  type="button"
+                  className={cn(
+                    'flex w-full flex-col items-start px-3 py-2 text-left hover:bg-[#f7f7f7]',
+                    index === activeIndex && 'bg-[#f7f7f7]'
+                  )}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => void selectSuggestion(s)}
+                >
+                  <span className="text-[13px] font-medium text-[#222222]">{s.mainText}</span>
+                  {s.secondaryText ? (
+                    <span className="text-[12px] text-[#6a6a6a]">{s.secondaryText}</span>
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>,
+          document.body
+        )
+      : null
+
   return (
     <div ref={rootRef} className={cn('relative', className)}>
       <input
+        ref={inputRef}
         type="text"
         value={query}
         disabled={disabled}
-        autoComplete="street-address"
+        autoComplete="off"
         aria-label={ariaLabel}
         aria-autocomplete="list"
         aria-controls={listId}
@@ -198,6 +288,7 @@ export default function AddressAutocomplete({
         )}
         onChange={e => {
           const next = e.target.value
+          typingRef.current = true
           setQuery(next)
           commitFreeText(next)
         }}
@@ -231,32 +322,7 @@ export default function AddressAutocomplete({
         </span>
       )}
 
-      {open && suggestions.length > 0 && (
-        <ul
-          id={listId}
-          role="listbox"
-          className="absolute left-0 right-0 z-30 mt-1 max-h-56 overflow-auto rounded-xl border border-[#dddddd] bg-white py-1 shadow-[0_8px_28px_rgba(0,0,0,0.12)]"
-        >
-          {suggestions.map((s, index) => (
-            <li key={s.placeId} role="option" aria-selected={index === activeIndex}>
-              <button
-                type="button"
-                className={cn(
-                  'flex w-full flex-col items-start px-3 py-2 text-left hover:bg-[#f7f7f7]',
-                  index === activeIndex && 'bg-[#f7f7f7]'
-                )}
-                onMouseDown={e => e.preventDefault()}
-                onClick={() => void selectSuggestion(s)}
-              >
-                <span className="text-[13px] font-medium text-[#222222]">{s.mainText}</span>
-                {s.secondaryText ? (
-                  <span className="text-[12px] text-[#6a6a6a]">{s.secondaryText}</span>
-                ) : null}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      {menu}
     </div>
   )
 }

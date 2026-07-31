@@ -119,7 +119,7 @@ export default function ListingReservation({
               </p>
             )}
           </div>
-          <div className="border-b border-[#b0b0b0] px-3 py-2.5">
+          <div className="relative z-20 border-b border-[#b0b0b0] px-3 py-2.5">
             <label className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
               Plats
             </label>
@@ -138,7 +138,7 @@ export default function ListingReservation({
               }
             />
           </div>
-          <div className="px-3 py-2.5">
+          <div className="relative z-0 px-3 py-2.5">
             <label className="block text-[10px] font-bold text-[#222222] uppercase tracking-wide">
               Gäster
             </label>
