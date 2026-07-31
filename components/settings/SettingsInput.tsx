@@ -1,7 +1,9 @@
 'use client'
 
 import type { KeyboardEventHandler, ReactNode } from 'react'
-import { settingsTokens as t } from './tokens'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
 
 type Props = {
   id: string
@@ -20,7 +22,9 @@ type Props = {
   onKeyDown?: KeyboardEventHandler<HTMLInputElement>
 }
 
-/** Source 1 `text-input`: white, 8px radius, 56px, focus 2px ink border — no glow. */
+/**
+ * Settings text field — Field + Input (shadcn), sized for Airbnb-style account forms.
+ */
 export default function SettingsInput({
   id,
   label,
@@ -38,17 +42,14 @@ export default function SettingsInput({
   onKeyDown,
 }: Props) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <label
-          htmlFor={id}
-          className="block text-[14px] font-medium leading-[1.29] text-[#6a6a6a]"
-        >
+    <Field data-disabled={disabled || undefined} className="gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <FieldLabel htmlFor={id} className="text-[14px] font-medium text-muted-foreground">
           {label}
-        </label>
+        </FieldLabel>
         {labelAction}
       </div>
-      <input
+      <Input
         id={id}
         type={type}
         value={value}
@@ -60,26 +61,13 @@ export default function SettingsInput({
         min={min}
         onKeyDown={onKeyDown}
         onChange={e => onChange(e.target.value)}
-        className="w-full bg-white text-[#222222] text-[16px] font-normal leading-[1.5] placeholder:text-[#929292] disabled:bg-[#f7f7f7] disabled:text-[#929292] focus:outline-none"
-        style={{
-          height: 56,
-          padding: '14px 12px',
-          borderRadius: t.rounded.sm,
-          border: `1px solid ${t.colors.hairline}`,
-          transition: `border-color ${t.motion.fast} ${t.motion.easeStandard}, border-width ${t.motion.fast} ${t.motion.easeStandard}`,
-        }}
-        onFocus={e => {
-          e.currentTarget.style.border = `2px solid ${t.colors.ink}`
-          e.currentTarget.style.padding = '13px 11px'
-        }}
-        onBlur={e => {
-          e.currentTarget.style.border = `1px solid ${t.colors.hairline}`
-          e.currentTarget.style.padding = '14px 12px'
-        }}
+        className={cn(
+          'h-14 rounded-lg border-border bg-background px-3 text-[16px] shadow-none',
+          'focus-visible:border-foreground focus-visible:ring-1 focus-visible:ring-foreground',
+          'disabled:bg-muted disabled:opacity-100'
+        )}
       />
-      {hint && (
-        <p className="text-[13px] leading-[1.23] text-[#929292] mt-1.5">{hint}</p>
-      )}
-    </div>
+      {hint ? <FieldDescription className="text-[13px]">{hint}</FieldDescription> : null}
+    </Field>
   )
 }

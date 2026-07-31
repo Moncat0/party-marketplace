@@ -24,6 +24,7 @@ import { CATEGORIES, type CategorySlug } from '@/lib/categories'
 import { LOCATIONS } from '@/lib/locations'
 import { OCCASIONS, type OccasionSlug } from '@/lib/occasions'
 import ServiceWizardChrome from '@/components/service-wizard/ServiceWizardChrome'
+import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
@@ -365,11 +366,7 @@ function NameStep({
             disabled={disabled}
           />
         </div>
-        {error && (
-          <p className="text-[14px] text-[#C13515]" role="alert">
-            {error}
-          </p>
-        )}
+        {error && <FormErrorAlert className="text-[14px]">{error}</FormErrorAlert>}
       </div>
     </div>
   )

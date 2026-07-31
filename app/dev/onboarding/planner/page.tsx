@@ -24,13 +24,15 @@ export default function DevPlannerWelcomePreviewPage({ searchParams }: Props) {
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <div className="flex-shrink-0 border-b border-[#ffe0d4] bg-[#FFF0EB] px-4 py-2 text-center text-[12px] text-[#222222]">
-        Local preview · planner welcome ·{' '}
+        Local preview · planner welcome (namn → plats → kategori → tillfälle) ·{' '}
         <Link href="/dev/onboarding" className="font-semibold underline underline-offset-2">
           All flows
         </Link>
         {step ? (
           <span className="ml-2 text-[#6a6a6a]">(?step={step})</span>
-        ) : null}
+        ) : (
+          <span className="ml-2 text-[#6a6a6a]">tip: ?step=occasion</span>
+        )}
       </div>
       <div className="min-h-0 flex-1 overflow-hidden [&_[data-wizard-chrome]]:h-full [&_[data-wizard-chrome]]:max-h-full">
         <AccountOnboarding nextPath="/" previewMode previewStep={step} />

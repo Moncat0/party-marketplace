@@ -1,14 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { PASSWORD_SET_METADATA_KEY } from '@/lib/auth-password'
-import { isPasswordValid } from '@/lib/auth-compliance'
-import SettingsSection from '@/components/settings/SettingsSection'
-import SettingsInput from '@/components/settings/SettingsInput'
-import SettingsButton from '@/components/settings/SettingsButton'
-import { settingsTokens as t } from '@/components/settings/tokens'
+import {
+  getPasswordChecks,
+  isPasswordValid,
+  passwordsMatch,
+} from '@/lib/auth-compliance'
+import AuthPasswordInput from '@/components/auth/AuthPasswordInput'
+import PasswordHint from '@/components/auth/PasswordHint'
+import FormErrorAlert from '@/components/auth/FormErrorAlert'
+import { Button } from '@/components/ui/button'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -16,6 +20,9 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const pwChecks = useMemo(() => getPasswordChecks(password), [password])
+  const match = confirm.length > 0 ? passwordsMatch(password, confirm) : false
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -25,17 +32,17 @@ export default function ResetPasswordPage() {
       setError('Lösenordet måste ha minst 8 tecken, versal, gemen och siffra.')
       return
     }
-    if (password !== confirm) {
+    if (!passwordsMatch(password, confirm)) {
       setError('Lösenorden matchar inte.')
       return
     }
 
     setLoading(true)
-    const { error } = await createClient().auth.updateUser({
+    const { error: updateError } = await createClient().auth.updateUser({
       password,
       data: { [PASSWORD_SET_METADATA_KEY]: true },
     })
-    if (error) {
+    if (updateError) {
       setError('Något gick fel. Länken kan ha gått ut — begär en ny återställningslänk.')
     } else {
       setDone(true)
@@ -44,74 +51,96 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-4 py-10">
+    <main className="flex min-h-screen items-center justify-center bg-white px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
+        <div className="mb-8 text-center">
           <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
             FESTEN.
           </Link>
           <p className="mt-2 text-[14px] leading-[1.43] text-[#6a6a6a]">Välj ett nytt lösenord</p>
         </div>
 
-        {done ? (
-          <SettingsSection title="Lösenord uppdaterat!">
-            <p className="text-[14px] leading-[1.43] text-[#6a6a6a] mb-6">
-              Ditt lösenord är nu ändrat. Du kan logga in med det nya lösenordet.
-            </p>
-            <Link href="/" className="block">
-              <SettingsButton className="w-full">Gå till startsidan</SettingsButton>
-            </Link>
-          </SettingsSection>
-        ) : (
-          <SettingsSection title="Nytt lösenord">
-            {error && (
-              <div
-                className="mb-4 px-4 py-3 text-[14px]"
-                style={{
-                  color: t.colors.error,
-                  backgroundColor: '#fff5f3',
-                  borderRadius: t.rounded.sm,
-                  border: `1px solid #f5c6c0`,
-                }}
-              >
-                {error}{' '}
-                {error.includes('gått ut') && (
-                  <Link href="/forgot-password" className="font-medium underline">
-                    Begär ny länk
-                  </Link>
-                )}
-              </div>
-            )}
+        <div className="rounded-2xl border border-[#dddddd] bg-white p-6 sm:p-8">
+          {done ? (
+            <>
+              <h1 className="text-[22px] font-semibold tracking-tight text-[#222222]">
+                Lösenord uppdaterat!
+              </h1>
+              <p className="mt-2 text-[14px] leading-relaxed text-[#6a6a6a]">
+                Ditt lösenord är nu ändrat. Du kan logga in med det nya lösenordet.
+              </p>
+              <Button asChild className="mt-6 h-12 w-full rounded-xl text-[16px] font-semibold">
+                <Link href="/">Gå till startsidan</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <h1 className="text-[22px] font-semibold tracking-tight text-[#222222]">
+                Nytt lösenord
+              </h1>
+              <p className="mt-2 text-[14px] leading-relaxed text-[#6a6a6a]">
+                Samma krav som när du skapar konto.
+              </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <SettingsInput
-                id="password"
-                label="Nytt lösenord"
-                type="password"
-                value={password}
-                onChange={setPassword}
-                placeholder="Minst 8 tecken"
-                autoComplete="new-password"
-              />
-              <SettingsInput
-                id="confirm"
-                label="Bekräfta lösenord"
-                type="password"
-                value={confirm}
-                onChange={setConfirm}
-                placeholder="Upprepa lösenordet"
-                autoComplete="new-password"
-              />
-              <SettingsButton
-                type="submit"
-                className="w-full"
-                disabled={!password || !confirm || loading}
-              >
-                {loading ? 'Sparar...' : 'Spara nytt lösenord'}
-              </SettingsButton>
-            </form>
-          </SettingsSection>
-        )}
+              {error && (
+                <FormErrorAlert className="mt-4 text-[14px]">
+                  {error}{' '}
+                  {error.includes('gått ut') && (
+                    <Link href="/?auth=1&view=forgot" className="font-medium">
+                      Begär ny länk
+                    </Link>
+                  )}
+                </FormErrorAlert>
+              )}
+
+              <form onSubmit={e => void handleSubmit(e)} className="mt-5 flex flex-col gap-3.5">
+                <div>
+                  <label
+                    htmlFor="reset-password"
+                    className="mb-1.5 block text-[12px] font-medium text-foreground"
+                  >
+                    Nytt lösenord
+                  </label>
+                  <AuthPasswordInput
+                    id="reset-password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="Nytt lösenord"
+                    autoComplete="new-password"
+                    autoFocus
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="reset-confirm"
+                    className="mb-1.5 block text-[12px] font-medium text-foreground"
+                  >
+                    Bekräfta lösenord
+                  </label>
+                  <AuthPasswordInput
+                    id="reset-confirm"
+                    value={confirm}
+                    onChange={e => setConfirm(e.target.value)}
+                    placeholder="Upprepa lösenordet"
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+
+                <PasswordHint checks={pwChecks} match={match} />
+
+                <Button
+                  type="submit"
+                  disabled={loading || !password || !confirm}
+                  className="mt-1 h-12 w-full rounded-xl text-[16px] font-semibold"
+                >
+                  {loading ? 'Sparar…' : 'Spara nytt lösenord'}
+                </Button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
     </main>
   )

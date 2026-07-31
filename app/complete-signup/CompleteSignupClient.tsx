@@ -35,6 +35,8 @@ export default function CompleteSignupClient({
     if (previewMode) {
       setFirstName('Anna')
       setLastName('Andersson')
+      // Simulate Google People API birthday prefill when available
+      setBirthDate('1994-03-12')
       setChecking(false)
       return
     }

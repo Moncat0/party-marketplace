@@ -17,6 +17,9 @@ import PublishSuccessScreen from '@/components/service-wizard/PublishSuccessScre
 import OccasionMultiSelect from '@/components/ui/OccasionMultiSelect'
 import { formatOccasions } from '@/lib/occasions'
 import { buildDisplayName } from '@/lib/profile-completeness'
+import FormErrorAlert from '@/components/auth/FormErrorAlert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 import {
   type AccountWizardDraft,
   type FirstPublishStep,
@@ -78,6 +81,8 @@ type Props = {
    * Local `/dev` previews — no auth, no DB writes. Advances through UI only.
    */
   previewMode?: boolean
+  /** Jump to a listing (or account) step when previewMode is on */
+  previewStep?: FirstPublishStep
 }
 
 export default function ServiceWizard({
@@ -94,6 +99,7 @@ export default function ServiceWizard({
   accountNeedsBio,
   emailVerified = false,
   previewMode = false,
+  previewStep,
 }: Props) {
   const router = useRouter()
   const supabase = createClient()
@@ -109,6 +115,12 @@ export default function ServiceWizard({
     accountNeedsName ?? !(initialAccount?.firstName ?? '').trim()
   const needsBio = accountNeedsBio ?? !(initialAccount?.bio ?? '').trim()
   const [step, setStep] = useState<FirstPublishStep>(() => {
+    if (previewMode && previewStep) {
+      if (includeAccountSteps || isServiceWizardStep(previewStep)) {
+        if (!includeAccountSteps && isAccountWizardStep(previewStep)) return 'intro1'
+        return previewStep
+      }
+    }
     if (includeAccountSteps) {
       return resumeFirstPublishStep({
         needsName,
@@ -519,11 +531,7 @@ export default function ServiceWizard({
         contentClassName="items-center justify-start"
       >
         <div className="w-full max-w-[640px]">
-          {error && (
-            <p className="mb-4 rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
-              {error}
-            </p>
-          )}
+          {error && <FormErrorAlert className="mb-4 text-[14px]">{error}</FormErrorAlert>}
           {info && (
             <p className="mb-4 rounded-xl border border-[#b8e0d0] bg-[#f0faf6] px-4 py-3 text-[14px] text-[#1D9E75]">
               {info}
@@ -1245,31 +1253,37 @@ function PublishStep({
       </p>
 
       {!emailVerified && (
-        <div className="mt-6 rounded-2xl border border-[#f5c6c0] bg-[#fff5f3] px-5 py-4">
-          <p className="text-[15px] font-semibold text-[#C13515]">E-post inte bekräftad</p>
-          <p className="mt-1 text-[14px] leading-relaxed text-[#5F5E5A]">
-            Du kan spara utkast och förhandsgranska, men publicering kräver en bekräftad
-            e-postadress.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            <button
-              type="button"
-              disabled={resending}
-              onClick={onResendConfirm}
-              className="text-[14px] font-semibold text-[#222222] underline underline-offset-2 disabled:opacity-50"
-            >
-              {resending ? 'Skickar…' : 'Skicka bekräftelselänk igen'}
-            </button>
-            <button
-              type="button"
-              disabled={resending}
-              onClick={onRefreshVerified}
-              className="text-[14px] font-semibold text-[#222222] underline underline-offset-2 disabled:opacity-50"
-            >
-              Jag har bekräftat — kontrollera igen
-            </button>
-          </div>
-        </div>
+        <Alert
+          variant="destructive"
+          className="mt-6 rounded-2xl border-[#f5c6c0] bg-[#fff5f3] text-[#C13515] [&>svg]:text-[#C13515]"
+        >
+          <AlertCircle className="size-4" />
+          <AlertTitle className="text-[15px] text-[#C13515]">E-post inte bekräftad</AlertTitle>
+          <AlertDescription className="text-[14px] leading-relaxed text-[#5F5E5A]">
+            <p>
+              Du kan spara utkast och förhandsgranska, men publicering kräver en bekräftad
+              e-postadress.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="button"
+                disabled={resending}
+                onClick={onResendConfirm}
+                className="text-[14px] font-semibold text-[#222222] underline underline-offset-2 disabled:opacity-50"
+              >
+                {resending ? 'Skickar…' : 'Skicka bekräftelselänk igen'}
+              </button>
+              <button
+                type="button"
+                disabled={resending}
+                onClick={onRefreshVerified}
+                className="text-[14px] font-semibold text-[#222222] underline underline-offset-2 disabled:opacity-50"
+              >
+                Jag har bekräftat — kontrollera igen
+              </button>
+            </div>
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="mt-8 overflow-hidden rounded-2xl border border-[#dddddd]">

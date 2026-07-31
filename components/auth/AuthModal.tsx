@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import AuthPanel from '@/components/auth/AuthPanel'
+import type { OpenAuthView } from '@/lib/open-auth'
 
 type Props = {
   open: boolean
@@ -15,6 +16,7 @@ type Props = {
   intent?: AuthIntent | null
   next?: string | null
   initialMode?: 'login' | 'signup'
+  initialView?: OpenAuthView | null
 }
 
 export default function AuthModal({
@@ -22,6 +24,7 @@ export default function AuthModal({
   onOpenChange,
   intent = null,
   next = null,
+  initialView = null,
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,9 +42,10 @@ export default function AuthModal({
           Fortsätt med e-post eller Google.
         </DialogDescription>
         <AuthPanel
-          key={`${intent ?? ''}-${next ?? ''}-${open}`}
+          key={`${intent ?? ''}-${next ?? ''}-${initialView ?? ''}-${open}`}
           intent={intent}
           next={next}
+          initialView={initialView ?? undefined}
           showClose
           onClose={() => onOpenChange(false)}
         />

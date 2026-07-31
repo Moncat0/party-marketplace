@@ -10,7 +10,7 @@ export default function DevPlannerSoftGatePreviewPage() {
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <div className="flex-shrink-0 border-b border-[#ffe0d4] bg-[#FFF0EB] px-4 py-2 text-center text-[12px] text-[#222222]">
-        Local preview · soft-gate name ·{' '}
+        Local preview · soft-gate name (after save/request → back to listing) ·{' '}
         <Link href="/dev/onboarding" className="font-semibold underline underline-offset-2">
           All flows
         </Link>

@@ -15,27 +15,35 @@ export default function DevOnboardingIndexPage() {
       href: '/dev/onboarding/auth',
       title: 'Auth modal',
       blurb:
-        'Email-only identify → password or compact finish signup (full checklist) → confirm email',
+        'Email-only identify → password (forgot password stays in-modal) or finish signup (calendar DOB + checklist) → confirm email. SMS gated.',
     },
     {
       href: '/dev/onboarding/complete-signup',
       title: 'Finish signup (Google)',
-      blurb: 'Agree and continue after Google OAuth (no password)',
+      blurb:
+        'Post-OAuth agree step: name (prefilled) + födelsedatum calendar picker — no password.',
+    },
+    {
+      href: '/dev/onboarding/set-password',
+      title: 'Set password',
+      blurb: 'Magic-link / invite path — create password after email confirm.',
     },
     {
       href: '/dev/onboarding/planner',
       title: 'Planner welcome',
-      blurb: 'Name → plats → kategori → tillfälle',
+      blurb: 'Discovery: namn → plats → kategori → tillfälle → /sok',
     },
     {
       href: '/dev/onboarding/planner-soft-gate',
       title: 'Planner soft-gate name',
-      blurb: 'Name-only step after save/request while logged in',
+      blurb:
+        'Name-only after save/request when first_name is missing — then back to the listing.',
     },
     {
       href: '/dev/onboarding/provider',
-      title: 'Provider onboarding',
-      blurb: 'Listing wizard only → publish (no name/bio)',
+      title: 'Provider listing wizard',
+      blurb:
+        'Listing-only flow (no name/bio): intro → title → category → tillfällen → … → publish. Optional ?step=occasions',
     },
   ]
 
@@ -48,7 +56,8 @@ export default function DevOnboardingIndexPage() {
         Onboarding flows
       </h1>
       <p className="mt-2 text-[15px] leading-relaxed text-[#6a6a6a]">
-        No login. Nothing is saved. Production blocks these routes.
+        No login. Nothing is saved. Production blocks these routes. Previews track current
+        product UI (calendar DOB, occasions, email-only auth).
       </p>
 
       <ul className="mt-8 space-y-3">

@@ -7,6 +7,7 @@ import SiteNav from '@/components/SiteNav'
 import AuthHost from '@/components/auth/AuthHost'
 import RememberAccountSync from '@/components/auth/RememberAccountSync'
 import GoogleOneTap from '@/components/auth/GoogleOneTap'
+import { Toaster } from '@/components/ui/sonner'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -78,6 +79,7 @@ export default function RootLayout({
           <RememberAccountSync />
           <GoogleOneTap />
           <CookieBanner />
+          <Toaster position="top-center" richColors closeButton />
         </PostHogProvider>
       </body>
     </html>

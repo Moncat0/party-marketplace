@@ -29,7 +29,6 @@ import {
   getPasswordChecks,
   isPasswordValid,
   passwordsMatch,
-  type PasswordChecks,
 } from '@/lib/auth-compliance'
 import { buildDisplayName } from '@/lib/profile-completeness'
 import { GOOGLE_OAUTH_SCOPES } from '@/lib/google-birthday'
@@ -38,6 +37,8 @@ import FinishSignupFields, {
   isAtLeast18,
 } from '@/components/auth/FinishSignupFields'
 import AuthPasswordInput from '@/components/auth/AuthPasswordInput'
+import PasswordHint from '@/components/auth/PasswordHint'
+import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -46,6 +47,8 @@ export type AuthView =
   | 'fresh'
   | 'finish-signup'
   | 'password'
+  | 'forgot-password'
+  | 'forgot-sent'
   | 'confirm-code'
   | 'check-email'
 
@@ -120,14 +123,16 @@ export default function AuthPanel({
     previewMode && initialView === 'finish-signup' ? '1988-07-20' : ''
   )
   const [identifier, setIdentifier] = useState(() => {
-    if (initialView === 'password') return 'demo@festen.se'
+    if (initialView === 'password' || initialView === 'forgot-password' || initialView === 'forgot-sent')
+      return 'demo@festen.se'
     if (initialView === 'finish-signup' || initialView === 'check-email') return 'ny@festen.se'
     return ''
   })
   const [identifierFocused, setIdentifierFocused] = useState(false)
   const [countryDial, setCountryDial] = useState(COUNTRY_DIALS[0].dial)
   const [email, setEmail] = useState(() => {
-    if (initialView === 'password') return 'demo@festen.se'
+    if (initialView === 'password' || initialView === 'forgot-password' || initialView === 'forgot-sent')
+      return 'demo@festen.se'
     if (initialView === 'finish-signup' || initialView === 'check-email') return 'ny@festen.se'
     return ''
   })
@@ -170,7 +175,12 @@ export default function AuthPanel({
     if (initialView === 'confirm-code' && !phoneE164) {
       setPhoneE164('+46768513119')
     }
-    if (initialView === 'password' && !email) {
+    if (
+      (initialView === 'password' ||
+        initialView === 'forgot-password' ||
+        initialView === 'forgot-sent') &&
+      !email
+    ) {
       setEmail('demo@festen.se')
       setIdentifier('demo@festen.se')
     }
@@ -611,6 +621,45 @@ export default function AuthPanel({
     window.location.href = postAuthHref()
   }
 
+  async function sendPasswordReset(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    resetMessages()
+    const normalized = email.trim().toLowerCase()
+    if (!isValidEmail(normalized)) {
+      setError('Ange en giltig e-postadress.')
+      setLoading(false)
+      return
+    }
+
+    if (previewMode) {
+      setView('forgot-sent')
+      setLoading(false)
+      return
+    }
+
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback?next=/reset-password`
+        : '/auth/callback?next=/reset-password'
+
+    const { error: resetError } = await createClient().auth.resetPasswordForEmail(
+      normalized,
+      { redirectTo }
+    )
+
+    if (resetError) {
+      setError(
+        'Något gick fel. Kontrollera att e-postadressen stämmer och försök igen.'
+      )
+      setLoading(false)
+      return
+    }
+
+    setView('forgot-sent')
+    setLoading(false)
+  }
+
   async function resendConfirmation() {
     setLoading(true)
     resetMessages()
@@ -666,9 +715,7 @@ export default function AuthPanel({
       )}
 
       {error && view !== 'finish-signup' && (
-        <div className="mb-4 rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
-          {error}
-        </div>
+        <FormErrorAlert className="mb-4 text-[14px]">{error}</FormErrorAlert>
       )}
       {message && (
         <div className="mb-4 rounded-xl border border-[#b8e0d0] bg-[#f0faf6] px-4 py-3 text-[14px] text-[#1D9E75]">
@@ -927,12 +974,16 @@ export default function AuthPanel({
               required
             />
             <div className="text-right -mt-1">
-              <Link
-                href="/forgot-password"
+              <button
+                type="button"
+                onClick={() => {
+                  resetMessages()
+                  setView('forgot-password')
+                }}
                 className="text-[13px] font-medium text-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
               >
                 Glömt lösenord?
-              </Link>
+              </button>
             </div>
             <Button
               type="submit"
@@ -942,6 +993,88 @@ export default function AuthPanel({
               {loading ? 'Loggar in…' : 'Logga in'}
             </Button>
           </form>
+        </div>
+      )}
+
+      {view === 'forgot-password' && (
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => {
+              resetMessages()
+              setView(email ? 'password' : 'fresh')
+            }}
+            className="mb-4 text-[14px] font-medium text-foreground/70 hover:text-foreground"
+          >
+            ← Tillbaka
+          </button>
+          <h2 className="text-[26px] font-semibold tracking-tight text-foreground">
+            Glömt lösenord?
+          </h2>
+          <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">
+            Ange din e-post så skickar vi en länk där du kan välja ett nytt lösenord.
+          </p>
+
+          <form onSubmit={e => void sendPasswordReset(e)} className="mt-6 flex flex-col gap-4">
+            <div>
+              <label htmlFor="forgot-email" className="mb-1.5 block text-[12px] font-medium text-foreground">
+                E-postadress
+              </label>
+              <input
+                id="forgot-email"
+                type="email"
+                value={email}
+                onChange={e => {
+                  const v = e.target.value
+                  setEmail(v)
+                  setIdentifier(v)
+                }}
+                placeholder="din@epost.se"
+                autoComplete="email"
+                autoFocus
+                required
+                className={authInputClass}
+              />
+            </div>
+            {error && <FormErrorAlert>{error}</FormErrorAlert>}
+            <Button
+              type="submit"
+              disabled={loading || !email.trim()}
+              className="h-12 w-full rounded-xl text-[16px] font-semibold"
+            >
+              {loading ? 'Skickar…' : 'Skicka återställningslänk'}
+            </Button>
+          </form>
+        </div>
+      )}
+
+      {view === 'forgot-sent' && (
+        <div className="pt-1 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF0EB]">
+            <MailIcon />
+          </div>
+          <h2 className="text-[26px] font-semibold tracking-tight text-foreground">
+            Kolla din inkorg!
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            Om det finns ett konto för{' '}
+            <span className="font-medium text-foreground">{email}</span> har vi skickat en
+            länk för att välja ett nytt lösenord.
+          </p>
+          <p className="mt-4 text-[13px] text-muted-foreground">
+            Ser du inget? Kolla skräppost.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              resetMessages()
+              setPassword('')
+              setView('password')
+            }}
+            className="mt-6 text-[14px] font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            Tillbaka till inloggning
+          </button>
         </div>
       )}
 
@@ -1035,62 +1168,6 @@ export default function AuthPanel({
         </div>
       )}
     </div>
-  )
-}
-
-function PasswordHint({
-  checks,
-  match,
-}: {
-  checks: PasswordChecks
-  /** Always passed so the “match” row is reserved from first paint (avoids mid-step height jump). */
-  match: boolean
-}) {
-  const rules: { key: string; label: string; met: boolean }[] = [
-    { key: 'length', label: 'Minst 8 tecken', met: checks.minLength },
-    { key: 'upper', label: 'En versal (A–Z)', met: checks.hasUpper },
-    { key: 'lower', label: 'En gemen (a–z)', met: checks.hasLower },
-    { key: 'number', label: 'En siffra (0–9)', met: checks.hasNumber },
-    { key: 'match', label: 'Lösenorden matchar', met: match },
-  ]
-
-  return (
-    <ul
-      className="mt-0.5 grid grid-cols-2 gap-x-2 gap-y-1"
-      aria-live="polite"
-    >
-      {rules.map(rule => (
-        <li
-          key={rule.key}
-          className={cn(
-            'flex items-center gap-1.5 text-[12px] leading-tight',
-            rule.key === 'match' && 'col-span-2',
-            rule.met ? 'text-[#1D9E75]' : 'text-muted-foreground'
-          )}
-        >
-          <span
-            className={cn(
-              'flex h-3.5 w-3.5 flex-shrink-0 items-center justify-center rounded-full',
-              rule.met ? 'bg-[#1D9E75] text-white' : 'border border-border bg-background'
-            )}
-            aria-hidden
-          >
-            {rule.met ? (
-              <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
-                <path
-                  d="M2.5 6.2 4.8 8.5 9.5 3.5"
-                  stroke="currentColor"
-                  strokeWidth="1.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            ) : null}
-          </span>
-          <span>{rule.label}</span>
-        </li>
-      ))}
-    </ul>
   )
 }
 

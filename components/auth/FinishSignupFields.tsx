@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import AuthPasswordInput, { authInputClass } from '@/components/auth/AuthPasswordInput'
 import DatePickerField from '@/components/ui/DatePickerField'
+import FormErrorAlert from '@/components/auth/FormErrorAlert'
 
 export { authInputClass }
 
@@ -155,11 +156,7 @@ export default function FinishSignupFields({
         </>
       )}
 
-      {error && (
-        <div className="rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-3 py-2.5 text-[13px] text-[#C13515]">
-          {error}
-        </div>
-      )}
+      {error && <FormErrorAlert>{error}</FormErrorAlert>}
 
       <AgreeAndContinueLegal />
 

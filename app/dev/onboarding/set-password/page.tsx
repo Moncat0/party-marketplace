@@ -10,9 +10,13 @@ export default function DevSetPasswordPreviewPage() {
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <div className="flex-shrink-0 border-b border-[#ffe0d4] bg-[#FFF0EB] px-4 py-2 text-center text-[12px] text-[#222222]">
-        Local preview · set-password ·{' '}
+        Local preview · set password (post magic-link) ·{' '}
         <Link href="/dev/onboarding" className="font-semibold underline underline-offset-2">
           All flows
+        </Link>
+        {' · '}
+        <Link href="/dev/onboarding/auth" className="font-semibold underline underline-offset-2">
+          Auth modal
         </Link>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden [&_main]:h-full [&_main]:max-h-full">

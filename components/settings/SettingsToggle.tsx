@@ -1,7 +1,8 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { settingsTokens as t } from './tokens'
+import { Field, FieldContent, FieldDescription, FieldTitle } from '@/components/ui/field'
+import { Switch } from '@/components/ui/switch'
+import { cn } from '@/lib/utils'
 
 type Props = {
   label: string
@@ -12,13 +13,13 @@ type Props = {
   /** Optional inline link under the label (e.g. Läs mer) */
   learnMore?: { label: string; onClick: () => void }
   /**
-   * ink = Airbnb black switch with checkmark when on (privacy).
-   * brand = ember primary (notifications).
+   * ink = black track when on (privacy).
+   * brand = primary ember (notifications).
    */
   variant?: 'ink' | 'brand'
 }
 
-/** Airbnb-style switch: track + white knob, checkmark when on (ink). */
+/** Settings switch — Field + Switch (shadcn). */
 export default function SettingsToggle({
   label,
   description,
@@ -28,63 +29,40 @@ export default function SettingsToggle({
   learnMore,
   variant = 'brand',
 }: Props) {
-  const onColor = variant === 'ink' ? '#222222' : t.colors.primary
-  const offColor = '#b0b0b0'
-
   return (
-    <div className="flex items-start justify-between gap-6 py-1">
-      <div className="min-w-0 flex-1">
-        <p className="text-[16px] font-semibold leading-[1.25] text-[#222222]">{label}</p>
-        {description && (
-          <p className="mt-1 text-[14px] font-normal leading-[1.43] text-[#6a6a6a]">
+    <Field
+      orientation="horizontal"
+      data-disabled={disabled || undefined}
+      className="items-start justify-between gap-6 py-1"
+    >
+      <FieldContent className="gap-1">
+        <FieldTitle className="text-[16px] font-semibold text-foreground">{label}</FieldTitle>
+        {description ? (
+          <FieldDescription className="text-[14px] text-muted-foreground">
             {description}
-          </p>
-        )}
-        {learnMore && (
+          </FieldDescription>
+        ) : null}
+        {learnMore ? (
           <button
             type="button"
             onClick={learnMore.onClick}
-            className="mt-1 text-[14px] font-normal text-[#222222] underline underline-offset-[3px] hover:text-[#6a6a6a]"
+            className="mt-0.5 w-fit text-[14px] text-foreground underline underline-offset-[3px] hover:text-muted-foreground"
           >
             {learnMore.label}
           </button>
-        )}
-      </div>
-      <Button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        aria-label={label}
+        ) : null}
+      </FieldContent>
+      <Switch
+        checked={checked}
         disabled={disabled}
-        onClick={() => onChange(!checked)}
-        variant="ghost"
-        className="relative h-[32px] w-[48px] min-w-0 flex-shrink-0 rounded-full p-0 hover:bg-transparent focus-visible:ring-foreground disabled:opacity-50"
-        style={{
-          backgroundColor: checked ? onColor : offColor,
-          transition: `background-color ${t.motion.fast} ${t.motion.easeStandard}`,
-        }}
-      >
-        <span
-          className="absolute top-[2px] left-[2px] flex h-7 w-7 items-center justify-center rounded-full bg-white"
-          style={{
-            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-            transform: checked ? 'translateX(16px)' : 'translateX(0)',
-            transition: `transform ${t.motion.fast} ${t.motion.easeWarm}`,
-          }}
-        >
-          {checked && variant === 'ink' && (
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-              <path
-                d="M2 6.2L4.7 9L10 3"
-                stroke="#222222"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
-        </span>
-      </Button>
-    </div>
+        onCheckedChange={onChange}
+        aria-label={label}
+        className={cn(
+          'mt-0.5 h-8 w-12 data-[state=checked]:bg-primary data-[state=unchecked]:bg-[#b0b0b0]',
+          '[&>span]:h-7 [&>span]:w-7 [&>span]:data-[state=checked]:translate-x-4',
+          variant === 'ink' && 'data-[state=checked]:bg-foreground'
+        )}
+      />
+    </Field>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -9,8 +9,16 @@ import {
   parseSetPasswordNext,
   PASSWORD_SET_METADATA_KEY,
 } from '@/lib/auth-password'
+import {
+  getPasswordChecks,
+  isPasswordValid,
+  passwordsMatch,
+} from '@/lib/auth-compliance'
 import { setIntentCookie, type AuthIntent } from '@/lib/auth-intent'
 import { GOOGLE_OAUTH_SCOPES } from '@/lib/google-birthday'
+import AuthPasswordInput from '@/components/auth/AuthPasswordInput'
+import PasswordHint from '@/components/auth/PasswordHint'
+import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Button } from '@/components/ui/button'
 
 export default function SetPasswordClient({
@@ -31,6 +39,8 @@ export default function SetPasswordClient({
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [email, setEmail] = useState<string | null>(previewMode ? previewEmail : null)
+  const pwChecks = useMemo(() => getPasswordChecks(password), [password])
+  const match = confirm.length > 0 ? passwordsMatch(password, confirm) : false
 
   useEffect(() => {
     if (previewMode) {
@@ -68,11 +78,11 @@ export default function SetPasswordClient({
       return
     }
     setError(null)
-    if (password.length < 8) {
-      setError('Lösenordet måste vara minst 8 tecken.')
+    if (!isPasswordValid(password)) {
+      setError('Lösenordet måste ha minst 8 tecken, versal, gemen och siffra.')
       return
     }
-    if (password !== confirm) {
+    if (!passwordsMatch(password, confirm)) {
       setError('Lösenorden matchar inte.')
       return
     }
@@ -164,56 +174,47 @@ export default function SetPasswordClient({
             </p>
           </div>
 
-          {error && (
-            <div className="mb-4 rounded-xl border border-[#f5c6c0] bg-[#fff5f3] px-4 py-3 text-[14px] text-[#C13515]">
-              {error}
-            </div>
-          )}
+          {error && <FormErrorAlert className="mb-4 text-[14px]">{error}</FormErrorAlert>}
 
           <form
             id="set-password-form"
             onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
+            className="flex flex-col gap-3.5"
           >
             <div>
               <label
                 htmlFor="set-password"
-                className="mb-1.5 block text-[14px] font-medium text-[#222222]"
+                className="mb-1.5 block text-[12px] font-medium text-foreground"
               >
                 Lösenord
               </label>
-              <input
+              <AuthPasswordInput
                 id="set-password"
-                type="password"
                 autoComplete="new-password"
                 autoFocus
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Minst 8 tecken"
+                placeholder="Nytt lösenord"
                 required
-                minLength={8}
-                className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
               />
             </div>
             <div>
               <label
                 htmlFor="set-password-confirm"
-                className="mb-1.5 block text-[14px] font-medium text-[#222222]"
+                className="mb-1.5 block text-[12px] font-medium text-foreground"
               >
                 Bekräfta lösenord
               </label>
-              <input
+              <AuthPasswordInput
                 id="set-password-confirm"
-                type="password"
                 autoComplete="new-password"
                 value={confirm}
                 onChange={e => setConfirm(e.target.value)}
                 placeholder="Upprepa lösenordet"
                 required
-                minLength={8}
-                className="h-14 w-full rounded-xl border border-[#b0b0b0] bg-white px-4 text-[16px] text-[#222222] outline-none focus:border-[#222222] focus:ring-1 focus:ring-[#222222]"
               />
             </div>
+            <PasswordHint checks={pwChecks} match={match} />
           </form>
 
           <div className="my-6 flex items-center gap-3">

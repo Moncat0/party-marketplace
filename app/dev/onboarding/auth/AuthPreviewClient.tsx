@@ -11,10 +11,12 @@ const previewModalClass =
 const PREVIEW_STEPS: { id: AuthView; label: string; gated?: boolean }[] = [
   { id: 'fresh', label: 'Identify' },
   { id: 'password', label: 'Password' },
-  { id: 'finish-signup', label: 'Finish signup' },
+  { id: 'forgot-password', label: 'Forgot password' },
+  { id: 'forgot-sent', label: 'Reset sent' },
+  { id: 'finish-signup', label: 'Finish + DOB' },
   { id: 'check-email', label: 'Confirm email' },
   { id: 'welcome', label: 'Welcome back' },
-  { id: 'confirm-code', label: 'SMS (preview)', gated: true },
+  { id: 'confirm-code', label: 'SMS (gated)', gated: true },
 ]
 
 export default function AuthPreviewClient() {
@@ -35,14 +37,21 @@ export default function AuthPreviewClient() {
         </p>
         <h1 className="mt-1 text-[22px] font-semibold text-white">Auth modal</h1>
         <p className="mt-1 text-[13px] text-white/70">
-          Preview mode — no live auth. Tip: use <span className="text-white">demo@…</span> on
-          Identify to open Password; any other email opens Finish signup.{' '}
+          Matches production: email-only identify, finish signup with calendar födelsedatum +
+          password checklist. Tip: <span className="text-white">demo@…</span> → Password; any
+          other email → Finish signup. SMS is gated off in app code.
+        </p>
+        <p className="mt-2 text-[13px] text-white/70">
           <Link href="/dev/onboarding" className="underline underline-offset-2">
             All flows
           </Link>
           {' · '}
           <Link href="/dev/onboarding/complete-signup" className="underline underline-offset-2">
-            Finish signup (Google)
+            Google finish signup
+          </Link>
+          {' · '}
+          <Link href="/dev/onboarding/set-password" className="underline underline-offset-2">
+            Set password
           </Link>
         </p>
         <div className="mt-4 flex flex-wrap justify-center gap-2">
