@@ -46,10 +46,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect /admin — only Monica can access it
+  // Protect /admin — allowlisted emails only
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    const adminEmail = process.env.ADMIN_EMAIL ?? 'monicaandreatorres@gmail.com'
-    if (!user || user.email !== adminEmail) {
+    const raw =
+      process.env.ADMIN_EMAILS ??
+      process.env.ADMIN_EMAIL ??
+      'monicaandreatorres@gmail.com,gen.escudero@gmail.com'
+    const adminEmails = raw
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean)
+    const email = user?.email?.toLowerCase()
+    if (!email || !adminEmails.includes(email)) {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }

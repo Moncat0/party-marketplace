@@ -1,21 +1,42 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { isMessagingAllowedStatus } from '@/lib/message-access'
+import { getCancellationPolicy, isCancellationPolicyId } from '@/lib/cancellation-policies'
+import { trackServer } from '@/lib/track-server'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { booking_request_id, price_sek, description, duration, event_date, location, cancellation_policy } = await request.json()
+  const {
+    booking_request_id,
+    price_sek,
+    description,
+    duration,
+    event_date,
+    location,
+    cancellation_policy,
+  } = await request.json()
+
   if (!booking_request_id || !price_sek || price_sek < 1) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
-  // Verify sender is the provider
   const { data: booking } = await supabase
     .from('booking_requests')
-    .select('*, services!service_id(id, provider_profiles(user_id))')
+    .select(
+      `
+      *,
+      services!service_id(
+        id,
+        cancellation_policy,
+        provider_profiles(user_id, stripe_account_id, stripe_onboarded)
+      )
+    `
+    )
     .eq('id', booking_request_id)
     .single()
 
@@ -31,19 +52,55 @@ export async function POST(request: NextRequest) {
   const serviceRaw = booking.services as unknown
   const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
     id: string
-    provider_profiles: { user_id: string } | { user_id: string }[] | null
+    cancellation_policy: string | null
+    provider_profiles:
+      | { user_id: string; stripe_account_id: string | null; stripe_onboarded: boolean }
+      | { user_id: string; stripe_account_id: string | null; stripe_onboarded: boolean }[]
+      | null
   } | null
+
   const profile = service?.provider_profiles
     ? Array.isArray(service.provider_profiles)
       ? service.provider_profiles[0]
       : service.provider_profiles
     : null
 
-  if (profile?.user_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (profile?.user_id !== user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
-  const price_ore = Math.round(price_sek * 100)
+  // Soft gate: must finish Stripe Express before sending a priced quote
+  if (!profile.stripe_account_id || !profile.stripe_onboarded) {
+    return NextResponse.json(
+      {
+        error:
+          'Koppla utbetalningar via Stripe innan du skickar en offert. Du hittar det under Konto → Betalningar.',
+        code: 'stripe_required',
+      },
+      { status: 403 }
+    )
+  }
 
-  // Create the quote
+  const policyId = isCancellationPolicyId(cancellation_policy)
+    ? cancellation_policy
+    : isCancellationPolicyId(service?.cancellation_policy)
+      ? service!.cancellation_policy
+      : null
+
+  if (!policyId) {
+    return NextResponse.json(
+      {
+        error:
+          'Välj en avbokningspolicy på tjänsten (Flexibel, Måttlig eller Strikt) innan du skickar offert.',
+        code: 'cancellation_policy_required',
+      },
+      { status: 400 }
+    )
+  }
+
+  const policy = getCancellationPolicy(policyId)
+  const price_ore = Math.round(Number(price_sek) * 100)
+
   const { data: quote, error: quoteError } = await supabase
     .from('quotes')
     .insert({
@@ -54,15 +111,16 @@ export async function POST(request: NextRequest) {
       duration: duration || null,
       event_date: event_date || null,
       location: location || null,
-      cancellation_policy: cancellation_policy || null,
+      cancellation_policy: policy?.detail ?? policyId,
       status: 'pending',
     })
     .select()
     .single()
 
-  if (quoteError || !quote) return NextResponse.json({ error: 'Failed to create quote' }, { status: 500 })
+  if (quoteError || !quote) {
+    return NextResponse.json({ error: 'Failed to create quote' }, { status: 500 })
+  }
 
-  // Create a message referencing the quote
   const { data: message, error: msgError } = await supabase
     .from('messages')
     .insert({
@@ -74,7 +132,20 @@ export async function POST(request: NextRequest) {
     .select('*, users!sender_id(name), quotes(*)')
     .single()
 
-  if (msgError || !message) return NextResponse.json({ error: 'Failed to create message' }, { status: 500 })
+  if (msgError || !message) {
+    return NextResponse.json({ error: 'Failed to create message' }, { status: 500 })
+  }
+
+  await trackServer(
+    'quote_sent',
+    {
+      booking_id: booking_request_id,
+      quote_id: quote.id,
+      price_ore,
+      cancellation_policy: policyId,
+    },
+    user.id
+  )
 
   return NextResponse.json({ message })
 }

@@ -22,6 +22,8 @@ type Props = {
   firstName?: string
   lastName?: string
   stripeOnboarded?: boolean
+  /** From ?stripe= after Connect redirect */
+  stripeFlash?: string | null
 }
 
 function HelpLink({ href, label }: { href: string; label: string }) {
@@ -44,6 +46,7 @@ export default function PaymentsSettings({
   firstName = '',
   lastName = '',
   stripeOnboarded = false,
+  stripeFlash = null,
 }: Props) {
   const [tab, setTab] = useState<Tab>(role === 'provider' ? 'payouts' : 'payments')
   const [cardOpen, setCardOpen] = useState(false)
@@ -72,6 +75,45 @@ export default function PaymentsSettings({
       <h2 className="mb-6 text-[26px] font-bold leading-[1.125] tracking-[-0.02em] text-[#222222] md:text-[32px]">
         Betalningar
       </h2>
+
+      {stripeFlash === 'connect_not_enabled' && (
+        <div
+          className="mb-6 rounded-xl px-4 py-3 text-[14px] leading-[1.45] text-[#222222]"
+          style={{ backgroundColor: '#FFF1E5', border: '1px solid #FFD2B3' }}
+        >
+          Stripe Connect är inte aktiverat på plattformskontot ännu. Öppna{' '}
+          <a
+            href="https://dashboard.stripe.com/test/connect"
+            target="_blank"
+            rel="noreferrer"
+            className="font-semibold underline underline-offset-2"
+          >
+            Stripe Dashboard → Connect
+          </a>{' '}
+          (testläge), slutför Get started, och prova igen.
+        </div>
+      )}
+      {stripeFlash === 'connected' && (
+        <div
+          className="mb-6 rounded-xl px-4 py-3 text-[14px] text-[#1D9E75]"
+          style={{ backgroundColor: 'rgba(29,158,117,0.1)' }}
+        >
+          Utbetalningar är kopplade.
+        </div>
+      )}
+      {stripeFlash === 'incomplete' && (
+        <div
+          className="mb-6 rounded-xl px-4 py-3 text-[14px] text-[#222222]"
+          style={{ backgroundColor: '#f7f7f7' }}
+        >
+          Stripe-onboarding är inte klar ännu. Fortsätt där du slutade.
+        </div>
+      )}
+      {(stripeFlash === 'error') && (
+        <div className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-[14px] text-red-700">
+          Något gick fel med Stripe. Försök igen om en stund.
+        </div>
+      )}
 
       <div
         className="flex gap-8"
@@ -232,14 +274,20 @@ export default function PaymentsSettings({
               <div className="mt-5">
                 {stripeOnboarded ? (
                   <p className="text-[14px] font-medium text-[#1D9E75]">
-                    Utbetalningar är kopplade via Stripe.
+                    Utbetalningar är kopplade via Stripe. Pengar skickas efter att kunden frigör
+                    betalningen (eller efter 1 dag om de inte svarar).
                   </p>
-                ) : null}
+                ) : (
+                  <p className="text-[14px] leading-[1.43] text-[#6a6a6a]">
+                    Du måste koppla Stripe innan du kan skicka prissatta offerter. Kortuppgifter och
+                    kontonummer hanteras endast av Stripe — FESTEN sparar dem inte.
+                  </p>
+                )}
                 <a
                   href="/api/stripe/connect"
                   className="mt-4 inline-flex h-12 items-center justify-center rounded-lg bg-[#222222] px-6 text-[16px] font-medium text-white hover:bg-[#000]"
                 >
-                  {stripeOnboarded ? 'Hantera utbetalningar' : 'Konfigurera utbetalningar'}
+                  {stripeOnboarded ? 'Öppna Stripe-utbetalningar' : 'Konfigurera utbetalningar'}
                 </a>
               </div>
             )}

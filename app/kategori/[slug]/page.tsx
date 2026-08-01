@@ -6,6 +6,7 @@ import type { Metadata } from 'next'
 import Container from '@/components/Container'
 import ListingCard from '@/components/listings/ListingCard'
 import MarketplaceHeader from '@/components/MarketplaceHeader'
+import { HOST_USERS_SELECT, hostUserForDisplay } from '@/lib/host-display-name'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,7 @@ export default async function CategoryPage({ params }: Props) {
     .select(
       `
       id, title, city, location_id, photos, category_slug, category_tags, created_at,
-      provider_profiles(users(name, avatar_url)),
+      provider_profiles(users(${HOST_USERS_SELECT})),
       reviews(rating)
     `
     )
@@ -66,7 +67,7 @@ export default async function CategoryPage({ params }: Props) {
       photos: s.photos ?? [],
       category_slug: s.category_slug ?? null,
       category_tags: s.category_tags ?? [],
-      users: users as { name: string | null; avatar_url?: string | null } | null,
+      users: hostUserForDisplay(users),
       reviewCount,
       avgRating,
     }

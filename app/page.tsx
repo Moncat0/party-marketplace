@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase-server'
 import HomeBrowse from './HomeBrowse'
 import type { Metadata } from 'next'
+import { HOST_USERS_SELECT, hostUserForDisplay } from '@/lib/host-display-name'
 
 export const metadata: Metadata = {
   title: 'FESTEN. — Hitta underhållning till ditt kalas',
@@ -20,7 +21,7 @@ export default async function HomePage() {
   const { data: services } = await supabase
     .from('services')
     .select(
-      'id, title, city, location_id, photos, category_slug, category_tags, created_at, price_range_min, provider_profiles(user_id, users(name, avatar_url)), reviews(rating)'
+      `id, title, city, location_id, photos, category_slug, category_tags, created_at, price_range_min, provider_profiles(user_id, users(${HOST_USERS_SELECT})), reviews(rating)`
     )
     .eq('is_published', true)
     .eq('is_disabled', false)
@@ -47,7 +48,7 @@ export default async function HomePage() {
       category_tags: s.category_tags ?? [],
       created_at: s.created_at,
       price_range_min: s.price_range_min,
-      users,
+      users: hostUserForDisplay(users),
       reviewCount,
       avgRating,
     }

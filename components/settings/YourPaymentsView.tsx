@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import { paymentStatusLabelSv } from '@/lib/payments'
 
 export type PaymentRow = {
   id: string
@@ -58,11 +59,7 @@ export default function YourPaymentsView({ payments, backHref }: Props) {
                                 year: 'numeric',
                               })
                             : null,
-                          p.status === 'paid'
-                            ? 'Betald'
-                            : p.status === 'unpaid'
-                              ? 'Obetald'
-                              : p.status,
+                          paymentStatusLabelSv(p.status),
                         ]
                           .filter(Boolean)
                           .join(' · ')}

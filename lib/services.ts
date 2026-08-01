@@ -15,6 +15,7 @@ export type ServiceRow = {
   location_id: string | null
   price_range_min: number | null
   price_range_max: number | null
+  cancellation_policy?: string | null
   photos: string[] | null
   is_published: boolean
   is_disabled: boolean
@@ -211,6 +212,6 @@ export const PUBLISHED_SERVICE_SELECT = `
     id,
     user_id,
     bio,
-    users ( name, avatar_url )
+    users ( name, first_name, last_name, preferred_first_name, avatar_url )
   )
 `

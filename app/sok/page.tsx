@@ -4,6 +4,7 @@ import SearchResults from './SearchResults'
 import { getCategoryBySlug } from '@/lib/categories'
 import { getLocationLabel } from '@/lib/locations'
 import { formatOccasion } from '@/lib/occasions'
+import { HOST_USERS_SELECT, hostUserForDisplay } from '@/lib/host-display-name'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,7 +42,7 @@ export default async function SokPage({ searchParams }: Props) {
   const { data: services } = await supabase
     .from('services')
     .select(
-      'id, title, city, location_id, photos, category_slug, category_tags, occasions, created_at, price_range_min, provider_profiles(users(name, avatar_url)), reviews(rating)'
+      `id, title, city, location_id, photos, category_slug, category_tags, occasions, created_at, price_range_min, provider_profiles(users(${HOST_USERS_SELECT})), reviews(rating)`
     )
     .eq('is_published', true)
     .eq('is_disabled', false)
@@ -69,7 +70,7 @@ export default async function SokPage({ searchParams }: Props) {
       occasions: (s.occasions as string[] | null) ?? [],
       created_at: s.created_at,
       price_range_min: s.price_range_min,
-      users,
+      users: hostUserForDisplay(users),
       reviewCount,
       avgRating,
     }

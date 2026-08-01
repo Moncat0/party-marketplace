@@ -21,6 +21,7 @@ import {
 } from '@/lib/messaging-prefs'
 import { cn } from '@/lib/utils'
 import { formatEventType } from '@/lib/event-types'
+import { CANCELLATION_POLICIES, type CancellationPolicyId } from '@/lib/cancellation-policies'
 
 type Quote = {
   id: string
@@ -104,9 +105,11 @@ export default function MessageThread({
   const [quoteDuration, setQuoteDuration] = useState('')
   const [quoteDate, setQuoteDate] = useState(eventDate ?? '')
   const [quoteLocation, setQuoteLocation] = useState(eventLocation ?? '')
-  const [quoteCancellation, setQuoteCancellation] = useState('Ingen återbetalning')
+  const [quoteCancellation, setQuoteCancellation] = useState<CancellationPolicyId>('moderate')
+  const [quoteError, setQuoteError] = useState<string | null>(null)
   const [sendingQuote, setSendingQuote] = useState(false)
   const [respondingToQuote, setRespondingToQuote] = useState<string | null>(null)
+  const [quoteRespondError, setQuoteRespondError] = useState<string | null>(null)
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([])
   const [suggestedOn, setSuggestedOn] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
@@ -287,6 +290,7 @@ export default function MessageThread({
     e.preventDefault()
     if (!quotePrice || Number(quotePrice) < 1 || sendingQuote) return
     setSendingQuote(true)
+    setQuoteError(null)
 
     const res = await fetch('/api/quotes', {
       method: 'POST',
@@ -302,8 +306,8 @@ export default function MessageThread({
       }),
     })
 
+    const data = await res.json().catch(() => ({}))
     if (res.ok) {
-      const data = await res.json()
       setMessages(prev => [...prev, data.message])
       setShowQuoteForm(false)
       setQuotePrice('')
@@ -311,25 +315,41 @@ export default function MessageThread({
       setQuoteDuration('')
       setQuoteLocation(eventLocation ?? '')
       setQuoteDate(eventDate ?? '')
-      setQuoteCancellation('Ingen återbetalning')
+      setQuoteCancellation('moderate')
+    } else if (data.code === 'stripe_required') {
+      setQuoteError(data.error)
+    } else {
+      setQuoteError(data.error ?? 'Kunde inte skicka offerten.')
     }
     setSendingQuote(false)
   }
 
   async function handleQuoteResponse(quoteId: string, status: 'accepted' | 'declined') {
     setRespondingToQuote(quoteId)
+    setQuoteRespondError(null)
     const res = await fetch(`/api/quotes/${quoteId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
 
+    const data = await res.json().catch(() => ({}))
     if (res.ok) {
       setMessages(prev => prev.map(m =>
         m.quote_id === quoteId && m.quotes
           ? { ...m, quotes: { ...m.quotes, status } }
           : m
       ))
+      if (status === 'accepted' && data.checkoutUrl) {
+        track('checkout_started', { booking_id: bookingId, quote_id: quoteId, source: 'quote_accept' })
+        window.location.href = data.checkoutUrl as string
+        return
+      }
+      if (status === 'accepted' && data.warning) {
+        setQuoteRespondError(data.warning as string)
+      }
+    } else {
+      setQuoteRespondError(data.error ?? 'Kunde inte svara på offerten.')
     }
     setRespondingToQuote(null)
   }
@@ -487,6 +507,9 @@ export default function MessageThread({
                     )}
 
                     <div className="px-5 py-4">
+                      {quoteRespondError && quote.status === 'pending' && isPlanner && (
+                        <p className="mb-2 text-xs text-destructive">{quoteRespondError}</p>
+                      )}
                       {quote.status === 'pending' && isPlanner && (
                         <div className="flex gap-2">
                           <Button
@@ -504,7 +527,7 @@ export default function MessageThread({
                             disabled={respondingToQuote === quote.id}
                             className="h-auto flex-1 rounded-xl bg-success py-2.5 text-xs font-semibold text-white hover:bg-success/90"
                           >
-                            {respondingToQuote === quote.id ? '...' : 'Acceptera offert →'}
+                            {respondingToQuote === quote.id ? 'Öppnar betalning…' : 'Acceptera & betala →'}
                           </Button>
                         </div>
                       )}
@@ -514,7 +537,9 @@ export default function MessageThread({
                       {quote.status === 'accepted' && (
                         <div className="flex items-center gap-2">
                           <span className="h-2 w-2 rounded-full bg-[#1D9E75]" />
-                          <p className="text-xs font-semibold text-[#1D9E75]">Offert accepterad — betalning väntar</p>
+                          <p className="text-xs font-semibold text-[#1D9E75]">
+                            Offert accepterad — beloppet hålls av FESTEN tills evenemanget är klart
+                          </p>
                         </div>
                       )}
                       {quote.status === 'declined' && (
@@ -669,17 +694,30 @@ export default function MessageThread({
               </div>
 
               <div className="mb-4">
-                <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Avbokningsvillkor</label>
+                <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Avbokningspolicy</label>
                 <select
                   value={quoteCancellation}
-                  onChange={e => setQuoteCancellation(e.target.value)}
+                  onChange={e => setQuoteCancellation(e.target.value as CancellationPolicyId)}
                   className="w-full rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-2.5 text-sm text-[#222222] focus:border-[#222222] focus:outline-none focus:ring-1 focus:ring-[#222222]"
                 >
-                  <option>Ingen återbetalning</option>
-                  <option>50% återbetalning vid avbokning 7+ dagar innan</option>
-                  <option>Full återbetalning vid avbokning 14+ dagar innan</option>
+                  {CANCELLATION_POLICIES.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.label} — {p.short}
+                    </option>
+                  ))}
                 </select>
               </div>
+
+              {quoteError && (
+                <p className="mb-3 text-sm text-destructive">
+                  {quoteError}{' '}
+                  {quoteError.includes('Stripe') || quoteError.includes('utbetalning') ? (
+                    <Link href="/dashboard/account?s=payments" className="underline">
+                      Öppna betalningar →
+                    </Link>
+                  ) : null}
+                </p>
+              )}
 
               <div className="flex items-center gap-3">
                 <Button
@@ -692,7 +730,7 @@ export default function MessageThread({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => { setShowQuoteForm(false); setQuotePrice(''); setQuoteDescription('') }}
+                  onClick={() => { setShowQuoteForm(false); setQuotePrice(''); setQuoteDescription(''); setQuoteError(null) }}
                   className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
                 >
                   Avbryt

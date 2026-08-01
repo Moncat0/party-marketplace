@@ -72,16 +72,19 @@ export default function ConversationDetails({ booking, inboxPath, side }: Props)
   const needsPayment =
     side.role === 'planner' &&
     booking.status === 'accepted' &&
-    booking.payment_status !== 'paid' &&
+    booking.payment_status === 'unpaid' &&
     !!booking.price_ore &&
     !!side.stripeOnboarded
 
   const awaitingStripe =
     side.role === 'planner' &&
     booking.status === 'accepted' &&
-    booking.payment_status !== 'paid' &&
+    booking.payment_status === 'unpaid' &&
     !!booking.price_ore &&
     !side.stripeOnboarded
+
+  const fundsHeld =
+    booking.payment_status === 'held' || booking.payment_status === 'pending_release'
 
   function close() {
     router.push(inboxPath, { scroll: false })
@@ -206,10 +209,11 @@ export default function ConversationDetails({ booking, inboxPath, side }: Props)
           {booking.guest_count != null && (
             <DetailRow label="Gäster" value={`${booking.guest_count}`} />
           )}
-          {booking.payment_status === 'paid' && (
-            <DetailRow label="Betalning" value="Betald" />
+          {fundsHeld && <DetailRow label="Betalning" value="Betald (hålls av FESTEN)" />}
+          {booking.payment_status === 'released' && (
+            <DetailRow label="Betalning" value="Utbetald" />
           )}
-          {booking.price_ore != null && booking.payment_status !== 'paid' && (
+          {booking.payment_status === 'unpaid' && booking.price_ore != null && (
             <DetailRow
               label="Offert"
               value={`${Math.round(booking.price_ore / 100).toLocaleString('sv-SE')} kr`}

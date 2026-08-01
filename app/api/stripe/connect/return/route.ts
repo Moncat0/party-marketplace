@@ -1,14 +1,16 @@
 import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { SITE_URL } from '@/lib/payments'
+import { trackServer } from '@/lib/track-server'
 
 // GET /api/stripe/connect/return — Stripe redirects here after onboarding
 export async function GET(request: NextRequest) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return NextResponse.redirect(new URL('/signup', request.url))
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3004'
 
   const { data: profile } = await supabase
     .from('provider_profiles')
@@ -17,20 +19,27 @@ export async function GET(request: NextRequest) {
     .single()
 
   if (!profile?.stripe_account_id) {
-    return NextResponse.redirect(new URL('/dashboard?stripe=error', request.url))
+    return NextResponse.redirect(`${SITE_URL}/dashboard/account?s=payments&stripe=error`)
   }
 
-  // Verify the account is fully onboarded
   const account = await stripe.accounts.retrieve(profile.stripe_account_id)
-  const onboarded = account.details_submitted && !account.requirements?.currently_due?.length
+  const onboarded =
+    !!account.details_submitted &&
+    !!account.charges_enabled &&
+    !(account.requirements?.currently_due?.length)
 
   if (onboarded) {
-    await supabase.from('provider_profiles')
+    await supabase
+      .from('provider_profiles')
       .update({ stripe_onboarded: true })
       .eq('id', profile.id)
-    return NextResponse.redirect(new URL('/dashboard?stripe=connected', request.url))
+    await trackServer(
+      'stripe_connected',
+      { account_id: profile.stripe_account_id },
+      user.id
+    )
+    return NextResponse.redirect(`${SITE_URL}/dashboard/account?s=payments&stripe=connected`)
   }
 
-  // Not fully done yet — send back to onboarding
-  return NextResponse.redirect(new URL('/dashboard?stripe=incomplete', request.url))
+  return NextResponse.redirect(`${SITE_URL}/dashboard/account?s=payments&stripe=incomplete`)
 }

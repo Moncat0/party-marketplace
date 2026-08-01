@@ -86,6 +86,9 @@ create table users (
   terms_accepted_at                     timestamptz,
   age_confirmed_at                      timestamptz,
 
+  -- Stripe Customer id only (card numbers never stored in FESTEN)
+  stripe_customer_id                    text,
+
   created_at                            timestamptz not null default now()
 );
 
@@ -146,6 +149,12 @@ create table services (
   price_range_min     integer,
   price_range_max     integer,
   photos              text[] default '{}',
+  -- Airbnb-style cancel preset shown on listing + copied onto quotes
+  cancellation_policy text
+                        check (
+                          cancellation_policy is null
+                          or cancellation_policy in ('flexible', 'moderate', 'strict')
+                        ),
   is_published        boolean not null default false,
   is_disabled         boolean not null default false,
   view_count          integer not null default 0,
@@ -181,12 +190,29 @@ create table booking_requests (
   status                      text not null default 'pending'
                                 check (status in ('pending', 'accepted', 'declined', 'completed')),
 
-  -- Payment (set once a quote is accepted; charged via Stripe Connect)
+  -- Escrow payment (charged on quote accept; held on platform until release)
   price_ore                   integer,
-  payment_status              text check (payment_status in ('unpaid', 'paid')),
+  payment_status              text check (payment_status in (
+                                'unpaid',
+                                'held',
+                                'pending_release',
+                                'released',
+                                'refunded',
+                                'partially_refunded',
+                                'disputed'
+                              )),
   paid_at                     timestamptz,
+  held_at                     timestamptz,
+  pending_release_at          timestamptz,
+  release_deadline_at         timestamptz,
+  released_at                 timestamptz,
+  disputed_at                 timestamptz,
+  refunded_at                 timestamptz,
   stripe_checkout_session_id  text,
   stripe_payment_intent_id    text,
+  stripe_transfer_id          text,
+  platform_fee_ore            integer,
+  provider_payout_ore         integer,
 
   created_at                  timestamptz not null default now()
 );

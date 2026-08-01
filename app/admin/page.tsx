@@ -1,95 +1,122 @@
-import { createAdminClient } from '@/lib/supabase-admin'
 import Link from 'next/link'
+import { AlertTriangle, ExternalLink } from 'lucide-react'
+import { createAdminClient } from '@/lib/supabase-admin'
+import { getOverviewMetrics } from '@/lib/admin-metrics'
+import { parseAdminRange, posthogAppUrl } from '@/lib/admin-range'
+import AdminPageHeader from '@/components/admin/AdminPageHeader'
+import AdminKpiCard from '@/components/admin/AdminKpiCard'
+import AdminStatusBadge from '@/components/admin/AdminStatusBadge'
+import { Button } from '@/components/ui/button'
 
 export const metadata = { title: 'Admin — Översikt' }
+export const dynamic = 'force-dynamic'
 
-async function getStats() {
+type Props = { searchParams: { range?: string } }
+
+export default async function AdminOverviewPage({ searchParams }: Props) {
+  const range = parseAdminRange(searchParams.range)
   const supabase = createAdminClient()
-  const [users, providers, bookings, reviews, messages] = await Promise.all([
-    supabase.from('users').select('id', { count: 'exact', head: true }),
-    supabase.from('provider_profiles').select('id', { count: 'exact', head: true }),
-    supabase.from('booking_requests').select('id', { count: 'exact', head: true }),
-    supabase.from('reviews').select('id', { count: 'exact', head: true }),
-    supabase.from('messages').select('id', { count: 'exact', head: true }),
-  ])
-  return {
-    users: users.count ?? 0,
-    providers: providers.count ?? 0,
-    bookings: bookings.count ?? 0,
-    reviews: reviews.count ?? 0,
-    messages: messages.count ?? 0,
-  }
-}
-
-async function getRecentBookings() {
-  const supabase = createAdminClient()
-  const { data } = await supabase
-    .from('booking_requests')
-    .select('id, status, created_at, event_type, users!planner_id(name), services!service_id(title)')
-    .order('created_at', { ascending: false })
-    .limit(5)
-  return data ?? []
-}
-
-const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  accepted: 'bg-green-100 text-green-800',
-  declined: 'bg-red-100 text-red-800',
-}
-
-export default async function AdminOverviewPage() {
-  const [stats, recentBookings] = await Promise.all([getStats(), getRecentBookings()])
-
-  const statCards = [
-    { label: 'Användare', value: stats.users, href: '/admin/users', emoji: '👤' },
-    { label: 'Talanger', value: stats.providers, href: '/admin/providers', emoji: '🎭' },
-    { label: 'Bokningar', value: stats.bookings, href: '/admin/bookings', emoji: '📅' },
-    { label: 'Recensioner', value: stats.reviews, href: '/admin/reviews', emoji: '⭐' },
-    { label: 'Meddelanden', value: stats.messages, href: '#', emoji: '💬' },
-  ]
+  const metrics = await getOverviewMetrics(supabase, range)
+  const maxDay = Math.max(1, ...metrics.requestsByDay.map(d => d.count))
+  const posthogUrl = posthogAppUrl()
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-[#222222] mb-6">Översikt</h1>
+      <AdminPageHeader
+        title="Översikt"
+        range={range}
+        actions={
+          <Button asChild variant="outline" size="sm" className="rounded-xl">
+            <a href={posthogUrl} target="_blank" rel="noreferrer">
+              <ExternalLink className="size-3.5" data-icon="inline-start" />
+              Öppna PostHog
+            </a>
+          </Button>
+        }
+      />
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-        {statCards.map(card => (
-          <Link
-            key={card.label}
-            href={card.href}
-            className="rounded-2xl bg-white p-4 shadow-sm hover:bg-[#F2F2F2] transition-colors"
-          >
-            <p className="text-2xl mb-1">{card.emoji}</p>
-            <p className="text-2xl font-bold text-[#222222]">{card.value}</p>
-            <p className="text-xs text-[#6A6A6A]">{card.label}</p>
-          </Link>
+      {metrics.pendingAging > 0 ? (
+        <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-700" strokeWidth={2} />
+          <div className="min-w-0 text-[14px]">
+            <p className="font-medium text-amber-950">
+              {metrics.pendingAging} förfrågningar väntar i mer än 48 timmar
+            </p>
+            <Link
+              href="/admin/bookings"
+              className="mt-1 inline-block font-medium text-amber-900 underline underline-offset-2"
+            >
+              Granska bokningar
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+        {metrics.kpis.map(kpi => (
+          <AdminKpiCard key={kpi.key} kpi={kpi} />
         ))}
       </div>
 
-      {/* Recent bookings */}
-      <h2 className="text-sm font-semibold text-[#222222] mb-3">Senaste bokningar</h2>
-      {recentBookings.length === 0 ? (
-        <p className="text-sm text-[#6A6A6A]">Inga bokningar ännu.</p>
-      ) : (
-        <div className="space-y-2">
-          {recentBookings.map((b: any) => (
-            <div key={b.id} className="rounded-xl bg-white p-3 shadow-sm flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-[#222222] truncate">
-                  {(b.users as any)?.name ?? 'Okänd'} → {(b.services as any)?.title ?? 'Okänd'}
-                </p>
-                <p className="text-xs text-[#6A6A6A]">
-                  {b.event_type ?? '—'} · {new Date(b.created_at).toLocaleDateString('sv-SE')}
-                </p>
-              </div>
-              <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[b.status] ?? 'bg-gray-100 text-gray-700'}`}>
-                {b.status}
-              </span>
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {metrics.secondary.map(kpi => (
+          <AdminKpiCard key={kpi.key} kpi={kpi} />
+        ))}
+      </div>
+
+      <section className="mb-8 rounded-2xl border border-border bg-background p-5">
+        <h2 className="text-[16px] font-semibold text-foreground">Förfrågningar · 14 dagar</h2>
+        <p className="mt-1 text-[13px] text-muted-foreground">Volym per dag</p>
+        <div className="mt-5 flex h-28 items-end gap-1.5">
+          {metrics.requestsByDay.map(day => (
+            <div key={day.date} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+              <div
+                className="w-full rounded-t-md bg-primary/80"
+                style={{
+                  height: `${Math.max(4, (day.count / maxDay) * 100)}%`,
+                }}
+                title={`${day.date}: ${day.count}`}
+              />
             </div>
           ))}
         </div>
-      )}
+        <div className="mt-2 flex justify-between text-[11px] text-muted-foreground">
+          <span>{metrics.requestsByDay[0]?.date.slice(5)}</span>
+          <span>{metrics.requestsByDay.at(-1)?.date.slice(5)}</span>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-[16px] font-semibold text-foreground">Senaste aktivitet</h2>
+          <Link
+            href="/admin/bookings"
+            className="text-[13px] font-medium text-muted-foreground hover:text-foreground"
+          >
+            Alla bokningar
+          </Link>
+        </div>
+        {metrics.activity.length === 0 ? (
+          <p className="text-[14px] text-muted-foreground">Ingen aktivitet ännu.</p>
+        ) : (
+          <div className="space-y-2">
+            {metrics.activity.map(item => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-[14px] font-medium text-foreground">{item.label}</p>
+                  <p className="text-[12px] text-muted-foreground">
+                    {new Date(item.at).toLocaleString('sv-SE')}
+                  </p>
+                </div>
+                <AdminStatusBadge status={item.kind} />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }

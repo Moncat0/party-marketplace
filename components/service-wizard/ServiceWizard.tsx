@@ -20,6 +20,7 @@ import { buildDisplayName } from '@/lib/profile-completeness'
 import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
+import { CANCELLATION_POLICIES, type CancellationPolicyId } from '@/lib/cancellation-policies'
 import {
   type AccountWizardDraft,
   type FirstPublishStep,
@@ -52,6 +53,7 @@ type ServiceSeed = {
   photos: string[] | null
   price_range_min: number | null
   price_range_max: number | null
+  cancellation_policy?: string | null
   is_published: boolean
   created_at: string
 }
@@ -182,6 +184,7 @@ export default function ServiceWizard({
           location_id: draft.locationId,
           price_range_min: draft.priceMin ? Number(draft.priceMin) : null,
           price_range_max: draft.priceMax ? Number(draft.priceMax) : null,
+          cancellation_policy: draft.cancellationPolicy,
           photos: draft.photos,
           is_published: opts?.publish ? true : false,
           ...(opts?.publish ? { is_disabled: false } : {}),
@@ -602,6 +605,7 @@ export default function ServiceWizard({
             <PriceStep
               priceMin={draft.priceMin}
               priceMax={draft.priceMax}
+              cancellationPolicy={draft.cancellationPolicy}
               onChange={patch => setDraft(prev => ({ ...prev, ...patch }))}
             />
           )}
@@ -1174,11 +1178,15 @@ function PhotoUploadModal({
 function PriceStep({
   priceMin,
   priceMax,
+  cancellationPolicy,
   onChange,
 }: {
   priceMin: string
   priceMax: string
-  onChange: (p: Partial<Pick<ServiceWizardDraft, 'priceMin' | 'priceMax'>>) => void
+  cancellationPolicy: CancellationPolicyId | null
+  onChange: (
+    p: Partial<Pick<ServiceWizardDraft, 'priceMin' | 'priceMax' | 'cancellationPolicy'>>
+  ) => void
 }) {
   return (
     <div>
@@ -1220,6 +1228,39 @@ function PriceStep({
           </span>
         </label>
       </div>
+
+      <h2 className="mt-10 text-[20px] font-semibold text-[#222222]">Avbokningspolicy</h2>
+      <p className="mt-2 text-[15px] text-[#6a6a6a]">
+        Välj hur återbetalning fungerar om planeraren avbokar. Visas på din tjänst och i offerter.
+      </p>
+      <fieldset className="mt-5 space-y-3">
+        {CANCELLATION_POLICIES.map(policy => {
+          const selected = cancellationPolicy === policy.id
+          return (
+            <label
+              key={policy.id}
+              className={cn(
+                'flex cursor-pointer gap-3 rounded-2xl border px-4 py-4 transition-colors',
+                selected ? 'border-[#222222] bg-[#f7f7f7]' : 'border-[#dddddd] hover:border-[#b0b0b0]'
+              )}
+            >
+              <input
+                type="radio"
+                name="cancellation_policy"
+                className="mt-1"
+                checked={selected}
+                onChange={() => onChange({ cancellationPolicy: policy.id })}
+              />
+              <span>
+                <span className="block text-[16px] font-semibold text-[#222222]">{policy.label}</span>
+                <span className="mt-1 block text-[14px] leading-[1.4] text-[#6a6a6a]">
+                  {policy.short}
+                </span>
+              </span>
+            </label>
+          )
+        })}
+      </fieldset>
     </div>
   )
 }
@@ -1301,7 +1342,10 @@ function PublishStep({
             <p className="text-[14px] text-[#6a6a6a]">{formatOccasions(draft.occasions)}</p>
           ) : null}
           <p className="text-[14px] text-[#6a6a6a]">
-            {draft.priceMin}–{draft.priceMax} kr · {draft.photos.length} foto
+            {draft.priceMin}–{draft.priceMax} kr ·{' '}
+            {CANCELLATION_POLICIES.find(p => p.id === draft.cancellationPolicy)?.label ??
+              'Ingen avbokningspolicy'}{' '}
+            · {draft.photos.length} foto
             {draft.photos.length === 1 ? '' : 'n'}
           </p>
         </div>

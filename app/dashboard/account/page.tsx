@@ -24,7 +24,7 @@ function parseSection(s: string | undefined): SettingsSection {
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: { s?: string }
+  searchParams: { s?: string; stripe?: string }
 }) {
   const supabase = await createClient()
   const {
@@ -35,7 +35,7 @@ export default async function AccountPage({
   const { data: userData } = await supabase
     .from('users')
     .select(
-      'name, first_name, last_name, preferred_first_name, phone, auth_provider, address_line1, address_line2, address_city, address_postal_code, address_country, privacy_read_receipts, privacy_review_show_city, privacy_review_show_booked_services, notif_marketing, notif_booking_accepted, notif_booking_declined, notif_new_message, notif_review_reminder, notif_provider_news, notif_provider_regs, notif_festen_news, notif_festen_feedback'
+      'name, first_name, last_name, preferred_first_name, phone, auth_provider, privacy_read_receipts, privacy_review_show_city, privacy_review_show_booked_services, notif_marketing, notif_booking_accepted, notif_booking_declined, notif_new_message, notif_review_reminder, notif_provider_news, notif_provider_regs, notif_festen_news, notif_festen_feedback'
     )
     .eq('id', user.id)
     .single()
@@ -56,18 +56,12 @@ export default async function AccountPage({
         lastName={userData?.last_name ?? ''}
         preferredFirstName={userData?.preferred_first_name ?? ''}
         phone={userData?.phone ?? ''}
-        address={{
-          line1: userData?.address_line1 ?? '',
-          line2: userData?.address_line2 ?? '',
-          city: userData?.address_city ?? '',
-          postalCode: userData?.address_postal_code ?? '',
-          country: userData?.address_country ?? '',
-        }}
         authProvider={userData?.auth_provider ?? null}
         privacyReadReceipts={userData?.privacy_read_receipts ?? true}
         privacyReviewShowCity={userData?.privacy_review_show_city ?? true}
         privacyReviewShowBookedServices={userData?.privacy_review_show_booked_services ?? false}
         stripeOnboarded={profile.stripe_onboarded ?? false}
+        stripeFlash={searchParams.stripe ?? null}
         initialSection={parseSection(searchParams.s)}
         notificationPrefs={{
           bookingAccepted: userData?.notif_booking_accepted ?? true,

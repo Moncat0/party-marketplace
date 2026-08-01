@@ -1,57 +1,52 @@
 import { createClient } from '@/lib/supabase-server'
 import { redirect } from 'next/navigation'
 import ProviderHostShell from '@/components/dashboard/ProviderHostShell'
-import EditProfileForm from './EditProfileForm'
+import HostProfileForm from './HostProfileForm'
 import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
-import {
-  ensureProviderAndService,
-  getServiceByIdForProvider,
-  getServicesForProvider,
-} from '@/lib/services'
 
 export const dynamic = 'force-dynamic'
-export const metadata = { title: 'Redigera tjänst' }
+export const metadata = { title: 'Min profil' }
 
 type Props = {
   searchParams: { service?: string }
 }
 
-export default async function EditProfilePage({ searchParams }: Props) {
+export default async function ProviderProfilePage({ searchParams }: Props) {
+  // Legacy listing-editor bookmarks: /dashboard/profile?service=<id>
+  if (searchParams.service) {
+    redirect(`/dashboard/listings/${searchParams.service}/edit`)
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup?intent=provider&next=/dashboard/profile')
 
-  const { data: existingProvider } = await supabase
+  const { data: provider } = await supabase
     .from('provider_profiles')
-    .select('id')
+    .select('id, bio')
     .eq('user_id', user.id)
     .maybeSingle()
 
-  if (!existingProvider) return await redirectWithoutProviderProfile(supabase, user.id)
+  if (!provider) return await redirectWithoutProviderProfile(supabase, user.id)
 
-  let service = searchParams.service
-    ? await getServiceByIdForProvider(supabase, existingProvider.id, searchParams.service)
-    : null
-
-  if (!service) {
-    const services = await getServicesForProvider(supabase, existingProvider.id)
-    service = services[0] ?? null
-  }
-
-  if (!service) {
-    const result = await ensureProviderAndService(supabase, user.id)
-    if (result.error) return await redirectWithoutProviderProfile(supabase, user.id)
-    const services = await getServicesForProvider(supabase, result.providerId)
-    service = services[0] ?? null
-  }
-
-  if (!service) return await redirectWithoutProviderProfile(supabase, user.id)
+  const { data: userData } = await supabase
+    .from('users')
+    .select('first_name, last_name, preferred_first_name, avatar_url')
+    .eq('id', user.id)
+    .single()
 
   return (
     <ProviderHostShell>
-      <EditProfileForm service={service} userId={user.id} />
+      <HostProfileForm
+        userId={user.id}
+        firstName={userData?.first_name ?? ''}
+        lastName={userData?.last_name ?? ''}
+        preferredFirstName={userData?.preferred_first_name ?? ''}
+        avatarUrl={userData?.avatar_url ?? null}
+        bio={provider.bio ?? ''}
+      />
     </ProviderHostShell>
   )
 }

@@ -149,7 +149,7 @@ function listingType(listing: HostListing) {
 
 function editHref(listing: HostListing) {
   return listing.is_published
-    ? `/dashboard/profile?service=${listing.id}`
+    ? `/dashboard/listings/${listing.id}/edit`
     : `/dashboard/listings/new/flow?resume=1&id=${listing.id}`
 }
 

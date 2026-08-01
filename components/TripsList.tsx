@@ -163,6 +163,8 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
     booking.payment_status === 'unpaid' &&
     booking.price_ore &&
     !profile?.stripe_onboarded
+  const fundsHeld =
+    booking.payment_status === 'held' || booking.payment_status === 'pending_release'
   const badge = statusStyle(booking.status)
 
   return (
@@ -213,8 +215,11 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
           {bookingOccasionLabel(booking) && (
             <span>{bookingOccasionLabel(booking)}</span>
           )}
-          {booking.payment_status === 'paid' && (
-            <span style={{ color: t.colors.success }}>Betald ✓</span>
+          {fundsHeld && (
+            <span style={{ color: t.colors.success }}>Betald (hålls) ✓</span>
+          )}
+          {booking.payment_status === 'released' && (
+            <span style={{ color: t.colors.success }}>Utbetald ✓</span>
           )}
         </div>
 

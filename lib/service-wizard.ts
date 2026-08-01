@@ -4,6 +4,8 @@ import {
   resolveCategorySlug,
   type CategorySlug,
 } from '@/lib/categories'
+import type { CancellationPolicyId } from '@/lib/cancellation-policies'
+import { isCancellationPolicyId } from '@/lib/cancellation-policies'
 import { DEFAULT_LOCATION_ID } from '@/lib/locations'
 import { normalizeOccasions, type OccasionSlug } from '@/lib/occasions'
 
@@ -43,6 +45,7 @@ export type ServiceWizardDraft = {
   photos: string[]
   priceMin: string
   priceMax: string
+  cancellationPolicy: CancellationPolicyId | null
 }
 
 export type AccountWizardDraft = {
@@ -60,6 +63,7 @@ export const EMPTY_WIZARD_DRAFT: ServiceWizardDraft = {
   photos: [],
   priceMin: '',
   priceMax: '',
+  cancellationPolicy: null,
 }
 
 export const EMPTY_ACCOUNT_DRAFT: AccountWizardDraft = {
@@ -173,7 +177,8 @@ export function isStepValid(step: ServiceWizardStep, draft: ServiceWizardDraft):
         Number.isFinite(min) &&
         Number.isFinite(max) &&
         min > 0 &&
-        max >= min
+        max >= min &&
+        isCancellationPolicyId(draft.cancellationPolicy)
       )
     }
     default:
@@ -203,7 +208,7 @@ export function resumeStep(draft: ServiceWizardDraft): ServiceWizardStep {
   if (!draft.locationId) return 'location'
   if (!draft.description.trim()) return 'intro2'
   if (draft.photos.length < 1) return 'photos'
-  if (!draft.priceMin || !draft.priceMax) return 'intro3'
+  if (!draft.priceMin || !draft.priceMax || !draft.cancellationPolicy) return 'intro3'
   return 'publish'
 }
 
@@ -238,6 +243,7 @@ export function draftFromService(service: {
   photos: string[] | null
   price_range_min: number | null
   price_range_max: number | null
+  cancellation_policy?: string | null
 } | null): ServiceWizardDraft {
   if (!service) return { ...EMPTY_WIZARD_DRAFT }
   return {
@@ -252,6 +258,9 @@ export function draftFromService(service: {
     photos: service.photos ?? [],
     priceMin: service.price_range_min?.toString() ?? '',
     priceMax: service.price_range_max?.toString() ?? '',
+    cancellationPolicy: isCancellationPolicyId(service.cancellation_policy)
+      ? service.cancellation_policy
+      : null,
   }
 }
 

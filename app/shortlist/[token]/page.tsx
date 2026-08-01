@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import SettingsButton from '@/components/settings/SettingsButton'
 import { settingsTokens as t } from '@/components/settings/tokens'
+import { HOST_USERS_SELECT, hostDisplayName } from '@/lib/host-display-name'
 
 export default async function SharedShortlistPage({ params }: { params: { token: string } }) {
   const supabase = await createClient()
@@ -18,7 +19,9 @@ export default async function SharedShortlistPage({ params }: { params: { token:
 
   const { data: items } = await supabase
     .from('shortlist_items')
-    .select('id, services(id, title, city, photos, category_tags, provider_profiles(users(name)))')
+    .select(
+      `id, services(id, title, city, photos, category_tags, provider_profiles(users(${HOST_USERS_SELECT})))`
+    )
     .eq('shortlist_id', shortlist.id)
     .order('added_at', { ascending: false })
 
@@ -63,6 +66,9 @@ export default async function SharedShortlistPage({ params }: { params: { token:
                 ? provider.users[0]
                 : provider.users
               : null
+            const displayName = users
+              ? hostDisplayName(users as Parameters<typeof hostDisplayName>[0])
+              : ''
             return (
               <Link key={item.id} href={`/tjanster/${s.id}`} className="group block">
                 <div
@@ -84,9 +90,9 @@ export default async function SharedShortlistPage({ params }: { params: { token:
                 <p className="font-semibold text-[14px] text-[#222222] truncate">
                   {s.title}
                 </p>
-                {users?.name && (
-                  <p className="text-[13px] text-[#6a6a6a] truncate">{users.name}</p>
-                )}
+                {displayName ? (
+                  <p className="text-[13px] text-[#6a6a6a] truncate">{displayName}</p>
+                ) : null}
                 {s.city && <p className="text-[13px] text-[#6a6a6a]">{s.city}</p>}
               </Link>
             )

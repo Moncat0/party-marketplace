@@ -132,3 +132,80 @@ export async function sendDataExportReady(
     ],
   })
 }
+
+/** Receipt after escrow Checkout — Stripe holds funds on FESTEN. */
+export async function sendPaymentHeldReceipt(opts: {
+  to: string
+  plannerName: string
+  serviceTitle: string
+  providerName: string
+  bookingId: string
+  priceOre: number
+  eventDate?: string | null
+  stripePaymentIntentId?: string | null
+  stripeSessionId?: string | null
+}) {
+  const priceSek = Math.round(opts.priceOre / 100).toLocaleString('sv-SE')
+  const eventLabel = opts.eventDate
+    ? new Date(opts.eventDate).toLocaleDateString('sv-SE', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : null
+
+  await resend.emails.send({
+    from: FROM,
+    to: opts.to,
+    subject: `Kvitto: ${priceSek} kr hålls för din bokning`,
+    html: `
+      <p>Hej ${escapeHtml(opts.plannerName)}!</p>
+      <p>Vi har mottagit din betalning via FESTEN.</p>
+      <table style="border-collapse:collapse;margin:16px 0;font-size:14px">
+        <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Tjänst</td><td><strong>${escapeHtml(opts.serviceTitle)}</strong></td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Talang</td><td>${escapeHtml(opts.providerName)}</td></tr>
+        ${eventLabel ? `<tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Datum</td><td>${escapeHtml(eventLabel)}</td></tr>` : ''}
+        <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Belopp</td><td><strong>${priceSek} kr</strong></td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Status</td><td>Hålls av FESTEN till efter evenemanget</td></tr>
+        ${opts.stripePaymentIntentId ? `<tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Stripe-referens</td><td style="font-family:monospace;font-size:12px">${escapeHtml(opts.stripePaymentIntentId)}</td></tr>` : ''}
+      </table>
+      <p>Pengarna betalas ut till talangen när du godkänner efter evenemanget (eller automatiskt efter 1 dag om du inte svarar).</p>
+      <p><a href="${siteUrl()}/planner/bookings" style="background:#FF6B35;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">Se bokningen →</a></p>
+      <p>/ FESTEN.</p>
+    `,
+  })
+}
+
+/** Admin → user support email (no in-app support thread yet). */
+export async function sendAdminSupportMessage(
+  to: string,
+  recipientName: string,
+  subject: string,
+  body: string,
+  replyTo?: string | null
+) {
+  const safeBody = body
+    .split('\n')
+    .map(line => `<p style="margin:0 0 12px">${escapeHtml(line) || '&nbsp;'}</p>`)
+    .join('')
+
+  await resend.emails.send({
+    from: FROM,
+    to,
+    replyTo: replyTo || undefined,
+    subject,
+    html: `
+      <p>Hej ${escapeHtml(recipientName)}!</p>
+      ${safeBody}
+      <p style="margin-top:24px;color:#6a6a6a;font-size:13px">/ FESTEN. support</p>
+    `,
+  })
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}

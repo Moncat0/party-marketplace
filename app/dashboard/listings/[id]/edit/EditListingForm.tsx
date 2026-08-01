@@ -24,6 +24,11 @@ import {
   getLocationLabel,
   locationIdFromCity,
 } from '@/lib/locations'
+import {
+  CANCELLATION_POLICIES,
+  isCancellationPolicyId,
+  type CancellationPolicyId,
+} from '@/lib/cancellation-policies'
 
 type Service = {
   id: string
@@ -36,10 +41,11 @@ type Service = {
   location_id?: string | null
   price_range_min: number | null
   price_range_max: number | null
+  cancellation_policy?: string | null
   photos: string[] | null
 }
 
-export default function EditProfileForm({ service, userId }: { service: Service; userId: string }) {
+export default function EditListingForm({ service, userId }: { service: Service; userId: string }) {
   const router = useRouter()
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -55,6 +61,9 @@ export default function EditProfileForm({ service, userId }: { service: Service;
     location_id: service.location_id ?? locationIdFromCity(service.city) ?? DEFAULT_LOCATION_ID,
     price_range_min: service.price_range_min?.toString() ?? '',
     price_range_max: service.price_range_max?.toString() ?? '',
+    cancellation_policy: (isCancellationPolicyId(service.cancellation_policy)
+      ? service.cancellation_policy
+      : null) as CancellationPolicyId | null,
     photos: service.photos ?? [],
   })
 
@@ -117,6 +126,7 @@ export default function EditProfileForm({ service, userId }: { service: Service;
         location_id: form.location_id,
         price_range_min: form.price_range_min ? Number(form.price_range_min) : null,
         price_range_max: form.price_range_max ? Number(form.price_range_max) : null,
+        cancellation_policy: form.cancellation_policy,
         photos: form.photos,
       })
       .eq('id', service.id)
@@ -274,6 +284,35 @@ export default function EditProfileForm({ service, userId }: { service: Service;
                   placeholder="Till"
                 />
               </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
+            title="Avbokningspolicy"
+            description="Vad händer om planeraren avbokar? Visas på tjänsten och i offerter."
+          >
+            <div className="space-y-2">
+              {CANCELLATION_POLICIES.map(policy => {
+                const active = form.cancellation_policy === policy.id
+                return (
+                  <button
+                    key={policy.id}
+                    type="button"
+                    onClick={() =>
+                      setForm(prev => ({ ...prev, cancellation_policy: policy.id }))
+                    }
+                    className={cn(
+                      'w-full rounded-xl border px-4 py-3 text-left transition-colors',
+                      active
+                        ? 'border-[#222222] bg-[#f7f7f7]'
+                        : 'border-[#dddddd] hover:border-[#222222]'
+                    )}
+                  >
+                    <p className="text-[14px] font-semibold text-[#222222]">{policy.label}</p>
+                    <p className="mt-0.5 text-[13px] text-[#6a6a6a]">{policy.short}</p>
+                  </button>
+                )
+              })}
             </div>
           </SettingsSection>
 

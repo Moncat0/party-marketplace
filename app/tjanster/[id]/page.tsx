@@ -6,12 +6,15 @@ import type { ListingCardData } from '@/components/listings/ListingCard'
 import { formatCategoryFromSlug, resolveCategorySlug } from '@/lib/categories'
 import { formatEventType } from '@/lib/event-types'
 import { normalizeOccasions } from '@/lib/occasions'
+import { HOST_USERS_SELECT, hostDisplayName, hostUserForDisplay } from '@/lib/host-display-name'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const supabase = await createClient()
   const { data: service } = await supabase
     .from('services')
-    .select('title, description, photos, city, provider_profiles(users(name))')
+    .select(
+      `title, description, photos, city, provider_profiles(users(${HOST_USERS_SELECT}))`
+    )
     .eq('id', params.id)
     .single()
 
@@ -20,9 +23,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const provider = Array.isArray(service.provider_profiles)
     ? service.provider_profiles[0]
     : service.provider_profiles
-  const usersArr = provider?.users as unknown as { name: string | null }[] | { name: string | null } | null
+  const usersArr = provider?.users as unknown
   const user = Array.isArray(usersArr) ? usersArr[0] ?? null : usersArr
-  const title = service.title ?? user?.name ?? 'Talang'
+  const hostName = hostDisplayName(user ?? {})
+  const title = service.title ?? (hostName || 'Talang')
   const description =
     service.description?.slice(0, 160) ??
     `Boka ${title} i ${service.city ?? 'Stockholm'} via FESTEN.`
@@ -76,7 +80,7 @@ export default async function ServicePage({
   const { data: service } = await supabase
     .from('services')
     .select(
-      '*, provider_profiles(id, user_id, bio, created_at, users(name, avatar_url))'
+      `*, provider_profiles(id, user_id, bio, created_at, users(${HOST_USERS_SELECT}))`
     )
     .eq('id', params.id)
     .single()
@@ -130,8 +134,9 @@ export default async function ServicePage({
     city: service.city,
     price_range_min: service.price_range_min,
     price_range_max: service.price_range_max,
+    cancellation_policy: service.cancellation_policy ?? null,
     photos: service.photos ?? [],
-    users: hostUser,
+    users: hostUserForDisplay(hostUser),
     bio: provider?.bio ?? null,
     memberSince: provider?.created_at ?? null,
   }
@@ -211,7 +216,7 @@ export default async function ServicePage({
   let similarQuery = supabase
     .from('services')
     .select(
-      'id, title, city, photos, category_slug, category_tags, price_range_min, provider_profiles(users(name, avatar_url))'
+      `id, title, city, photos, category_slug, category_tags, price_range_min, provider_profiles(users(${HOST_USERS_SELECT}))`
     )
     .eq('is_published', true)
     .eq('is_disabled', false)
@@ -231,7 +236,7 @@ export default async function ServicePage({
     const { data: byCat } = await supabase
       .from('services')
       .select(
-        'id, title, city, photos, category_slug, category_tags, price_range_min, provider_profiles(users(name, avatar_url))'
+        `id, title, city, photos, category_slug, category_tags, price_range_min, provider_profiles(users(${HOST_USERS_SELECT}))`
       )
       .eq('is_published', true)
     .eq('is_disabled', false)
@@ -284,7 +289,7 @@ export default async function ServicePage({
       category_slug: s.category_slug ?? null,
       category_tags: s.category_tags ?? [],
       price_range_min: s.price_range_min,
-      users: u ? { name: u.name, avatar_url: u.avatar_url } : null,
+      users: hostUserForDisplay(u),
       reviewCount: stats?.count ?? 0,
       avgRating: stats && stats.count > 0 ? stats.sum / stats.count : null,
     }

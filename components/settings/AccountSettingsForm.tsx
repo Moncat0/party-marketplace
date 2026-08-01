@@ -5,6 +5,21 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase'
 import { PASSWORD_SET_METADATA_KEY } from '@/lib/auth-password'
+import {
+  COUNTRY_DIALS,
+  formatPhoneDisplay,
+  isValidE164,
+  parseE164ToDialAndNational,
+  toE164,
+} from '@/lib/auth-identifier'
+import { cn } from '@/lib/utils'
+import {
+  Bell,
+  CreditCard,
+  Lock,
+  Shield,
+  UserRound,
+} from 'lucide-react'
 import SettingsInput from './SettingsInput'
 import SettingsToggle from './SettingsToggle'
 import SettingsButton from './SettingsButton'
@@ -20,21 +35,12 @@ import PaymentsSettings from './PaymentsSettings'
 import { settingsTokens as t } from './tokens'
 import { settingsLayout as L } from './layout'
 
-export type AddressFields = {
-  line1: string
-  line2: string
-  city: string
-  postalCode: string
-  country: string
-}
-
 export type AccountSettingsProps = {
   email: string
   firstName: string
   lastName: string
   preferredFirstName: string
   phone: string
-  address: AddressFields
   authProvider: string | null
   notificationPrefs: NotificationPrefs
   privacyReadReceipts: boolean
@@ -42,6 +48,7 @@ export type AccountSettingsProps = {
   privacyReviewShowBookedServices: boolean
   role: 'planner' | 'provider'
   stripeOnboarded?: boolean
+  stripeFlash?: string | null
   initialSection?: SettingsSection
 }
 
@@ -72,79 +79,40 @@ function maskEmail(email: string): string {
   return `${local[0]}***${local[local.length - 1]}@${domain}`
 }
 
-function formatAddress(a: AddressFields): string | null {
-  const line = [a.line1, a.line2].filter(Boolean).join(', ')
-  const cityLine = [a.postalCode, a.city].filter(Boolean).join(' ')
-  const parts = [line, cityLine, a.country].filter(Boolean)
-  return parts.length ? parts.join(', ') : null
-}
-
-/** Preferred defaults to legal name word at index 0 (first name). */
-function defaultPreferred(legalFirst: string, preferred: string): string {
+/** Preferred defaults to first name when empty. */
+function defaultPreferred(firstName: string, preferred: string): string {
   const trimmed = preferred.trim()
   if (trimmed) return trimmed
-  return legalFirst.trim().split(/\s+/)[0] ?? ''
+  return firstName.trim().split(/\s+/)[0] ?? ''
 }
 
 const NAV: { id: Section; label: string; icon: ReactNode }[] = [
   {
     id: 'personal',
     label: 'Personlig information',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
+    icon: <UserRound className="size-[18px] shrink-0" strokeWidth={1.75} aria-hidden />,
   },
   {
     id: 'security',
     label: 'Inloggning & säkerhet',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      </svg>
-    ),
+    icon: <Shield className="size-[18px] shrink-0" strokeWidth={1.75} aria-hidden />,
   },
   {
     id: 'privacy',
     label: 'Integritet',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-      </svg>
-    ),
+    icon: <Lock className="size-[18px] shrink-0" strokeWidth={1.75} aria-hidden />,
   },
   {
     id: 'notifications',
     label: 'Notifieringar',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-      </svg>
-    ),
+    icon: <Bell className="size-[18px] shrink-0" strokeWidth={1.75} aria-hidden />,
   },
   {
     id: 'payments',
     label: 'Betalningar',
-    icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2" />
-        <path d="M2 10h20" />
-      </svg>
-    ),
+    icon: <CreditCard className="size-[18px] shrink-0" strokeWidth={1.75} aria-hidden />,
   },
 ]
-
-const emptyAddress: AddressFields = {
-  line1: '',
-  line2: '',
-  city: '',
-  postalCode: '',
-  country: '',
-}
 
 export default function AccountSettingsForm({
   email,
@@ -152,7 +120,6 @@ export default function AccountSettingsForm({
   lastName,
   preferredFirstName,
   phone,
-  address,
   authProvider,
   notificationPrefs,
   privacyReadReceipts,
@@ -160,6 +127,7 @@ export default function AccountSettingsForm({
   privacyReviewShowBookedServices,
   role,
   stripeOnboarded = false,
+  stripeFlash = null,
   initialSection = 'personal',
 }: AccountSettingsProps) {
   const supabase = createClient()
@@ -184,12 +152,11 @@ export default function AccountSettingsForm({
   const [newPreferred, setNewPreferred] = useState(initialPreferred)
   const [savedPreferred, setSavedPreferred] = useState(initialPreferred)
 
-  const [newPhone, setNewPhone] = useState(phone)
+  const initialPhoneParts = parseE164ToDialAndNational(phone)
+  const [phoneDial, setPhoneDial] = useState(initialPhoneParts.dial)
+  const [newPhoneNational, setNewPhoneNational] = useState(initialPhoneParts.national)
   const [savedPhone, setSavedPhone] = useState(phone)
   const [newEmail, setNewEmail] = useState(email)
-
-  const [newAddress, setNewAddress] = useState<AddressFields>(address)
-  const [savedAddress, setSavedAddress] = useState<AddressFields>(address)
 
   const [newPassword, setNewPassword] = useState('')
   const [readReceipts, setReadReceipts] = useState(privacyReadReceipts)
@@ -204,12 +171,12 @@ export default function AccountSettingsForm({
   const [resetSent, setResetSent] = useState(false)
   const [msg, setMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  const legalName = [savedFirst, savedLast].filter(Boolean).join(' ')
-  const addressDisplay = formatAddress(savedAddress)
+  const fullName = [savedFirst, savedLast].filter(Boolean).join(' ')
+  const phoneDisplay = savedPhone ? formatPhoneDisplay(savedPhone) : null
   const phoneDescription =
     role === 'planner'
-      ? 'Lägg till ett nummer så att talanger och FESTEN. kan nå dig. Du kan lägga till fler nummer och välja hur de används.'
-      : 'Lägg till ett nummer så att planerare och FESTEN. kan nå dig. Du kan lägga till fler nummer och välja hur de används.'
+      ? 'Lägg till ett nummer så att talanger och FESTEN. kan nå dig.'
+      : 'Lägg till ett nummer så att planerare och FESTEN. kan nå dig.'
 
   function openEdit(key: string) {
     setMsg(null)
@@ -278,45 +245,45 @@ export default function AccountSettingsForm({
   }
 
   async function handleSavePhone() {
+    const national = newPhoneNational.trim()
+    if (!national) {
+      setSaving(true)
+      setMsg(null)
+      const { error } = await supabase.from('users').update({ phone: null }).eq('email', email)
+      if (error) {
+        setMsg({ type: 'error', text: 'Något gick fel. Försök igen.' })
+      } else {
+        setSavedPhone('')
+        setPhoneDial(COUNTRY_DIALS[0].dial)
+        setNewPhoneNational('')
+        setEditing(null)
+        setMsg({ type: 'success', text: 'Telefon uppdaterad!' })
+      }
+      setSaving(false)
+      return
+    }
+
+    const e164 = toE164(phoneDial, national)
+    if (!isValidE164(e164)) {
+      setMsg({
+        type: 'error',
+        text: 'Ange ett giltigt telefonnummer. I Sverige kan du skriva 07… — nollan tas bort automatiskt med +46.',
+      })
+      return
+    }
+
     setSaving(true)
     setMsg(null)
-    const { error } = await supabase
-      .from('users')
-      .update({ phone: newPhone.trim() || null })
-      .eq('email', email)
+    const { error } = await supabase.from('users').update({ phone: e164 }).eq('email', email)
     if (error) {
       setMsg({ type: 'error', text: 'Något gick fel. Försök igen.' })
     } else {
-      setSavedPhone(newPhone.trim())
+      const parts = parseE164ToDialAndNational(e164)
+      setSavedPhone(e164)
+      setPhoneDial(parts.dial)
+      setNewPhoneNational(parts.national)
       setEditing(null)
       setMsg({ type: 'success', text: 'Telefon uppdaterad!' })
-    }
-    setSaving(false)
-  }
-
-  async function handleSaveAddress() {
-    setSaving(true)
-    setMsg(null)
-    const payload = {
-      address_line1: newAddress.line1.trim() || null,
-      address_line2: newAddress.line2.trim() || null,
-      address_city: newAddress.city.trim() || null,
-      address_postal_code: newAddress.postalCode.trim() || null,
-      address_country: newAddress.country.trim() || null,
-    }
-    const { error } = await supabase.from('users').update(payload).eq('email', email)
-    if (error) {
-      setMsg({ type: 'error', text: 'Något gick fel. Försök igen.' })
-    } else {
-      setSavedAddress({
-        line1: newAddress.line1.trim(),
-        line2: newAddress.line2.trim(),
-        city: newAddress.city.trim(),
-        postalCode: newAddress.postalCode.trim(),
-        country: newAddress.country.trim(),
-      })
-      setEditing(null)
-      setMsg({ type: 'success', text: 'Adress uppdaterad!' })
     }
     setSaving(false)
   }
@@ -516,9 +483,9 @@ export default function AccountSettingsForm({
             <Msg msg={msg} />
 
                 <SettingsRow
-                  label="Juridiskt namn"
-                  value={legalName || null}
-                  actionLabel={legalName ? 'Redigera' : 'Lägg till'}
+                  label="Namn"
+                  value={fullName || null}
+                  actionLabel={fullName ? 'Redigera' : 'Lägg till'}
                   expanded={editing === 'name'}
                   onAction={() => {
                     setNewFirst(savedFirst)
@@ -547,32 +514,53 @@ export default function AccountSettingsForm({
                   </SettingsButton>
                 </SettingsRow>
 
-                <SettingsRow
-                  label="Föredraget förnamn"
-                  value={savedPreferred || null}
-                  actionLabel={savedPreferred ? 'Redigera' : 'Lägg till'}
-                  expanded={editing === 'preferred'}
-                  onAction={() => {
-                    setNewPreferred(
-                      savedPreferred || defaultPreferred(savedFirst, '')
-                    )
-                    openEdit('preferred')
-                  }}
-                >
-                  <SettingsInput
-                    id="preferred-first-name"
+                {role === 'planner' ? (
+                  <SettingsRow
                     label="Föredraget förnamn"
-                    value={newPreferred}
-                    onChange={setNewPreferred}
-                    autoComplete="nickname"
-                  />
-                  <p className="text-[13px] leading-[1.4] text-[#6a6a6a]">
-                    Visas för andra på FESTEN. Standard är ditt juridiska förnamn.
-                  </p>
-                  <SettingsButton onClick={handleSavePreferred} disabled={saving}>
-                    {saving ? 'Sparar...' : 'Spara'}
-                  </SettingsButton>
-                </SettingsRow>
+                    value={savedPreferred || null}
+                    actionLabel={savedPreferred ? 'Redigera' : 'Lägg till'}
+                    expanded={editing === 'preferred'}
+                    onAction={() => {
+                      setNewPreferred(
+                        savedPreferred || defaultPreferred(savedFirst, '')
+                      )
+                      openEdit('preferred')
+                    }}
+                  >
+                    <SettingsInput
+                      id="preferred-first-name"
+                      label="Föredraget förnamn"
+                      value={newPreferred}
+                      onChange={setNewPreferred}
+                      autoComplete="nickname"
+                    />
+                    <p className="text-[13px] leading-[1.4] text-[#6a6a6a]">
+                      Visas för andra på FESTEN. Om du lämnar det tomt används ditt förnamn.
+                    </p>
+                    <SettingsButton onClick={handleSavePreferred} disabled={saving}>
+                      {saving ? 'Sparar...' : 'Spara'}
+                    </SettingsButton>
+                  </SettingsRow>
+                ) : (
+                  <div
+                    className="py-6"
+                    style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
+                  >
+                    <p className="text-[16px] font-semibold leading-[1.25] text-[#222222]">
+                      Publik profil
+                    </p>
+                    <p className="mt-1 text-[14px] leading-[1.43] text-[#6a6a6a]">
+                      Föredraget namn, profilbild och bio redigeras under{' '}
+                      <Link
+                        href="/dashboard/profile"
+                        className="font-medium text-[#222222] underline"
+                      >
+                        Min profil
+                      </Link>
+                      .
+                    </p>
+                  </div>
+                )}
 
                 <SettingsRow
                   label="E-postadress"
@@ -607,79 +595,73 @@ export default function AccountSettingsForm({
 
                 <SettingsRow
                   label="Telefonnummer"
-                  value={savedPhone || null}
+                  value={phoneDisplay}
                   description={savedPhone ? undefined : phoneDescription}
                   actionLabel={savedPhone ? 'Redigera' : 'Lägg till'}
                   expanded={editing === 'phone'}
                   onAction={() => {
-                    setNewPhone(savedPhone)
+                    const parts = parseE164ToDialAndNational(savedPhone)
+                    setPhoneDial(parts.dial)
+                    setNewPhoneNational(parts.national)
                     openEdit('phone')
-                  }}
-                >
-                  <SettingsInput
-                    id="phone"
-                    label="Telefon"
-                    type="tel"
-                    value={newPhone}
-                    onChange={setNewPhone}
-                    placeholder="+46 70 123 45 67"
-                    autoComplete="tel"
-                  />
-                  <SettingsButton onClick={handleSavePhone} disabled={saving}>
-                    {saving ? 'Sparar...' : 'Spara'}
-                  </SettingsButton>
-                </SettingsRow>
-
-                <SettingsRow
-                  label="Bostadsadress"
-                  value={addressDisplay}
-                  actionLabel={addressDisplay ? 'Redigera' : 'Lägg till'}
-                  expanded={editing === 'address'}
-                  onAction={() => {
-                    setNewAddress(savedAddress.line1 ? savedAddress : { ...emptyAddress, ...savedAddress })
-                    openEdit('address')
                   }}
                   isLast
                 >
-                  <SettingsInput
-                    id="address-line1"
-                    label="Gatuadress"
-                    value={newAddress.line1}
-                    onChange={v => setNewAddress(a => ({ ...a, line1: v }))}
-                    autoComplete="address-line1"
-                  />
-                  <SettingsInput
-                    id="address-line2"
-                    label="Lägenhet, våning (valfritt)"
-                    value={newAddress.line2}
-                    onChange={v => setNewAddress(a => ({ ...a, line2: v }))}
-                    autoComplete="address-line2"
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <SettingsInput
-                      id="address-postal"
-                      label="Postnummer"
-                      value={newAddress.postalCode}
-                      onChange={v => setNewAddress(a => ({ ...a, postalCode: v }))}
-                      autoComplete="postal-code"
-                    />
-                    <SettingsInput
-                      id="address-city"
-                      label="Ort"
-                      value={newAddress.city}
-                      onChange={v => setNewAddress(a => ({ ...a, city: v }))}
-                      autoComplete="address-level1"
-                    />
+                  <div>
+                    <p className="mb-2 text-[13px] font-medium text-[#222222]">Telefon</p>
+                    <div
+                      className={cn(
+                        'flex overflow-hidden rounded-xl border border-[#222222] bg-white'
+                      )}
+                    >
+                      <label className="relative flex shrink-0 items-stretch border-r border-[#DDDDDD] bg-[#F7F7F7]">
+                        <span className="sr-only">Landskod</span>
+                        <select
+                          value={phoneDial}
+                          onChange={e => setPhoneDial(e.target.value)}
+                          className="appearance-none bg-transparent py-3.5 pl-3.5 pr-8 text-[15px] font-medium text-[#222222] outline-none"
+                          aria-label="Landskod"
+                        >
+                          {COUNTRY_DIALS.map(c => (
+                            <option key={c.code} value={c.dial}>
+                              {c.dial}
+                            </option>
+                          ))}
+                        </select>
+                        <span
+                          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6a6a6a]"
+                          aria-hidden
+                        >
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <path
+                              d="M2.5 4.5L6 8l3.5-3.5"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                      </label>
+                      <label className="flex min-h-[52px] min-w-0 flex-1 items-center px-3.5">
+                        <input
+                          id="phone"
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          value={newPhoneNational}
+                          onChange={e => setNewPhoneNational(e.target.value)}
+                          placeholder="070 123 45 67"
+                          className="w-full bg-transparent text-[16px] text-[#222222] outline-none placeholder:text-[#B0B0B0]"
+                        />
+                      </label>
+                    </div>
+                    <p className="mt-2 text-[13px] leading-[1.4] text-[#6a6a6a]">
+                      Skriv numret som du brukar, t.ex. 07… Nollan tas bort automatiskt när
+                      landskoden är +46.
+                    </p>
                   </div>
-                  <SettingsInput
-                    id="address-country"
-                    label="Land"
-                    value={newAddress.country}
-                    onChange={v => setNewAddress(a => ({ ...a, country: v }))}
-                    autoComplete="country-name"
-                    placeholder="Sverige"
-                  />
-                  <SettingsButton onClick={handleSaveAddress} disabled={saving}>
+                  <SettingsButton onClick={handleSavePhone} disabled={saving}>
                     {saving ? 'Sparar...' : 'Spara'}
                   </SettingsButton>
                 </SettingsRow>
@@ -878,11 +860,7 @@ export default function AccountSettingsForm({
                 <SettingsToggle
                   variant="ink"
                   label="Visa min hemstad"
-                  description={
-                    savedAddress.city
-                      ? `Ex: ${savedAddress.city}${savedAddress.country ? `, ${savedAddress.country}` : ''}`
-                      : 'Ex: Stockholm, Sverige'
-                  }
+                  description="Ex: Stockholm, Sverige"
                   checked={reviewShowCity}
                   onChange={handleReviewCityChange}
                 />
@@ -1066,6 +1044,7 @@ export default function AccountSettingsForm({
             firstName={savedFirst}
             lastName={savedLast}
             stripeOnboarded={stripeOnboarded}
+            stripeFlash={stripeFlash}
           />
         )}
         </div>

@@ -1,21 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { stripe } from '@/lib/stripe'
+import { getOrCreateStripeCustomer } from '@/lib/payments'
 
-async function getOrCreateCustomer(email: string, name: string | null, userId: string) {
-  const existing = await stripe.customers.list({ email, limit: 1 })
-  if (existing.data[0]) {
-    return existing.data[0].id
-  }
-  const customer = await stripe.customers.create({
-    email,
-    name: name ?? undefined,
-    metadata: { festen_user_id: userId },
-  })
-  return customer.id
-}
-
-/** Create a SetupIntent so the client can save a card. */
+/** Create a SetupIntent so the client can save a card (stored only at Stripe). */
 export async function POST() {
   const supabase = await createClient()
   const {
@@ -30,7 +18,11 @@ export async function POST() {
     .single()
 
   try {
-    const customerId = await getOrCreateCustomer(user.email, profile?.name ?? null, user.id)
+    const customerId = await getOrCreateStripeCustomer({
+      userId: user.id,
+      email: user.email,
+      name: profile?.name ?? null,
+    })
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -47,7 +39,7 @@ export async function POST() {
   }
 }
 
-/** List saved cards for the current user. */
+/** List saved cards for the current user (from Stripe, not our DB). */
 export async function GET() {
   const supabase = await createClient()
   const {
@@ -56,8 +48,17 @@ export async function GET() {
   if (!user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const existing = await stripe.customers.list({ email: user.email, limit: 1 })
-    const customerId = existing.data[0]?.id
+    const { data: row } = await supabase
+      .from('users')
+      .select('stripe_customer_id')
+      .eq('id', user.id)
+      .single()
+
+    let customerId = row?.stripe_customer_id ?? null
+    if (!customerId) {
+      const existing = await stripe.customers.list({ email: user.email, limit: 1 })
+      customerId = existing.data[0]?.id ?? null
+    }
     if (!customerId) return NextResponse.json({ methods: [] })
 
     const methods = await stripe.paymentMethods.list({

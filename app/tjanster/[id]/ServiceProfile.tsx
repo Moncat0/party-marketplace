@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { getCancellationPolicy } from '@/lib/cancellation-policies'
 
 type Profile = {
   id: string
@@ -57,6 +58,7 @@ type Profile = {
   city: string | null
   price_range_min: number | null
   price_range_max: number | null
+  cancellation_policy?: string | null
   photos: string[]
   users: { name: string | null; avatar_url: string | null } | null
   bio: string | null
@@ -356,6 +358,7 @@ export default function ServiceProfile({
           ? `Upp till ${profile.price_range_max.toLocaleString('sv-SE')} kr`
           : null
 
+  const cancelPolicy = getCancellationPolicy(profile.cancellation_policy)
   const photos = profile.photos ?? []
 
   return (
@@ -455,6 +458,14 @@ export default function ServiceProfile({
               reviewCount={reviewCount}
               avgRating={avgRating}
             />
+
+            {cancelPolicy && (
+              <section className="border-t border-[#ebebeb] py-8">
+                <h2 className="text-[22px] font-semibold text-[#222222]">Avbokningspolicy</h2>
+                <p className="mt-2 text-[16px] font-medium text-[#222222]">{cancelPolicy.label}</p>
+                <p className="mt-1 text-[15px] leading-relaxed text-[#6a6a6a]">{cancelPolicy.detail}</p>
+              </section>
+            )}
 
             <ListingReviews
               reviews={reviews}

@@ -77,7 +77,7 @@ export default function TodayBookingsClient({
               variant="secondary"
               className="mt-6 h-auto rounded-xl px-5 py-3 text-[15px] font-semibold"
             >
-              <Link href="/dashboard/profile">Slutför din tjänst</Link>
+              <Link href="/dashboard/listings">Slutför din tjänst</Link>
             </Button>
           )}
           {hasPublishedListing && (

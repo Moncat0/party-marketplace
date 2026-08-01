@@ -90,6 +90,7 @@ export async function clearServiceDraft(
       location_id: DEFAULT_LOCATION_ID,
       price_range_min: null,
       price_range_max: null,
+      cancellation_policy: null,
       photos: [],
       is_published: false,
       is_disabled: false,

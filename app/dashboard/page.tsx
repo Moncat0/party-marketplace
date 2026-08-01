@@ -135,7 +135,7 @@ export default async function DashboardOverviewPage() {
         <OverviewBannerButton
           href={
             service
-              ? `/dashboard/profile?service=${service.id}`
+              ? `/dashboard/listings/${service.id}/edit`
               : '/dashboard/listings/new'
           }
           variant="dark"

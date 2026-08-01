@@ -7,7 +7,7 @@ export default function PaymentSuccessPage() {
   return (
     <main className="min-h-screen bg-white flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md space-y-4">
-        <SettingsSection title="Betalning genomförd!">
+        <SettingsSection title="Betalning mottagen!">
           <div
             className="mx-auto mb-5 h-14 w-14 flex items-center justify-center"
             style={{
@@ -29,7 +29,9 @@ export default function PaymentSuccessPage() {
             </svg>
           </div>
           <p className="text-[14px] leading-[1.43] text-[#6a6a6a] text-center">
-            Din bokning är nu bekräftad och betald. Vi har skickat ett kvitto till din e-post.
+            Tack! Beloppet hålls säkert av FESTEN tills evenemanget är genomfört och du godkänner
+            utbetalning till talangen. Du får ett kvitto från FESTEN på e-post när betalningen är
+            bekräftad.
           </p>
         </SettingsSection>
 

@@ -9,6 +9,18 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { siteChromePad, siteHeaderHeight, siteLogoClass } from '@/components/siteChrome'
+import {
+  ArrowLeftRight,
+  Calendar,
+  CircleHelp,
+  LogOut,
+  type LucideIcon,
+  Menu,
+  Settings,
+  Shield,
+  Star,
+  User,
+} from 'lucide-react'
 
 type UserNav = {
   name: string | null
@@ -34,7 +46,7 @@ const NAV = [
   {
     href: '/dashboard/listings',
     label: 'Tjänster',
-    match: (p: string) => p.startsWith('/dashboard/listings') || p.startsWith('/dashboard/profile'),
+    match: (p: string) => p.startsWith('/dashboard/listings'),
   },
   {
     href: '/dashboard/messages',
@@ -45,6 +57,10 @@ const NAV = [
 
 const menuItemClass =
   'flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-[#222222] hover:bg-[#f7f7f7] transition-colors'
+
+function MenuIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return <Icon className="size-[18px] shrink-0 text-[#222222]" strokeWidth={2} aria-hidden />
+}
 
 /**
  * Airbnb Host–style chrome for the provider dashboard:
@@ -58,6 +74,7 @@ export default function ProviderHostChrome({
 }: Props) {
   const pathname = usePathname()
   const [user, setUser] = useState<UserNav | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -73,19 +90,24 @@ export default function ProviderHostChrome({
         data: { user: authUser },
       } = await supabase.auth.getUser()
       if (!authUser) {
-        if (!cancelled) setUser(null)
+        if (!cancelled) {
+          setUser(null)
+          setIsAdmin(false)
+        }
         return
       }
-      const { data: row } = await supabase
-        .from('users')
-        .select('name, avatar_url')
-        .eq('id', authUser.id)
-        .maybeSingle()
+      const [{ data: row }, adminRes] = await Promise.all([
+        supabase.from('users').select('name, avatar_url').eq('id', authUser.id).maybeSingle(),
+        fetch('/api/admin/me')
+          .then(r => r.json() as Promise<{ isAdmin?: boolean }>)
+          .catch(() => ({ isAdmin: false })),
+      ])
       if (!cancelled) {
         setUser({
           name: row?.name ?? authUser.user_metadata?.full_name ?? null,
           avatarUrl: row?.avatar_url ?? authUser.user_metadata?.avatar_url ?? null,
         })
+        setIsAdmin(!!adminRes.isAdmin)
       }
     })()
     return () => {
@@ -200,11 +222,7 @@ export default function ProviderHostChrome({
                   menuOpen && 'shadow-[0_2px_4px_rgba(0,0,0,0.08)]'
                 )}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-foreground">
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </svg>
+                <Menu className="size-4 shrink-0 text-foreground" strokeWidth={2} aria-hidden />
                 {user?.avatarUrl ? (
                   <span className="relative h-8 w-8 overflow-hidden rounded-full bg-muted flex-shrink-0">
                     <Image src={user.avatarUrl} alt="" fill className="object-cover" sizes="32px" />
@@ -255,10 +273,19 @@ export default function ProviderHostChrome({
           className="fixed z-[60] rounded-2xl border border-[#dddddd] bg-white py-2 shadow-[0_2px_16px_rgba(0,0,0,0.12)]"
         >
           <Link
+            href="/dashboard/profile"
+            className={menuItemClass}
+            onClick={() => setMenuOpen(false)}
+          >
+            <MenuIcon icon={User} />
+            Min profil
+          </Link>
+          <Link
             href="/dashboard/requests"
             className={menuItemClass}
             onClick={() => setMenuOpen(false)}
           >
+            <MenuIcon icon={Calendar} />
             Förfrågningar
           </Link>
           <Link
@@ -266,6 +293,7 @@ export default function ProviderHostChrome({
             className={menuItemClass}
             onClick={() => setMenuOpen(false)}
           >
+            <MenuIcon icon={Star} />
             Recensioner
           </Link>
           <Link
@@ -273,6 +301,7 @@ export default function ProviderHostChrome({
             className={menuItemClass}
             onClick={() => setMenuOpen(false)}
           >
+            <MenuIcon icon={Settings} />
             Inställningar
           </Link>
           <Separator className="my-2" />
@@ -281,14 +310,26 @@ export default function ProviderHostChrome({
             className={menuItemClass}
             onClick={() => setMenuOpen(false)}
           >
+            <MenuIcon icon={ArrowLeftRight} />
             Byt till planerarläge
           </Link>
           <Link href="/hjalp" className={menuItemClass} onClick={() => setMenuOpen(false)}>
+            <MenuIcon icon={CircleHelp} />
             Hjälpcenter
           </Link>
+          {isAdmin ? (
+            <>
+              <Separator className="my-2" />
+              <Link href="/admin" className={menuItemClass} onClick={() => setMenuOpen(false)}>
+                <MenuIcon icon={Shield} />
+                Admin
+              </Link>
+            </>
+          ) : null}
           <Separator className="my-2" />
           <form action="/auth/signout" method="post">
             <button type="submit" className={menuItemClass}>
+              <MenuIcon icon={LogOut} />
               Logga ut
             </button>
           </form>

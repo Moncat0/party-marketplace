@@ -67,6 +67,44 @@ export function isValidE164(phone: string): boolean {
   return /^\+[1-9]\d{6,14}$/.test(phone)
 }
 
+/**
+ * Split a stored E.164 value into dial + national digits for edit UIs.
+ * Falls back to Sweden (+46) when the prefix is unknown.
+ */
+export function parseE164ToDialAndNational(e164: string): {
+  dial: string
+  national: string
+} {
+  const digits = e164.trim().replace(/\D/g, '')
+  if (!digits) {
+    return { dial: COUNTRY_DIALS[0].dial, national: '' }
+  }
+
+  const sorted = [...COUNTRY_DIALS].sort(
+    (a, b) => b.dial.replace(/\D/g, '').length - a.dial.replace(/\D/g, '').length
+  )
+
+  for (const country of sorted) {
+    const dialDigits = country.dial.replace(/\D/g, '')
+    if (digits.startsWith(dialDigits) && digits.length > dialDigits.length) {
+      return { dial: country.dial, national: digits.slice(dialDigits.length) }
+    }
+  }
+
+  return { dial: COUNTRY_DIALS[0].dial, national: digits }
+}
+
+/** Human-readable E.164 for settings rows (e.g. +46 76 123 45 67). */
 export function formatPhoneDisplay(e164: string): string {
-  return e164
+  const trimmed = e164.trim()
+  if (!trimmed || !isValidE164(trimmed)) return trimmed
+
+  const { dial, national } = parseE164ToDialAndNational(trimmed)
+  if (!national) return dial
+
+  if (dial === '+46' && national.length === 9) {
+    return `${dial} ${national.slice(0, 2)} ${national.slice(2, 5)} ${national.slice(5, 7)} ${national.slice(7)}`
+  }
+
+  return `${dial} ${national}`
 }
