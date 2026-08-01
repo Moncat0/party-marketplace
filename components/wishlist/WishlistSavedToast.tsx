@@ -42,7 +42,7 @@ export default function WishlistSavedToast({
   return createPortal(
     <div
       role="status"
-      className="fixed bottom-6 left-6 z-[70] flex max-w-[min(100vw-3rem,420px)] items-center gap-3 rounded-xl bg-white py-3 pl-3 pr-4 shadow-[0_6px_20px_rgba(0,0,0,0.2)]"
+      className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-4 right-4 z-[70] mx-auto flex max-w-[min(100vw-2rem,420px)] items-center gap-3 rounded-xl bg-white py-3 pl-3 pr-4 shadow-[0_6px_20px_rgba(0,0,0,0.2)] sm:left-6 sm:right-auto"
     >
       <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg bg-[#ebebeb]">
         {data.photoUrl ? (

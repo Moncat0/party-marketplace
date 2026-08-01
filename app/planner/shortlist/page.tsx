@@ -59,7 +59,7 @@ export default async function WishlistsPage() {
   }
 
   return (
-    <GuestAppChrome flush>
+    <GuestAppChrome>
       <Container>
         <div className="pt-10 pb-16 sm:pt-12">
           <h1 className="text-[32px] font-semibold leading-[36px] tracking-[-0.04em] text-[#222222] mb-10">

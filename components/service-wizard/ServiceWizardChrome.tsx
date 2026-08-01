@@ -72,7 +72,7 @@ export default function ServiceWizardChrome({
       </main>
 
       {!hideFooter && (
-        <footer className="flex-shrink-0 border-t border-transparent bg-white">
+        <footer className="flex-shrink-0 border-t border-transparent bg-white pb-[env(safe-area-inset-bottom)]">
           <div className="flex w-full gap-1.5 px-0">
             {phaseFills.map((fill, i) => (
               <div key={i} className="h-1.5 flex-1 overflow-hidden bg-[#dddddd]">

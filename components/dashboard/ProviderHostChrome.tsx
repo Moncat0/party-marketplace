@@ -152,7 +152,7 @@ export default function ProviderHostChrome({
   const initial = (user?.name ?? '?').charAt(0).toUpperCase()
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-dvh flex-col bg-white">
       <header className="sticky top-0 z-50 border-b border-border bg-background">
         <div className={siteChromePad}>
           <div
@@ -239,7 +239,7 @@ export default function ProviderHostChrome({
 
         {/* Mobile nav */}
         <nav
-          className="flex gap-1 overflow-x-auto border-t border-[#ebebeb] px-4 py-2 md:hidden"
+          className="flex gap-2 overflow-x-auto border-t border-[#ebebeb] px-4 py-2 scrollbar-hide md:hidden"
           aria-label="Talangdashboard"
         >
           {NAV.map(item => {
@@ -249,7 +249,7 @@ export default function ProviderHostChrome({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'whitespace-nowrap rounded-full px-3 py-1.5 text-[13px]',
+                  'inline-flex min-h-10 shrink-0 items-center whitespace-nowrap rounded-full px-3.5 text-[13px]',
                   active
                     ? 'bg-[#222222] font-semibold text-white'
                     : 'font-medium text-[#222222] hover:bg-[#f7f7f7]'
@@ -337,13 +337,11 @@ export default function ProviderHostChrome({
       )}
 
       {flush ? (
-        <div className="h-[calc(100vh-5rem)] min-h-0 min-[1440px]:h-[calc(100vh-6rem)] overflow-hidden">
-          {children}
-        </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
       ) : wide ? (
-        <main className={cn(siteChromePad, 'w-full py-10 sm:py-12')}>{children}</main>
+        <main className={cn(siteChromePad, 'w-full flex-1 py-8 sm:py-12')}>{children}</main>
       ) : (
-        <main className="mx-auto w-full max-w-[1120px] px-6 py-10 sm:px-10 sm:py-12">
+        <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-8 sm:px-10 sm:py-12">
           {children}
         </main>
       )}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -21,7 +21,8 @@ import {
 } from '@/lib/messaging-prefs'
 import { cn } from '@/lib/utils'
 import { formatEventType } from '@/lib/event-types'
-import { CANCELLATION_POLICIES, type CancellationPolicyId } from '@/lib/cancellation-policies'
+import OfferModal from '@/components/offers/OfferModal'
+import { cancellationPolicySummary } from '@/lib/quotes'
 
 type Quote = {
   id: string
@@ -31,7 +32,7 @@ type Quote = {
   event_date: string | null
   location: string | null
   cancellation_policy: string | null
-  status: 'pending' | 'accepted' | 'declined'
+  status: 'pending' | 'accepted' | 'declined' | 'withdrawn'
 }
 
 type Message = {
@@ -66,6 +67,8 @@ type Props = {
   embedded?: boolean
   /** Show back link to inbox (useful when embedded in guest chrome) */
   showBackLink?: boolean
+  /** Booking rail content for mobile “Bokning” sheet */
+  bookingDetails?: ReactNode
 }
 
 export default function MessageThread({
@@ -85,6 +88,7 @@ export default function MessageThread({
   serviceTitle = null,
   embedded = false,
   showBackLink,
+  bookingDetails = null,
 }: Props) {
   const [messages, setMessages] = useState(initial)
 
@@ -98,16 +102,7 @@ export default function MessageThread({
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState(false)
 
-  // Quote form state
-  const [showQuoteForm, setShowQuoteForm] = useState(false)
-  const [quotePrice, setQuotePrice] = useState('')
-  const [quoteDescription, setQuoteDescription] = useState('')
-  const [quoteDuration, setQuoteDuration] = useState('')
-  const [quoteDate, setQuoteDate] = useState(eventDate ?? '')
-  const [quoteLocation, setQuoteLocation] = useState(eventLocation ?? '')
-  const [quoteCancellation, setQuoteCancellation] = useState<CancellationPolicyId>('moderate')
-  const [quoteError, setQuoteError] = useState<string | null>(null)
-  const [sendingQuote, setSendingQuote] = useState(false)
+  const [offerModalOpen, setOfferModalOpen] = useState(false)
   const [respondingToQuote, setRespondingToQuote] = useState<string | null>(null)
   const [quoteRespondError, setQuoteRespondError] = useState<string | null>(null)
   const [quickReplies, setQuickReplies] = useState<QuickReply[]>([])
@@ -286,44 +281,6 @@ export default function MessageThread({
     setSending(false)
   }
 
-  async function handleSendQuote(e: React.FormEvent) {
-    e.preventDefault()
-    if (!quotePrice || Number(quotePrice) < 1 || sendingQuote) return
-    setSendingQuote(true)
-    setQuoteError(null)
-
-    const res = await fetch('/api/quotes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        booking_request_id: bookingId,
-        price_sek: Number(quotePrice),
-        description: quoteDescription.trim() || null,
-        duration: quoteDuration.trim() || null,
-        event_date: quoteDate || null,
-        location: quoteLocation.trim() || null,
-        cancellation_policy: quoteCancellation,
-      }),
-    })
-
-    const data = await res.json().catch(() => ({}))
-    if (res.ok) {
-      setMessages(prev => [...prev, data.message])
-      setShowQuoteForm(false)
-      setQuotePrice('')
-      setQuoteDescription('')
-      setQuoteDuration('')
-      setQuoteLocation(eventLocation ?? '')
-      setQuoteDate(eventDate ?? '')
-      setQuoteCancellation('moderate')
-    } else if (data.code === 'stripe_required') {
-      setQuoteError(data.error)
-    } else {
-      setQuoteError(data.error ?? 'Kunde inte skicka offerten.')
-    }
-    setSendingQuote(false)
-  }
-
   async function handleQuoteResponse(quoteId: string, status: 'accepted' | 'declined') {
     setRespondingToQuote(quoteId)
     setQuoteRespondError(null)
@@ -407,10 +364,10 @@ export default function MessageThread({
             variant="outline"
             size="sm"
             onClick={() => setInfoOpen(true)}
-            className="h-9 flex-shrink-0 gap-1.5 rounded-full border-[#dddddd] px-3 text-[13px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]"
-            aria-label="Tjänst och konversation"
+            className="h-10 min-h-10 flex-shrink-0 gap-1.5 rounded-full border-[#dddddd] px-3.5 text-[13px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]"
+            aria-label="Bokning och konversation"
           >
-            Tjänst
+            Bokning
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <polyline points="9 18 15 12 9 6" />
             </svg>
@@ -493,9 +450,11 @@ export default function MessageThread({
                         </div>
                       )}
                       {quote.cancellation_policy && (
-                        <div>
+                        <div className="col-span-2">
                           <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#6a6a6a]">Avbokning</p>
-                          <p className="text-sm text-[#222222]">{quote.cancellation_policy}</p>
+                          <p className="text-sm text-[#222222]">
+                            {cancellationPolicySummary(quote.cancellation_policy) ?? quote.cancellation_policy}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -546,6 +505,12 @@ export default function MessageThread({
                         <div className="flex items-center gap-2">
                           <span className="h-2 w-2 rounded-full bg-[#6a6a6a]" />
                           <p className="text-xs text-[#6a6a6a]">Offert avböjd</p>
+                        </div>
+                      )}
+                      {quote.status === 'withdrawn' && (
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-[#6a6a6a]" />
+                          <p className="text-xs text-[#6a6a6a]">Offerten har tagits tillbaka</p>
                         </div>
                       )}
                     </div>
@@ -629,122 +594,11 @@ export default function MessageThread({
           </div>
         )}
 
-        {/* Quote form panel (provider only) */}
-        {showQuoteForm && !isCompleted && (
-          <div className="max-h-[70vh] flex-shrink-0 overflow-y-auto border-t border-[#ebebeb] bg-white px-6 py-5">
-            <form onSubmit={handleSendQuote}>
-              <p className="mb-4 text-sm font-bold text-[#222222]">Skicka offert</p>
-
-              <div className="mb-3 grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Pris *</label>
-                  <div className="relative">
-                    <input
-                      type="number" min="1" value={quotePrice}
-                      onChange={e => setQuotePrice(e.target.value)}
-                      placeholder="3 000"
-                      className="w-full rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-2.5 pr-10 text-sm text-[#222222] placeholder-[#a0a0a0] focus:border-[#222222] focus:outline-none focus:ring-1 focus:ring-[#222222]"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#6a6a6a]">kr</span>
-                  </div>
-                  {quotePrice && Number(quotePrice) > 0 && (
-                    <p className="mt-1 text-xs text-[#6a6a6a]">Du får: <span className="font-semibold text-[#1D9E75]">{Math.round(Number(quotePrice) * 0.8).toLocaleString('sv-SE')} kr</span></p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Tid/längd</label>
-                  <input
-                    type="text" value={quoteDuration}
-                    onChange={e => setQuoteDuration(e.target.value)}
-                    placeholder="T.ex. 2 timmar"
-                    className="w-full rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-2.5 text-sm text-[#222222] placeholder-[#a0a0a0] focus:border-[#222222] focus:outline-none focus:ring-1 focus:ring-[#222222]"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Datum</label>
-                  <input
-                    type="date" value={quoteDate}
-                    onChange={e => setQuoteDate(e.target.value)}
-                    className="w-full rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-2.5 text-sm text-[#222222] focus:border-[#222222] focus:outline-none focus:ring-1 focus:ring-[#222222]"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Plats</label>
-                  <input
-                    type="text" value={quoteLocation}
-                    onChange={e => setQuoteLocation(e.target.value)}
-                    placeholder="T.ex. Vasastan, Stockholm"
-                    className="w-full rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-2.5 text-sm text-[#222222] placeholder-[#a0a0a0] focus:border-[#222222] focus:outline-none focus:ring-1 focus:ring-[#222222]"
-                  />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Vad ingår</label>
-                <textarea
-                  value={quoteDescription}
-                  onChange={e => setQuoteDescription(e.target.value)}
-                  placeholder="T.ex. 2 timmars uppträdande, eget ljud och ljus..."
-                  rows={2}
-                  className="w-full resize-none rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-2.5 text-sm text-[#222222] placeholder-[#a0a0a0] focus:border-[#222222] focus:outline-none focus:ring-1 focus:ring-[#222222]"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="mb-1 block text-xs font-medium text-[#6a6a6a]">Avbokningspolicy</label>
-                <select
-                  value={quoteCancellation}
-                  onChange={e => setQuoteCancellation(e.target.value as CancellationPolicyId)}
-                  className="w-full rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-2.5 text-sm text-[#222222] focus:border-[#222222] focus:outline-none focus:ring-1 focus:ring-[#222222]"
-                >
-                  {CANCELLATION_POLICIES.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.label} — {p.short}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {quoteError && (
-                <p className="mb-3 text-sm text-destructive">
-                  {quoteError}{' '}
-                  {quoteError.includes('Stripe') || quoteError.includes('utbetalning') ? (
-                    <Link href="/dashboard/account?s=payments" className="underline">
-                      Öppna betalningar →
-                    </Link>
-                  ) : null}
-                </p>
-              )}
-
-              <div className="flex items-center gap-3">
-                <Button
-                  type="submit"
-                  disabled={!quotePrice || Number(quotePrice) < 1 || sendingQuote}
-                  className="h-auto rounded-xl px-5 py-2.5 text-xs"
-                >
-                  {sendingQuote ? '...' : 'Skicka offert'}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => { setShowQuoteForm(false); setQuotePrice(''); setQuoteDescription(''); setQuoteError(null) }}
-                  className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  Avbryt
-                </Button>
-              </div>
-            </form>
-          </div>
-        )}
-
         {/* Composer — Airbnb rounded pill */}
-        {!isCompleted && !showQuoteForm && (
-          <div className="flex-shrink-0 border-t border-[#ebebeb] bg-white px-4 py-4 sm:px-6">
+        {!isCompleted && (
+          <div className="flex-shrink-0 border-t border-[#ebebeb] bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-4">
             {suggestedOn && quickReplies.length > 0 && (
-              <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
+              <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-hide">
                 {quickReplies.map(r => (
                   <Button
                     key={r.id}
@@ -752,7 +606,7 @@ export default function MessageThread({
                     variant="outline"
                     size="sm"
                     onClick={() => setContent(r.body)}
-                    className="h-8 flex-shrink-0 rounded-full border-[#dddddd] px-3 text-[13px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]"
+                    className="h-9 flex-shrink-0 rounded-full border-[#dddddd] px-3 text-[13px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]"
                   >
                     {r.title}
                   </Button>
@@ -775,6 +629,17 @@ export default function MessageThread({
               </div>
             )}
 
+            {isProvider && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOfferModalOpen(true)}
+                className="mb-3 h-11 w-full rounded-full border-[#222222] text-[13px] font-semibold text-[#222222] shadow-none hover:bg-[#f7f7f7] sm:hidden"
+              >
+                Skicka offert
+              </Button>
+            )}
+
             <form onSubmit={handleSend} className="flex items-end gap-2">
               <Button
                 type="button"
@@ -792,7 +657,7 @@ export default function MessageThread({
               </Button>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
 
-              <div className="relative flex min-h-[48px] flex-1 items-end rounded-[28px] border border-[#b0b0b0] bg-white px-4 py-2 focus-within:border-[#222222]">
+              <div className="relative flex min-h-[48px] min-w-0 flex-1 items-end rounded-[28px] border border-[#b0b0b0] bg-white px-4 py-2 focus-within:border-[#222222]">
                 <textarea
                   value={content}
                   onChange={e => setContent(e.target.value)}
@@ -831,16 +696,33 @@ export default function MessageThread({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowQuoteForm(true)}
-                  className="h-11 flex-shrink-0 rounded-full border-[#222222] px-4 text-[13px] font-semibold text-[#222222] shadow-none hover:bg-[#f7f7f7]"
+                  onClick={() => setOfferModalOpen(true)}
+                  className="hidden h-11 flex-shrink-0 rounded-full border-[#222222] px-4 text-[13px] font-semibold text-[#222222] shadow-none hover:bg-[#f7f7f7] sm:inline-flex"
                 >
-                  Offert
+                  Skicka offert
                 </Button>
               )}
             </form>
           </div>
         )}
       </div>
+
+      {isProvider && (
+        <OfferModal
+          open={offerModalOpen}
+          onOpenChange={setOfferModalOpen}
+          bookingId={bookingId}
+          eventDate={eventDate}
+          eventLocation={eventLocation}
+          guestCount={guestCount}
+          onSuccess={data => {
+            if (data.message) {
+              setMessages(prev => [...prev, data.message as Message])
+            }
+            router.refresh()
+          }}
+        />
+      )}
 
       <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto rounded-2xl p-0 sm:max-w-md" showClose={false}>
@@ -864,6 +746,12 @@ export default function MessageThread({
           </DialogHeader>
 
           <div className="px-5 py-5">
+            {bookingDetails ? (
+              <>
+                <div className="mb-6">{bookingDetails}</div>
+                <div className="my-6 border-t border-[#ebebeb]" />
+              </>
+            ) : null}
             <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.04em] text-[#6a6a6a]">
               Deltagare
             </p>

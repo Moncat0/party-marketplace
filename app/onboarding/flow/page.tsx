@@ -6,6 +6,7 @@ import {
   ONBOARDING_WIZARD_PATHS,
 } from '@/lib/service-wizard-server'
 import { completeSignupUrl, needsTermsAndAge } from '@/lib/auth-compliance'
+import { DEFAULT_LOCATION_ID } from '@/lib/locations'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Skapa din tjänst' }
@@ -23,13 +24,21 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
 
   const { data: appUser } = await supabase
     .from('users')
-    .select('email_verified_at, terms_accepted_at, age_confirmed_at')
+    .select(
+      'email_verified_at, terms_accepted_at, age_confirmed_at, first_name, last_name, preferred_first_name'
+    )
     .eq('id', user.id)
     .maybeSingle()
 
   if (needsTermsAndAge(appUser)) {
     redirect(completeSignupUrl('/onboarding/flow'))
   }
+
+  const { data: providerProfile } = await supabase
+    .from('provider_profiles')
+    .select('bio, location_id, city')
+    .eq('user_id', user.id)
+    .maybeSingle()
 
   const paths = ONBOARDING_WIZARD_PATHS
   const service = await loadWizardFlowService(supabase, user.id, {
@@ -39,6 +48,11 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
     paths,
   })
 
+  const preferred =
+    appUser?.preferred_first_name?.trim() || appUser?.first_name?.trim() || ''
+  const basedInLocationId =
+    providerProfile?.location_id?.trim() || DEFAULT_LOCATION_ID
+
   return (
     <ServiceWizard
       userId={user.id}
@@ -47,6 +61,16 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
       afterSavePath={paths.afterSave}
       afterPublishPath={paths.afterPublish}
       firstBackPath={paths.afterSave}
+      includeAccountSteps
+      accountNeedsName={!preferred}
+      accountNeedsBio={!providerProfile?.bio?.trim()}
+      accountNeedsBasedIn={!providerProfile?.location_id?.trim()}
+      initialAccount={{
+        firstName: preferred,
+        lastName: appUser?.last_name?.trim() || '',
+        bio: providerProfile?.bio ?? '',
+        basedInLocationId,
+      }}
       emailVerified={!!appUser?.email_verified_at}
       service={{
         id: service.id,
@@ -59,7 +83,7 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
         photos: service.photos ?? [],
         price_range_min: service.price_range_min,
         price_range_max: service.price_range_max,
-        cancellation_policy: service.cancellation_policy ?? null,
+        can_travel: service.can_travel ?? false,
         is_published: service.is_published,
         created_at: service.created_at,
       }}

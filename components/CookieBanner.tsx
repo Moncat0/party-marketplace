@@ -40,7 +40,7 @@ export default function CookieBanner() {
   if (!visible) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
+    <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-sm rounded-2xl bg-foreground p-4 shadow-lg relative">
         <Button
           type="button"

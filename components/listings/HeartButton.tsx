@@ -14,11 +14,11 @@ type Props = {
 /**
  * Wishlist heart — matches live Airbnb property-card heart:
  * - Glyph: 24×24, white stroke 2, fill rgba(0,0,0,0.5) / brand when saved
- * - Hit target: 32×32
+ * - Hit target: ≥40×40 for touch (glyph stays 24)
  * - Positioned by parent at top/right 12px (top-3 right-3)
  */
 export default function HeartButton({ saved, onClick, size = 24 }: Props) {
-  const hit = Math.max(32, size + 8)
+  const hit = Math.max(40, size + 16)
 
   return (
     <Button

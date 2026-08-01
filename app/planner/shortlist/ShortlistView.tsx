@@ -82,7 +82,7 @@ export default function ShortlistView({
   }
 
   return (
-    <GuestAppChrome flush>
+    <GuestAppChrome>
       <Container>
         <div className="pt-6 pb-20">
           <Button

@@ -155,6 +155,8 @@ create table services (
                           cancellation_policy is null
                           or cancellation_policy in ('flexible', 'moderate', 'strict')
                         ),
+  -- When true, listing matches location searches even outside host/service city
+  can_travel          boolean not null default false,
   is_published        boolean not null default false,
   is_disabled         boolean not null default false,
   view_count          integer not null default 0,
@@ -188,7 +190,13 @@ create table booking_requests (
   occasions                   text[] not null default '{}',
   description                 text,
   status                      text not null default 'pending'
-                                check (status in ('pending', 'accepted', 'declined', 'completed')),
+                                check (status in ('pending', 'accepted', 'declined', 'completed', 'cancelled')),
+
+  cancelled_at                timestamptz,
+  cancelled_by                text check (cancelled_by is null or cancelled_by in ('planner', 'provider')),
+  cancel_reason               text,
+  refund_ore                  integer,
+  stripe_refund_id            text,
 
   -- Escrow payment (charged on quote accept; held on platform until release)
   price_ore                   integer,
@@ -233,7 +241,7 @@ create table quotes (
   location               text,
   cancellation_policy    text,
   status                 text not null default 'pending'
-                           check (status in ('pending', 'accepted', 'declined')),
+                           check (status in ('pending', 'accepted', 'declined', 'withdrawn')),
   created_at             timestamptz not null default now()
 );
 

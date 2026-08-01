@@ -16,6 +16,7 @@ export type ServiceRow = {
   price_range_min: number | null
   price_range_max: number | null
   cancellation_policy?: string | null
+  can_travel?: boolean
   photos: string[] | null
   is_published: boolean
   is_disabled: boolean

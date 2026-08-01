@@ -72,7 +72,7 @@ export default function RecentlyViewedClient() {
   }, [])
 
   return (
-    <GuestAppChrome flush>
+    <GuestAppChrome>
       <Container>
         <div className="pt-8 pb-16">
           <Link

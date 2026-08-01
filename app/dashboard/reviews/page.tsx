@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import ProviderHostShell from '@/components/dashboard/ProviderHostShell'
 import { settingsTokens as t } from '@/components/settings/tokens'
 import { redirectWithoutProviderProfile } from '@/lib/require-provider-profile'
-import { getServicesForUser } from '@/lib/services'
+import { getHostReviewStats } from '@/lib/host-reviews'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Recensioner' }
@@ -15,23 +15,21 @@ export default async function ReviewsPage() {
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup?intent=provider&next=/dashboard/reviews')
 
-  const result = await getServicesForUser(supabase, user.id)
-  if (!result) return await redirectWithoutProviderProfile(supabase, user.id)
+  const { data: provider } = await supabase
+    .from('provider_profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
 
-  const serviceIds = result.services.map(s => s.id)
+  if (!provider) return await redirectWithoutProviderProfile(supabase, user.id)
 
-  const { data: reviews } = serviceIds.length
-    ? await supabase
-        .from('reviews')
-        .select('id, rating, comment, created_at, users!reviewer_id(name)')
-        .in('service_id', serviceIds)
-        .order('created_at', { ascending: false })
-    : { data: [] }
+  const { data: reviews } = await supabase
+    .from('reviews')
+    .select('id, rating, comment, created_at, service_id, users!reviewer_id(name)')
+    .eq('reviewee_id', user.id)
+    .order('created_at', { ascending: false })
 
-  const avgRating =
-    reviews && reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : null
+  const { avgRating, reviewCount } = await getHostReviewStats(supabase, user.id)
 
   return (
     <ProviderHostShell>
@@ -40,9 +38,9 @@ export default async function ReviewsPage() {
           <h1 className="text-[32px] font-medium leading-[1.125] tracking-[-0.8px]" style={{ color: t.colors.ink }}>
             Recensioner
           </h1>
-          {reviews && reviews.length > 0 && (
+          {reviewCount > 0 && (
             <p className="mt-2 text-[14px]" style={{ color: t.colors.muted }}>
-              {reviews.length} {reviews.length === 1 ? 'recension' : 'recensioner'}
+              {reviewCount} {reviewCount === 1 ? 'recension' : 'recensioner'} på din profil
             </p>
           )}
         </div>
@@ -72,8 +70,9 @@ export default async function ReviewsPage() {
             </div>
             <div className="h-12 w-px bg-white/20" />
             <p className="text-sm text-white/60">
-              Snittbetyg av {reviews!.length}{' '}
-              {reviews!.length === 1 ? 'recension' : 'recensioner'}
+              Snittbetyg av {reviewCount}{' '}
+              {reviewCount === 1 ? 'recension' : 'recensioner'} — behålls även om du tar bort en
+              tjänst.
             </p>
           </div>
         )}
@@ -113,6 +112,7 @@ export default async function ReviewsPage() {
                           month: 'long',
                           year: 'numeric',
                         })}
+                        {!review.service_id ? ' · Tjänst borttagen' : null}
                       </p>
                     </div>
                     <div className="flex gap-0.5">

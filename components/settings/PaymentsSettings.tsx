@@ -109,9 +109,20 @@ export default function PaymentsSettings({
           Stripe-onboarding är inte klar ännu. Fortsätt där du slutade.
         </div>
       )}
-      {(stripeFlash === 'error') && (
+      {stripeFlash === 'retry' && (
+        <div
+          className="mb-6 rounded-xl px-4 py-3 text-[14px] text-[#222222]"
+          style={{ backgroundColor: '#f7f7f7' }}
+        >
+          Den gamla Stripe-kopplingen var ogiltig och har rensats. Klicka på
+          konfigurera igen.
+        </div>
+      )}
+      {stripeFlash === 'error' && (
         <div className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-[14px] text-red-700">
-          Något gick fel med Stripe. Försök igen om en stund.
+          Något gick fel med Stripe. Kontrollera att du är inloggad som talang och
+          försök igen. Om felet kvarstår, starta om utvecklingsservern så den laddar
+          senaste Stripe-nycklarna.
         </div>
       )}
 

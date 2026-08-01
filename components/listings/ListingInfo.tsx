@@ -9,6 +9,7 @@ type Props = {
   occasions?: string[] | null
   description: string | null
   city: string | null
+  canTravel?: boolean
   serviceTitle: string | null
   reviewCount: number
   avgRating: number | null
@@ -21,6 +22,7 @@ export default function ListingInfo({
   occasions,
   description,
   city,
+  canTravel = false,
   serviceTitle,
   reviewCount,
   avgRating,
@@ -68,6 +70,27 @@ export default function ListingInfo({
         </div>
       </div>
 
+      <div className="flex items-start gap-4 pb-6 border-b border-[#ebebeb]">
+        <span
+          className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#f7f7f7] text-[#222222]"
+          aria-hidden
+        >
+          {canTravel ? <TravelIcon /> : <PinIcon />}
+        </span>
+        <div>
+          <p className="text-[16px] font-semibold text-[#222222]">
+            {canTravel ? 'Kan resa' : 'Endast lokalt'}
+          </p>
+          <p className="mt-0.5 text-[14px] leading-relaxed text-[#6a6a6a]">
+            {canTravel
+              ? 'Talangen kan komma till dig utanför sin basstad.'
+              : city
+                ? `Erbjuds lokalt i ${city}.`
+                : 'Erbjuds lokalt i basstaden.'}
+          </p>
+        </div>
+      </div>
+
       {occasionLabels.length > 0 && (
         <>
           <div>
@@ -96,5 +119,24 @@ export default function ListingInfo({
         </div>
       )}
     </div>
+  )
+}
+
+function PinIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  )
+}
+
+function TravelIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+      <path d="M3 17h18" />
+      <path d="M5 17V9l4-2 3 1 4-2 3 1v10" />
+      <path d="M7 17v2M17 17v2" />
+    </svg>
   )
 }

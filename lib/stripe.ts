@@ -9,7 +9,11 @@ function stripeSecretKey(): string {
   ) {
     key = key.slice(1, -1).trim()
   }
-  return key.replace(/[\r\n]/g, '')
+  key = key.replace(/[\r\n]/g, '')
+  if (!key) {
+    throw new Error('STRIPE_SECRET_KEY is missing (server-only).')
+  }
+  return key
 }
 
 export const stripe = new Stripe(stripeSecretKey(), {

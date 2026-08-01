@@ -11,10 +11,12 @@ import { fetchMessagesWithReadReceiptPrivacy } from '@/lib/messages-privacy'
 import { getServicesForUser } from '@/lib/services'
 import { bookingOccasionLabel } from '@/lib/booking-labels'
 import { markThreadRead } from '@/lib/message-access'
+import { resolveBookingCancellationPolicyId } from '@/lib/booking-cancel'
 import {
   formatInboxLastText,
   loadInboxMessageMeta,
 } from '@/lib/message-inbox'
+import type { QuoteRecord, QuoteStatus } from '@/lib/quotes'
 
 export const dynamic = 'force-dynamic'
 export const metadata = { title: 'Meddelanden' }
@@ -43,7 +45,7 @@ export default async function ProviderMessagesPage({
       ? supabase
           .from('booking_requests')
           .select(
-            'id, event_date, event_type, occasions, status, event_location, guest_count, description, planner_id, created_at, service_id, users!planner_id(name, avatar_url)'
+            'id, event_date, event_type, occasions, status, event_location, guest_count, description, planner_id, created_at, service_id, price_ore, payment_status, users!planner_id(name, avatar_url)'
           )
           .in('service_id', serviceIds)
           .in('status', ['accepted', 'completed'])
@@ -80,16 +82,43 @@ export default async function ProviderMessagesPage({
   let details: ReactNode = null
 
   if (active) {
-    const messages = await fetchMessagesWithReadReceiptPrivacy(
-      supabase,
-      active.booking.id,
-      user.id,
-      active.booking.planner_id
-    )
+    const [{ data: quoteRows }, messages] = await Promise.all([
+      supabase
+        .from('quotes')
+        .select(
+          'id, status, price_ore, description, duration, event_date, location, cancellation_policy'
+        )
+        .eq('booking_request_id', active.booking.id)
+        .order('created_at', { ascending: false }),
+      fetchMessagesWithReadReceiptPrivacy(
+        supabase,
+        active.booking.id,
+        user.id,
+        active.booking.planner_id
+      ),
+    ])
 
+    const acceptedQuote = (quoteRows ?? []).find(q => q.status === 'accepted')
+    const pendingQuoteRow = (quoteRows ?? []).find(q => q.status === 'pending')
+    const pendingQuote: QuoteRecord | null = pendingQuoteRow
+      ? {
+          id: pendingQuoteRow.id,
+          price_ore: pendingQuoteRow.price_ore,
+          description: pendingQuoteRow.description,
+          duration: pendingQuoteRow.duration,
+          event_date: pendingQuoteRow.event_date,
+          location: pendingQuoteRow.location,
+          cancellation_policy: pendingQuoteRow.cancellation_policy,
+          status: pendingQuoteRow.status as QuoteStatus,
+        }
+      : null
     const bookingService = active.booking.service_id
       ? serviceById.get(active.booking.service_id)
       : null
+    const cancellationPolicyId = resolveBookingCancellationPolicyId({
+      acceptedQuotePolicy: acceptedQuote?.cancellation_policy,
+      servicePolicy: bookingService?.cancellation_policy ?? null,
+    })
 
     embeddedThread = (
       <MessageThread
@@ -123,7 +152,11 @@ export default async function ProviderMessagesPage({
           event_location: active.booking.event_location,
           guest_count: active.booking.guest_count,
           description: active.booking.description,
+          price_ore: active.booking.price_ore,
+          payment_status: active.booking.payment_status,
+          cancellationPolicyId,
         }}
+        pendingQuote={pendingQuote}
         side={{
           role: 'provider',
           plannerName: active.thread.name,

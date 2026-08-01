@@ -27,6 +27,7 @@ type Provider = {
   title: string | null
   city: string | null
   location_id?: string | null
+  can_travel?: boolean
   photos: string[]
   category_slug?: string | null
   category_tags: string[]
@@ -47,9 +48,12 @@ type Props = {
   initialOccasion: string | null
   initialQuery: string
   initialSort: string
+  initialCanTravelOnly?: boolean
+  initialReviewFilter?: string
 }
 
 type SortKey = 'relevant' | 'rating' | 'price_asc' | 'price_desc'
+type ReviewFilter = 'any' | 'reviewed' | '4' | '4.5'
 
 const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'relevant', label: 'Relevans' },
@@ -57,6 +61,26 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: 'price_asc', label: 'Lägsta pris' },
   { key: 'price_desc', label: 'Högsta pris' },
 ]
+
+const REVIEW_FILTER_OPTIONS: { key: ReviewFilter; label: string }[] = [
+  { key: 'any', label: 'Alla' },
+  { key: 'reviewed', label: 'Med omdömen' },
+  { key: '4', label: '4,0+ ★' },
+  { key: '4.5', label: '4,5+ ★' },
+]
+
+function parseReviewFilter(value: string | undefined): ReviewFilter {
+  if (value === 'reviewed' || value === '4' || value === '4.5') return value
+  return 'any'
+}
+
+function matchesReviewFilter(p: Provider, filter: ReviewFilter): boolean {
+  if (filter === 'any') return true
+  if (filter === 'reviewed') return p.reviewCount > 0
+  if (filter === '4') return p.avgRating != null && p.avgRating >= 4 && p.reviewCount > 0
+  if (filter === '4.5') return p.avgRating != null && p.avgRating >= 4.5 && p.reviewCount > 0
+  return true
+}
 
 export default function SearchResults({
   providers,
@@ -67,6 +91,8 @@ export default function SearchResults({
   initialOccasion,
   initialQuery,
   initialSort,
+  initialCanTravelOnly = false,
+  initialReviewFilter,
 }: Props) {
   const router = useRouter()
   const [locationId, setLocationId] = useState(initialLocationId)
@@ -80,21 +106,31 @@ export default function SearchResults({
       ? initialSort
       : 'relevant') as SortKey
   )
+  const [canTravelOnly, setCanTravelOnly] = useState(initialCanTravelOnly)
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>(
+    parseReviewFilter(initialReviewFilter)
+  )
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false)
   const [orderMenuOpen, setOrderMenuOpen] = useState(false)
+  const [reviewMenuOpen, setReviewMenuOpen] = useState(false)
   const [editingSearch, setEditingSearch] = useState(false)
   const [editSegment, setEditSegment] = useState<'where' | 'service' | null>(null)
   const [draftPriceMin, setDraftPriceMin] = useState('')
   const [draftPriceMax, setDraftPriceMax] = useState('')
+  const [draftCanTravelOnly, setDraftCanTravelOnly] = useState(initialCanTravelOnly)
+  const [draftReviewFilter, setDraftReviewFilter] = useState<ReviewFilter>(
+    parseReviewFilter(initialReviewFilter)
+  )
   const tracked = useRef(false)
   const editRootRef = useRef<HTMLDivElement>(null)
 
   function expandSearch(segment: 'where' | 'service') {
     setCategoryMenuOpen(false)
     setOrderMenuOpen(false)
+    setReviewMenuOpen(false)
     setFiltersOpen(false)
     setEditSegment(segment)
     setEditingSearch(true)
@@ -128,17 +164,19 @@ export default function SearchResults({
       initialOccasion && isOccasionSlug(initialOccasion) ? initialOccasion : null
     )
     setQuery(initialQuery)
-  }, [initialLocationId, initialCategory, initialOccasion, initialQuery])
+    setCanTravelOnly(initialCanTravelOnly)
+    setReviewFilter(parseReviewFilter(initialReviewFilter))
+  }, [
+    initialLocationId,
+    initialCategory,
+    initialOccasion,
+    initialQuery,
+    initialCanTravelOnly,
+    initialReviewFilter,
+  ])
 
-  const filtered = useMemo(() => {
+  const { local, travelers, totalCount } = useMemo(() => {
     let list = [...providers]
-
-    if (locationId) {
-      list = list.filter(p => {
-        const id = p.location_id ?? locationIdFromCity(p.city)
-        return id === locationId
-      })
-    }
 
     if (category) {
       list = list.filter(
@@ -180,16 +218,61 @@ export default function SearchResults({
       list = list.filter(p => (p.price_range_min ?? 0) <= max)
     }
 
-    if (sort === 'rating') {
-      list.sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))
-    } else if (sort === 'price_asc') {
-      list.sort((a, b) => (a.price_range_min ?? 1e9) - (b.price_range_min ?? 1e9))
-    } else if (sort === 'price_desc') {
-      list.sort((a, b) => (b.price_range_min ?? 0) - (a.price_range_min ?? 0))
+    if (canTravelOnly) {
+      list = list.filter(p => !!p.can_travel)
     }
 
-    return list
-  }, [providers, locationId, category, occasion, query, sort, priceMin, priceMax])
+    if (reviewFilter !== 'any') {
+      list = list.filter(p => matchesReviewFilter(p, reviewFilter))
+    }
+
+    function sortList(rows: Provider[]) {
+      const next = [...rows]
+      if (sort === 'rating') {
+        next.sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))
+      } else if (sort === 'price_asc') {
+        next.sort((a, b) => (a.price_range_min ?? 1e9) - (b.price_range_min ?? 1e9))
+      } else if (sort === 'price_desc') {
+        next.sort((a, b) => (b.price_range_min ?? 0) - (a.price_range_min ?? 0))
+      }
+      return next
+    }
+
+    if (!locationId) {
+      const all = sortList(list)
+      return { local: all, travelers: [] as Provider[], totalCount: all.length }
+    }
+
+    const localRows: Provider[] = []
+    const travelerRows: Provider[] = []
+    for (const p of list) {
+      const id = p.location_id ?? locationIdFromCity(p.city)
+      if (id === locationId) {
+        localRows.push(p)
+      } else if (p.can_travel) {
+        travelerRows.push(p)
+      }
+    }
+
+    const localSorted = sortList(localRows)
+    const travelersSorted = sortList(travelerRows)
+    return {
+      local: localSorted,
+      travelers: travelersSorted,
+      totalCount: localSorted.length + travelersSorted.length,
+    }
+  }, [
+    providers,
+    locationId,
+    category,
+    occasion,
+    query,
+    sort,
+    priceMin,
+    priceMax,
+    canTravelOnly,
+    reviewFilter,
+  ])
 
   useEffect(() => {
     if (tracked.current) return
@@ -199,7 +282,11 @@ export default function SearchResults({
       city: locationId,
       category,
       occasion,
-      results_count: filtered.length,
+      results_count: totalCount,
+      local_count: local.length,
+      travelers_count: travelers.length,
+      can_travel_only: canTravelOnly,
+      review_filter: reviewFilter,
     })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -209,41 +296,61 @@ export default function SearchResults({
     occasion?: string | null
     query?: string
     sort?: SortKey
+    canTravelOnly?: boolean
+    reviewFilter?: ReviewFilter
   }) {
     const loc = next?.locationId ?? locationId
     const cat = next?.category === undefined ? category : next.category
     const occ = next?.occasion === undefined ? occasion : next.occasion
     const q = next?.query ?? query
     const s = next?.sort ?? sort
+    const travel = next?.canTravelOnly ?? canTravelOnly
+    const rating = next?.reviewFilter ?? reviewFilter
     const params = new URLSearchParams()
     if (loc) params.set('location', loc)
     if (cat) params.set('category', cat)
     if (occ) params.set('occasion', occ)
     if (q.trim()) params.set('q', q.trim())
     if (s && s !== 'relevant') params.set('sort', s)
+    if (travel) params.set('travel', '1')
+    if (rating !== 'any') params.set('rating', rating)
     router.push(`/sok?${params.toString()}`)
   }
 
   function openFilters() {
     setDraftPriceMin(priceMin)
     setDraftPriceMax(priceMax)
+    setDraftCanTravelOnly(canTravelOnly)
+    setDraftReviewFilter(reviewFilter)
     setCategoryMenuOpen(false)
     setOrderMenuOpen(false)
+    setReviewMenuOpen(false)
     setFiltersOpen(true)
   }
 
   function applyFilters() {
     setPriceMin(draftPriceMin)
     setPriceMax(draftPriceMax)
+    setCanTravelOnly(draftCanTravelOnly)
+    setReviewFilter(draftReviewFilter)
     setFiltersOpen(false)
+    pushSearch({
+      canTravelOnly: draftCanTravelOnly,
+      reviewFilter: draftReviewFilter,
+    })
   }
 
-  function clearPriceFilters() {
+  function clearAllFilters() {
     setDraftPriceMin('')
     setDraftPriceMax('')
+    setDraftCanTravelOnly(false)
+    setDraftReviewFilter('any')
     setPriceMin('')
     setPriceMax('')
+    setCanTravelOnly(false)
+    setReviewFilter('any')
     setFiltersOpen(false)
+    pushSearch({ canTravelOnly: false, reviewFilter: 'any' })
   }
 
   const catMeta = category ? getCategoryBySlug(category) : null
@@ -254,6 +361,11 @@ export default function SearchResults({
     ? `${catMeta.chipLabel ?? catMeta.label}`.toLowerCase()
     : 'tjänster'
   const priceFilterActive = !!priceMin || !!priceMax
+  const reviewFilterActive = reviewFilter !== 'any'
+  const dialogFilterCount =
+    (priceFilterActive ? 1 : 0) + (canTravelOnly ? 1 : 0) + (reviewFilterActive ? 1 : 0)
+  const reviewChipLabel =
+    REVIEW_FILTER_OPTIONS.find(o => o.key === reviewFilter)?.label ?? 'Omdömen'
   const orderLabel =
     SORT_OPTIONS.find(o => o.key === sort)?.label === 'Relevans'
       ? 'Order'
@@ -311,7 +423,7 @@ export default function SearchResults({
         subnav={
           <div
             className={cn(
-              'flex w-max max-w-full flex-wrap items-center justify-center gap-1.5',
+              'flex w-full max-w-full items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide md:w-max md:flex-wrap md:justify-center md:overflow-visible',
               // Filters stay out of the way; header height comes from searchExpanded.
               editingSearch && 'hidden'
             )}
@@ -323,7 +435,7 @@ export default function SearchResults({
               onClick={openFilters}
               className={cn(
                 'h-9 flex-shrink-0 gap-1.5 rounded-full border px-3.5 text-[13px] font-medium shadow-none',
-                priceFilterActive
+                dialogFilterCount > 0
                   ? 'border-foreground bg-background'
                   : 'border-border hover:border-foreground'
               )}
@@ -340,14 +452,74 @@ export default function SearchResults({
                 <circle cx="7.5" cy="11.5" r="1.25" fill="currentColor" />
               </svg>
               Filters
-              {priceFilterActive && (
+              {dialogFilterCount > 0 && (
                 <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-foreground px-1 text-[10px] font-semibold text-background">
-                  1
+                  {dialogFilterCount}
                 </span>
               )}
             </Button>
 
             <div className="mx-0.5 h-5 w-px flex-shrink-0 bg-border" aria-hidden />
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const next = !canTravelOnly
+                setCanTravelOnly(next)
+                setCategoryMenuOpen(false)
+                setOrderMenuOpen(false)
+                setReviewMenuOpen(false)
+                setFiltersOpen(false)
+                pushSearch({ canTravelOnly: next })
+              }}
+              className={cn(
+                'h-9 flex-shrink-0 rounded-full border px-3.5 text-[13px] font-medium shadow-none',
+                canTravelOnly
+                  ? 'border-foreground bg-background'
+                  : 'border-border hover:border-foreground'
+              )}
+            >
+              Kan resa
+            </Button>
+
+            <div className="relative">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setReviewMenuOpen(v => !v)
+                  setCategoryMenuOpen(false)
+                  setOrderMenuOpen(false)
+                  setFiltersOpen(false)
+                }}
+                className={cn(
+                  'h-9 flex-shrink-0 gap-1.5 rounded-full border px-3.5 text-[13px] font-medium shadow-none',
+                  reviewFilterActive || reviewMenuOpen
+                    ? 'border-foreground bg-background'
+                    : 'border-border hover:border-foreground'
+                )}
+              >
+                {reviewFilterActive ? reviewChipLabel : 'Omdömen'}
+                <ChevronDown />
+              </Button>
+              {reviewMenuOpen && (
+                <ChipMenu onClose={() => setReviewMenuOpen(false)}>
+                  {REVIEW_FILTER_OPTIONS.map(o => (
+                    <ChipMenuItem
+                      key={o.key}
+                      label={o.label}
+                      active={reviewFilter === o.key}
+                      onClick={() => {
+                        setReviewFilter(o.key)
+                        setReviewMenuOpen(false)
+                        pushSearch({ reviewFilter: o.key })
+                      }}
+                    />
+                  ))}
+                </ChipMenu>
+              )}
+            </div>
 
             <div className="relative">
               <Button
@@ -356,6 +528,7 @@ export default function SearchResults({
                 onClick={() => {
                   setCategoryMenuOpen(v => !v)
                   setOrderMenuOpen(false)
+                  setReviewMenuOpen(false)
                   setFiltersOpen(false)
                 }}
                 className={cn(
@@ -402,6 +575,7 @@ export default function SearchResults({
                 onClick={() => {
                   setOrderMenuOpen(v => !v)
                   setCategoryMenuOpen(false)
+                  setReviewMenuOpen(false)
                   setFiltersOpen(false)
                 }}
                 className={cn(
@@ -441,39 +615,100 @@ export default function SearchResults({
             <DialogTitle className="text-center text-[16px] font-semibold">Filters</DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-col gap-3 px-6 py-6">
-            <h3 className="text-[18px] font-semibold text-foreground">Price range</h3>
-            <p className="text-[14px] text-muted-foreground">From-price per booking (SEK)</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="price-min" className="text-[12px] text-muted-foreground">
-                  Minimum
-                </Label>
-                <input
-                  id="price-min"
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  value={draftPriceMin}
-                  onChange={e => setDraftPriceMin(e.target.value)}
-                  placeholder="0"
-                  className="h-12 rounded-xl border border-input px-4 text-[15px] text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-                />
+          <div className="flex flex-col gap-8 px-6 py-6">
+            <div className="flex flex-col gap-3">
+              <h3 className="text-[18px] font-semibold text-foreground">Price range</h3>
+              <p className="text-[14px] text-muted-foreground">From-price per booking (SEK)</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="price-min" className="text-[12px] text-muted-foreground">
+                    Minimum
+                  </Label>
+                  <input
+                    id="price-min"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={draftPriceMin}
+                    onChange={e => setDraftPriceMin(e.target.value)}
+                    placeholder="0"
+                    className="h-12 rounded-xl border border-input px-4 text-[15px] text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="price-max" className="text-[12px] text-muted-foreground">
+                    Maximum
+                  </Label>
+                  <input
+                    id="price-max"
+                    type="number"
+                    min={0}
+                    inputMode="numeric"
+                    value={draftPriceMax}
+                    onChange={e => setDraftPriceMax(e.target.value)}
+                    placeholder="Any"
+                    className="h-12 rounded-xl border border-input px-4 text-[15px] text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
+                  />
+                </div>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="price-max" className="text-[12px] text-muted-foreground">
-                  Maximum
-                </Label>
-                <input
-                  id="price-max"
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  value={draftPriceMax}
-                  onChange={e => setDraftPriceMax(e.target.value)}
-                  placeholder="Any"
-                  className="h-12 rounded-xl border border-input px-4 text-[15px] text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
-                />
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h3 className="text-[18px] font-semibold text-foreground">Kan resa</h3>
+              <p className="text-[14px] text-muted-foreground">
+                Visa bara talanger som kan resa till dig.
+              </p>
+              <button
+                type="button"
+                onClick={() => setDraftCanTravelOnly(v => !v)}
+                className={cn(
+                  'flex items-center justify-between rounded-2xl border px-4 py-4 text-left transition-colors',
+                  draftCanTravelOnly
+                    ? 'border-foreground bg-muted/40'
+                    : 'border-border hover:border-foreground'
+                )}
+              >
+                <span className="text-[15px] font-medium text-foreground">Endast kan resa</span>
+                <span
+                  className={cn(
+                    'relative h-6 w-11 rounded-full transition-colors',
+                    draftCanTravelOnly ? 'bg-foreground' : 'bg-border'
+                  )}
+                  aria-hidden
+                >
+                  <span
+                    className={cn(
+                      'absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-transform',
+                      draftCanTravelOnly ? 'left-[22px]' : 'left-0.5'
+                    )}
+                  />
+                </span>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h3 className="text-[18px] font-semibold text-foreground">Omdömen</h3>
+              <p className="text-[14px] text-muted-foreground">
+                Filtrera på betyg och antal omdömen.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {REVIEW_FILTER_OPTIONS.map(o => (
+                  <Button
+                    key={o.key}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDraftReviewFilter(o.key)}
+                    className={cn(
+                      'h-9 rounded-full border px-3.5 text-[13px] font-medium shadow-none',
+                      draftReviewFilter === o.key
+                        ? 'border-foreground bg-background'
+                        : 'border-border hover:border-foreground'
+                    )}
+                  >
+                    {o.label}
+                  </Button>
+                ))}
               </div>
             </div>
           </div>
@@ -482,7 +717,7 @@ export default function SearchResults({
             <Button
               type="button"
               variant="link"
-              onClick={clearPriceFilters}
+              onClick={clearAllFilters}
               className="h-auto p-0 underline"
             >
               Clear all
@@ -496,12 +731,12 @@ export default function SearchResults({
 
       <div className={`${RESULTS_SHELL} py-6 md:py-8`}>
         <h1 className="mb-6 text-[20px] font-semibold tracking-[-0.02em] text-foreground md:text-[22px]">
-          Utforska {filtered.length} {headingNoun}
+          Utforska {totalCount} {headingNoun}
           {occasionLabel ? ` till ${occasionLabel.toLowerCase()}` : ''}
-          {locationLabel ? ` i ${locationLabel}` : ''}
+          {locationId ? ` i ${locationLabel}` : ''}
         </h1>
 
-        {filtered.length === 0 ? (
+        {totalCount === 0 ? (
           <div className="py-24 text-center">
             <p className="mb-4 text-4xl">🎭</p>
             <p className="mb-2 text-lg font-semibold text-foreground">Inga resultat</p>
@@ -510,33 +745,82 @@ export default function SearchResults({
             </p>
           </div>
         ) : (
-          /*
-            Live --svc-grid_columns: 2 → 3 → 4 → 5
-            column-gap 16 → 24 → 32 · row-gap 24 → 32 → 40
-          */
-          <div className="grid grid-cols-1 gap-x-4 gap-y-6 min-[667px]:grid-cols-2 min-[744px]:gap-y-8 min-[950px]:grid-cols-3 min-[950px]:gap-x-8 min-[1128px]:grid-cols-4 min-[1128px]:gap-x-6 min-[1128px]:gap-y-8 min-[1440px]:grid-cols-5 min-[1440px]:gap-y-10">
-            {filtered.map(provider => (
-              <ListingCard
-                key={provider.id}
-                isLoggedIn={isLoggedIn}
-                plannerId={plannerId}
-                data={{
-                  id: provider.id,
-                  title: provider.title,
-                  city: provider.city,
-                  photos: provider.photos,
-                  category_slug: provider.category_slug,
-                  category_tags: provider.category_tags,
-                  users: provider.users,
-                  avgRating: provider.avgRating,
-                  reviewCount: provider.reviewCount,
-                  price_range_min: provider.price_range_min ?? null,
-                }}
-              />
-            ))}
+          <div className="space-y-12">
+            {locationId && local.length === 0 && travelers.length > 0 ? (
+              <p className="text-[14px] text-muted-foreground">
+                Inga lokala träffar i {locationLabel} — här är talanger som kan resa hit.
+              </p>
+            ) : null}
+
+            {local.length > 0 && (
+              <section>
+                {locationId && travelers.length > 0 ? (
+                  <h2 className="mb-5 text-[16px] font-semibold text-foreground md:text-[18px]">
+                    Lokalt i {locationLabel}
+                  </h2>
+                ) : null}
+                <ResultsGrid
+                  providers={local}
+                  isLoggedIn={isLoggedIn}
+                  plannerId={plannerId}
+                />
+              </section>
+            )}
+
+            {locationId && travelers.length > 0 ? (
+              <section>
+                <div className="mb-5">
+                  <h2 className="text-[16px] font-semibold text-foreground md:text-[18px]">
+                    Kan resa hit
+                  </h2>
+                  <p className="mt-1 text-[14px] text-muted-foreground">
+                    Talanger från andra städer som kan komma till {locationLabel}.
+                  </p>
+                </div>
+                <ResultsGrid
+                  providers={travelers}
+                  isLoggedIn={isLoggedIn}
+                  plannerId={plannerId}
+                />
+              </section>
+            ) : null}
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function ResultsGrid({
+  providers,
+  isLoggedIn,
+  plannerId,
+}: {
+  providers: Provider[]
+  isLoggedIn: boolean
+  plannerId: string | null
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-x-4 gap-y-6 min-[667px]:grid-cols-2 min-[744px]:gap-y-8 min-[950px]:grid-cols-3 min-[950px]:gap-x-8 min-[1128px]:grid-cols-4 min-[1128px]:gap-x-6 min-[1128px]:gap-y-8 min-[1440px]:grid-cols-5 min-[1440px]:gap-y-10">
+      {providers.map(provider => (
+        <ListingCard
+          key={provider.id}
+          isLoggedIn={isLoggedIn}
+          plannerId={plannerId}
+          data={{
+            id: provider.id,
+            title: provider.title,
+            city: provider.city,
+            photos: provider.photos,
+            category_slug: provider.category_slug,
+            category_tags: provider.category_tags,
+            users: provider.users,
+            avgRating: provider.avgRating,
+            reviewCount: provider.reviewCount,
+            price_range_min: provider.price_range_min ?? null,
+          }}
+        />
+      ))}
     </div>
   )
 }

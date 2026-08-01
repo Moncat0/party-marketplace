@@ -45,8 +45,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { getCancellationPolicy } from '@/lib/cancellation-policies'
-
 type Profile = {
   id: string
   user_id: string
@@ -56,9 +54,10 @@ type Profile = {
   category_tags: string[]
   occasions: string[]
   city: string | null
+  hostBasedIn?: string | null
+  can_travel?: boolean
   price_range_min: number | null
   price_range_max: number | null
-  cancellation_policy?: string | null
   photos: string[]
   users: { name: string | null; avatar_url: string | null } | null
   bio: string | null
@@ -72,6 +71,9 @@ type Props = {
   reviews: ListingReview[]
   avgRating: number | null
   reviewCount: number
+  /** Host-level aggregate (all services via reviewee_id) */
+  hostAvgRating?: number | null
+  hostReviewCount?: number
   currentUserId: string | null
   isSaved: boolean
   similarServices: ListingCardData[]
@@ -90,6 +92,8 @@ export default function ServiceProfile({
   reviews,
   avgRating,
   reviewCount,
+  hostAvgRating = null,
+  hostReviewCount = 0,
   currentUserId,
   isSaved,
   similarServices,
@@ -358,11 +362,10 @@ export default function ServiceProfile({
           ? `Upp till ${profile.price_range_max.toLocaleString('sv-SE')} kr`
           : null
 
-  const cancelPolicy = getCancellationPolicy(profile.cancellation_policy)
   const photos = profile.photos ?? []
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white pb-24 md:pb-0">
       {fromWizard ? (
         <WizardNavHeader exitHref={wizardExitHref} exitLabel="Avsluta" />
       ) : (
@@ -410,6 +413,7 @@ export default function ServiceProfile({
                 occasions={profile.occasions}
                 description={profile.description}
                 city={profile.city}
+                canTravel={!!profile.can_travel}
                 serviceTitle={profile.title}
                 reviewCount={reviewCount}
                 avgRating={avgRating}
@@ -453,19 +457,11 @@ export default function ServiceProfile({
               hostName={profile.users?.name ?? null}
               hostAvatar={profile.users?.avatar_url ?? null}
               bio={profile.bio}
-              city={profile.city}
+              city={profile.hostBasedIn ?? profile.city}
               memberSince={profile.memberSince}
-              reviewCount={reviewCount}
-              avgRating={avgRating}
+              reviewCount={hostReviewCount}
+              avgRating={hostAvgRating}
             />
-
-            {cancelPolicy && (
-              <section className="border-t border-[#ebebeb] py-8">
-                <h2 className="text-[22px] font-semibold text-[#222222]">Avbokningspolicy</h2>
-                <p className="mt-2 text-[16px] font-medium text-[#222222]">{cancelPolicy.label}</p>
-                <p className="mt-1 text-[15px] leading-relaxed text-[#6a6a6a]">{cancelPolicy.detail}</p>
-              </section>
-            )}
 
             <ListingReviews
               reviews={reviews}
@@ -493,6 +489,25 @@ export default function ServiceProfile({
       ) : null}
 
       {!fromWizard ? <SiteFooter isLoggedIn={!!currentUserId} /> : null}
+
+      {/* Mobile sticky CTA — booking form sits above Meet/Reviews on small screens */}
+      {!isPreview && !fromWizard ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#ebebeb] bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:hidden">
+          <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
+            <div className="min-w-0">
+              {priceLabel ? (
+                <p className="truncate text-[15px] font-semibold text-[#222222]">{priceLabel}</p>
+              ) : (
+                <p className="text-[15px] font-semibold text-[#222222]">Skicka förfrågan</p>
+              )}
+              <p className="text-[12px] text-[#6a6a6a]">Ingen betalning ännu</p>
+            </div>
+            <Button asChild className="h-12 shrink-0 rounded-xl px-5 font-semibold">
+              <a href="#forfragan">Förfrågan</a>
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {showAllPhotos && (
         <div className="fixed inset-0 z-50 bg-black/90 overflow-y-auto p-6">

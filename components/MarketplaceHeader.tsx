@@ -251,67 +251,80 @@ export default function MarketplaceHeader({
         {subnav ? (
           /*
             Results header (Airbnb): one chrome block.
-            1fr | auto | 1fr keeps search+filters as a compact centered unit —
-            not a full-bleed second strip under the top row.
-            When search expands to the homepage pill, grow to homepage row height
-            so the nav doesn't stay (or shrink further) on the compact strip.
+            Mobile: stack logo/menu, then full-width search+filters.
+            Desktop: 1fr | auto | 1fr keeps search+filters as a compact centered unit.
           */
           <div
             className={cn(
-              'grid grid-cols-[1fr_auto_1fr] gap-x-3 transition-[padding,min-height] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+              'flex flex-col gap-2 py-2.5 transition-[padding,min-height] duration-300 ease-[cubic-bezier(0.2,0,0,1)] md:grid md:grid-cols-[1fr_auto_1fr] md:gap-x-3 md:gap-y-0',
               searchExpanded
-                ? 'items-center py-4 min-h-20 min-[1440px]:min-h-24'
-                : 'items-start py-2.5'
+                ? 'md:items-center md:py-4 md:min-h-20 min-[1440px]:md:min-h-24'
+                : 'md:items-start'
             )}
           >
             <div
               className={cn(
-                'flex items-center justify-start',
-                searchExpanded ? 'min-h-16' : 'h-12'
+                'flex h-12 items-center justify-between md:justify-start',
+                searchExpanded && 'md:min-h-16'
               )}
             >
               <Link href="/" className={siteLogoClass}>
                 FESTEN.
               </Link>
+              <div className="md:hidden">{rightChrome}</div>
             </div>
 
-            <div className="flex min-w-0 max-w-[min(100vw-2rem,840px)] flex-col items-center gap-2">
+            <div className="flex w-full min-w-0 flex-col items-stretch gap-2 md:max-w-[min(100vw-2rem,840px)] md:items-center">
               {center}
               {subnav}
             </div>
 
             <div
               className={cn(
-                'flex items-center justify-end',
-                searchExpanded ? 'min-h-16' : 'h-12'
+                'hidden items-center justify-end md:flex',
+                searchExpanded ? 'md:min-h-16' : 'h-12'
               )}
             >
               {rightChrome}
             </div>
           </div>
         ) : (
-          <div
-            className={siteHeaderRow}
-            style={{
-              transition: 'height 280ms cubic-bezier(0.2, 0, 0, 1)',
-            }}
-          >
-            <div className="relative z-[2] flex-shrink-0 bg-background">
-              <Link href="/" className={siteLogoClass}>
-                FESTEN.
-              </Link>
+          <>
+            {/* Mobile: logo row, then full-width search so it never sits under chrome */}
+            <div className="flex flex-col gap-2 py-2.5 md:hidden">
+              <div className="flex h-12 items-center justify-between">
+                <Link href="/" className={siteLogoClass}>
+                  FESTEN.
+                </Link>
+                {rightChrome}
+              </div>
+              {center ? <div className="w-full min-w-0">{center}</div> : null}
             </div>
 
-            {center && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center z-0">
-                <div className="pointer-events-auto w-full max-w-[850px] flex justify-center px-2">
-                  {center}
-                </div>
+            {/* Desktop: optically centered search between logo and menu */}
+            <div
+              className={cn(siteHeaderRow, 'hidden md:flex')}
+              style={{
+                transition: 'height 280ms cubic-bezier(0.2, 0, 0, 1)',
+              }}
+            >
+              <div className="relative z-[2] flex-shrink-0 bg-background">
+                <Link href="/" className={siteLogoClass}>
+                  FESTEN.
+                </Link>
               </div>
-            )}
 
-            <div className="relative z-[2] ml-auto flex-shrink-0 bg-background">{rightChrome}</div>
-          </div>
+              {center && (
+                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center">
+                  <div className="pointer-events-auto flex w-full max-w-[850px] justify-center px-2">
+                    {center}
+                  </div>
+                </div>
+              )}
+
+              <div className="relative z-[2] ml-auto flex-shrink-0 bg-background">{rightChrome}</div>
+            </div>
+          </>
         )}
 
         {open && menuStyle && (

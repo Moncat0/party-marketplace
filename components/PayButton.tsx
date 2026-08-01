@@ -35,10 +35,9 @@ export default function PayButton({ bookingId, priceOre }: { bookingId: string; 
     <div>
       <Button
         type="button"
-        size="sm"
         onClick={handlePay}
         disabled={loading}
-        className="rounded-xl bg-success hover:bg-success/90 text-white"
+        className="h-12 w-full rounded-xl bg-success text-[15px] font-semibold text-white hover:bg-success/90 sm:w-auto sm:min-w-[160px]"
       >
         {loading ? '...' : `Betala ${priceSek} kr →`}
       </Button>

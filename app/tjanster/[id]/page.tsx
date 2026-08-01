@@ -7,6 +7,7 @@ import { formatCategoryFromSlug, resolveCategorySlug } from '@/lib/categories'
 import { formatEventType } from '@/lib/event-types'
 import { normalizeOccasions } from '@/lib/occasions'
 import { HOST_USERS_SELECT, hostDisplayName, hostUserForDisplay } from '@/lib/host-display-name'
+import { getHostReviewStats } from '@/lib/host-reviews'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   const supabase = await createClient()
@@ -80,7 +81,7 @@ export default async function ServicePage({
   const { data: service } = await supabase
     .from('services')
     .select(
-      `*, provider_profiles(id, user_id, bio, created_at, users(${HOST_USERS_SELECT}))`
+      `*, provider_profiles(id, user_id, bio, city, location_id, created_at, users(${HOST_USERS_SELECT}))`
     )
     .eq('id', params.id)
     .single()
@@ -132,9 +133,10 @@ export default async function ServicePage({
     category_tags: service.category_tags ?? [],
     occasions: normalizeOccasions(service.occasions),
     city: service.city,
+    hostBasedIn: provider?.city ?? service.city ?? null,
+    can_travel: !!service.can_travel,
     price_range_min: service.price_range_min,
     price_range_max: service.price_range_max,
-    cancellation_policy: service.cancellation_policy ?? null,
     photos: service.photos ?? [],
     users: hostUserForDisplay(hostUser),
     bio: provider?.bio ?? null,
@@ -189,6 +191,10 @@ export default async function ServicePage({
     reviews && reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
       : null
+
+  const hostReviewStats = provider?.user_id
+    ? await getHostReviewStats(supabase, provider.user_id)
+    : { avgRating: null, reviewCount: 0 }
 
   let isSaved = false
   if (user) {
@@ -301,6 +307,8 @@ export default async function ServicePage({
       reviews={normalizedReviews}
       avgRating={avgRating}
       reviewCount={reviews?.length ?? 0}
+      hostAvgRating={hostReviewStats.avgRating}
+      hostReviewCount={hostReviewStats.reviewCount}
       currentUserId={user?.id ?? null}
       isSaved={isSaved}
       similarServices={previewMode === 'live' ? similarServices : []}

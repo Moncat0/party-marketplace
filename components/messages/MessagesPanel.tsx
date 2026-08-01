@@ -311,7 +311,7 @@ export default function MessagesPanel({
     <>
       {/* Mobile */}
       <div
-        className={`lg:hidden flex flex-col ${fillParent ? 'h-full min-h-0' : 'min-h-[calc(100vh-5rem)]'}`}
+        className={`lg:hidden flex flex-col ${fillParent ? 'h-full min-h-0' : 'min-h-[calc(100dvh-5rem)]'}`}
       >
         {sidebar}
       </div>
@@ -540,11 +540,11 @@ function ModalShell({
   wide?: boolean
 }) {
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center sm:px-4">
       <button type="button" className="absolute inset-0 bg-black/45" aria-label="Stäng" onClick={onClose} />
       <div
-        className={`relative w-full bg-white shadow-xl ${wide ? 'max-w-lg' : 'max-w-md'}`}
-        style={{ borderRadius: 16, maxHeight: '85vh', overflow: 'auto' }}
+        className={`relative w-full bg-white shadow-xl ${wide ? 'max-w-lg' : 'max-w-md'} rounded-t-2xl sm:rounded-2xl max-h-[min(92dvh,100%)] overflow-auto pb-[env(safe-area-inset-bottom)] sm:pb-0`}
+        style={{ maxHeight: 'min(92dvh, 100%)' }}
       >
         <div className="sticky top-0 bg-white flex items-center justify-center px-4 py-4 border-b border-[#ebebeb]">
           <h2 className="text-[16px] font-semibold text-[#222222]">{title}</h2>

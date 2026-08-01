@@ -19,14 +19,12 @@ export default function GuestAppChrome({
   className = '',
 }: Props) {
   return (
-    <div className={`min-h-screen bg-white ${className}`}>
+    <div className={`flex min-h-dvh flex-col bg-white ${className}`}>
       <MarketplaceHeader currentMode={currentMode} />
       {flush ? (
-        <div className="h-[calc(100vh-5rem)] min-h-0 overflow-hidden min-[1440px]:h-[calc(100vh-6rem)]">
-          {children}
-        </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
       ) : (
-        <main className="mx-auto max-w-[1120px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        <main className="mx-auto w-full max-w-[1120px] flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
           {children}
         </main>
       )}

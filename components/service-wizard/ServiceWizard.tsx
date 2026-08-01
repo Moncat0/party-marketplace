@@ -6,7 +6,8 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { track } from '@/lib/posthog'
 import { CATEGORIES, categoryTagsFromSlug, type CategorySlug } from '@/lib/categories'
-import { LOCATIONS, getLocationLabel } from '@/lib/locations'
+import { DEFAULT_LOCATION_ID, LOCATIONS, getLocationLabel } from '@/lib/locations'
+import LocationSelect from '@/components/ui/LocationSelect'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,7 +21,6 @@ import { buildDisplayName } from '@/lib/profile-completeness'
 import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle } from 'lucide-react'
-import { CANCELLATION_POLICIES, type CancellationPolicyId } from '@/lib/cancellation-policies'
 import {
   type AccountWizardDraft,
   type FirstPublishStep,
@@ -53,7 +53,7 @@ type ServiceSeed = {
   photos: string[] | null
   price_range_min: number | null
   price_range_max: number | null
-  cancellation_policy?: string | null
+  can_travel?: boolean | null
   is_published: boolean
   created_at: string
 }
@@ -77,6 +77,7 @@ type Props = {
   /** Prefer DB truth over prefilled OAuth name for skipping steps */
   accountNeedsName?: boolean
   accountNeedsBio?: boolean
+  accountNeedsBasedIn?: boolean
   /** Required to publish — mirrors users.email_verified_at */
   emailVerified?: boolean
   /**
@@ -99,6 +100,7 @@ export default function ServiceWizard({
   initialAccount,
   accountNeedsName,
   accountNeedsBio,
+  accountNeedsBasedIn,
   emailVerified = false,
   previewMode = false,
   previewStep,
@@ -116,6 +118,8 @@ export default function ServiceWizard({
   const needsName =
     accountNeedsName ?? !(initialAccount?.firstName ?? '').trim()
   const needsBio = accountNeedsBio ?? !(initialAccount?.bio ?? '').trim()
+  const needsBasedIn =
+    accountNeedsBasedIn ?? !(initialAccount?.basedInLocationId ?? '').trim()
   const [step, setStep] = useState<FirstPublishStep>(() => {
     if (previewMode && previewStep) {
       if (includeAccountSteps || isServiceWizardStep(previewStep)) {
@@ -127,6 +131,7 @@ export default function ServiceWizard({
       return resumeFirstPublishStep({
         needsName,
         needsBio,
+        needsBasedIn,
         draft: initialDraft,
         resumeListing: resume,
       })
@@ -164,7 +169,9 @@ export default function ServiceWizard({
       ? 'name'
       : needsBio
         ? 'bio'
-        : 'intro1'
+        : needsBasedIn
+          ? 'basedIn'
+          : 'intro1'
     : 'intro1'
 
   const persist = useCallback(
@@ -184,7 +191,7 @@ export default function ServiceWizard({
           location_id: draft.locationId,
           price_range_min: draft.priceMin ? Number(draft.priceMin) : null,
           price_range_max: draft.priceMax ? Number(draft.priceMax) : null,
-          cancellation_policy: draft.cancellationPolicy,
+          can_travel: draft.canTravel,
           photos: draft.photos,
           is_published: opts?.publish ? true : false,
           ...(opts?.publish ? { is_disabled: false } : {}),
@@ -236,6 +243,32 @@ export default function ServiceWizard({
     if (trimmed) {
       track('profile_details_completed', { fields: ['bio'], role: 'provider' })
     }
+  }
+
+  async function persistAccountBasedIn(): Promise<void> {
+    const locationId = account.basedInLocationId || DEFAULT_LOCATION_ID
+    const city = getLocationLabel(locationId)
+    const { data: existing } = await supabase
+      .from('provider_profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (existing) {
+      const { error } = await supabase
+        .from('provider_profiles')
+        .update({ location_id: locationId, city })
+        .eq('user_id', userId)
+      if (error) throw error
+    } else {
+      const { error } = await supabase.from('provider_profiles').insert({
+        user_id: userId,
+        location_id: locationId,
+        city,
+      })
+      if (error) throw error
+    }
+    track('profile_details_completed', { fields: ['based_in'], role: 'provider' })
   }
 
   async function handleSaveExit() {
@@ -311,6 +344,20 @@ export default function ServiceWizard({
       setSaving(true)
       try {
         await persistAccountBio()
+        const n = includeAccountSteps ? nextFirstPublishStep(step) : null
+        if (n) setStep(n)
+      } catch {
+        setError('Kunde inte spara. Försök igen.')
+      } finally {
+        setSaving(false)
+      }
+      return
+    }
+
+    if (step === 'basedIn') {
+      setSaving(true)
+      try {
+        await persistAccountBasedIn()
         const n = includeAccountSteps ? nextFirstPublishStep(step) : null
         if (n) setStep(n)
       } catch {
@@ -556,6 +603,12 @@ export default function ServiceWizard({
               onSkip={() => void handleNext()}
             />
           )}
+          {step === 'basedIn' && (
+            <ProviderBasedInStep
+              locationId={account.basedInLocationId}
+              onChange={basedInLocationId => setAccount(a => ({ ...a, basedInLocationId }))}
+            />
+          )}
           {step === 'intro1' && <Intro1 phaseNumber={1 + listingPhaseOffset} />}
           {step === 'title' && (
             <TitleStep
@@ -605,7 +658,7 @@ export default function ServiceWizard({
             <PriceStep
               priceMin={draft.priceMin}
               priceMax={draft.priceMax}
-              cancellationPolicy={draft.cancellationPolicy}
+              canTravel={draft.canTravel}
               onChange={patch => setDraft(prev => ({ ...prev, ...patch }))}
             />
           )}
@@ -664,7 +717,8 @@ function ProviderNameStep({
         Vad ska gäster kalla dig?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Ditt namn syns på dina tjänster under “Träffa din leverantör” och i meddelanden.
+        Förnamnet blir ditt föredragna namn på FESTEN — det syns under “Träffa din leverantör” på
+        dina tjänster och i chatten med planerare.
       </p>
       <div className="mt-8 space-y-5">
         <div className="space-y-2">
@@ -699,6 +753,30 @@ function ProviderNameStep({
   )
 }
 
+function ProviderBasedInStep({
+  locationId,
+  onChange,
+}: {
+  locationId: string
+  onChange: (id: string) => void
+}) {
+  return (
+    <div>
+      <p className="text-[16px] font-medium text-[#222222]">Steg 1</p>
+      <h1 className="mt-3 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+        Var är du baserad?
+      </h1>
+      <p className="mt-2 text-[15px] text-[#6a6a6a]">
+        Din basstad ligger på din profil. Planerare använder den för att hitta lokal talent —
+        tillsammans med om dina tjänster kan resa.
+      </p>
+      <div className="mt-8">
+        <LocationSelect value={locationId} onChange={onChange} showComingSoon />
+      </div>
+    </div>
+  )
+}
+
 function ProviderBioStep({
   firstName,
   bio,
@@ -717,7 +795,8 @@ function ProviderBioStep({
         Berätta kort om dig
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Visas under “Träffa din leverantör” på dina tjänster. Du kan ändra det senare.
+        Din bio hör till din värdprofil (inte en enskild tjänst). Planerare läser den under
+        “Träffa din leverantör” för att känna dig trygg. Du kan ändra den senare under Min profil.
       </p>
       <div className="mt-8 space-y-3">
         <Label htmlFor="wizard-bio" className="text-[14px] font-medium text-[#222222]">
@@ -890,7 +969,8 @@ function LocationStep({
         Var erbjuder du din tjänst?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Vi lanserar i Stockholm. Fler städer kommer snart.
+        Primär plats för den här tjänsten. Under prissteget kan du välja om du också kan resa.
+        Vi lanserar i Stockholm — fler städer kommer snart.
       </p>
       <div className="mt-8 space-y-3">
         {LOCATIONS.map(loc => {
@@ -1178,14 +1258,14 @@ function PhotoUploadModal({
 function PriceStep({
   priceMin,
   priceMax,
-  cancellationPolicy,
+  canTravel,
   onChange,
 }: {
   priceMin: string
   priceMax: string
-  cancellationPolicy: CancellationPolicyId | null
+  canTravel: boolean
   onChange: (
-    p: Partial<Pick<ServiceWizardDraft, 'priceMin' | 'priceMax' | 'cancellationPolicy'>>
+    p: Partial<Pick<ServiceWizardDraft, 'priceMin' | 'priceMax' | 'canTravel'>>
   ) => void
 }) {
   return (
@@ -1229,38 +1309,32 @@ function PriceStep({
         </label>
       </div>
 
-      <h2 className="mt-10 text-[20px] font-semibold text-[#222222]">Avbokningspolicy</h2>
+      <h2 className="mt-10 text-[20px] font-semibold text-[#222222]">Kan resa</h2>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Välj hur återbetalning fungerar om planeraren avbokar. Visas på din tjänst och i offerter.
+        Visa dig i sökningar utanför din basstad när planerare filtrerar på plats — du dyker upp
+        tillsammans med lokala träffar.
       </p>
-      <fieldset className="mt-5 space-y-3">
-        {CANCELLATION_POLICIES.map(policy => {
-          const selected = cancellationPolicy === policy.id
-          return (
-            <label
-              key={policy.id}
-              className={cn(
-                'flex cursor-pointer gap-3 rounded-2xl border px-4 py-4 transition-colors',
-                selected ? 'border-[#222222] bg-[#f7f7f7]' : 'border-[#dddddd] hover:border-[#b0b0b0]'
-              )}
-            >
-              <input
-                type="radio"
-                name="cancellation_policy"
-                className="mt-1"
-                checked={selected}
-                onChange={() => onChange({ cancellationPolicy: policy.id })}
-              />
-              <span>
-                <span className="block text-[16px] font-semibold text-[#222222]">{policy.label}</span>
-                <span className="mt-1 block text-[14px] leading-[1.4] text-[#6a6a6a]">
-                  {policy.short}
-                </span>
-              </span>
-            </label>
-          )
-        })}
-      </fieldset>
+      <label
+        className={cn(
+          'mt-5 flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-4 transition-colors',
+          canTravel ? 'border-[#222222] bg-[#f7f7f7]' : 'border-[#dddddd] hover:border-[#b0b0b0]'
+        )}
+      >
+        <input
+          type="checkbox"
+          className="mt-1"
+          checked={canTravel}
+          onChange={e => onChange({ canTravel: e.target.checked })}
+        />
+        <span>
+          <span className="block text-[16px] font-semibold text-[#222222]">
+            Jag kan resa till andra städer
+          </span>
+          <span className="mt-1 block text-[14px] leading-[1.4] text-[#6a6a6a]">
+            På tjänsten visas “Kan resa”. Annars “Endast lokalt”.
+          </span>
+        </span>
+      </label>
     </div>
   )
 }
@@ -1343,9 +1417,7 @@ function PublishStep({
           ) : null}
           <p className="text-[14px] text-[#6a6a6a]">
             {draft.priceMin}–{draft.priceMax} kr ·{' '}
-            {CANCELLATION_POLICIES.find(p => p.id === draft.cancellationPolicy)?.label ??
-              'Ingen avbokningspolicy'}{' '}
-            · {draft.photos.length} foto
+            {draft.canTravel ? 'Kan resa' : 'Endast lokalt'} · {draft.photos.length} foto
             {draft.photos.length === 1 ? '' : 'n'}
           </p>
         </div>

@@ -28,7 +28,7 @@ export default function ResultsSearchPill({
   return (
     <div
       className={cn(
-        'flex h-12 w-max max-w-[min(100vw-2rem,560px)] items-center rounded-full border border-[#DDDDDD] bg-background',
+        'flex h-12 w-full max-w-[min(100%,560px)] min-w-0 items-center rounded-full border border-[#DDDDDD] bg-background',
         'shadow-[0_1px_2px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.05)]',
         'transition-[box-shadow,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
         className
@@ -37,11 +37,12 @@ export default function ResultsSearchPill({
       <button
         type="button"
         onClick={() => onExpand?.('where')}
-        className="flex items-center gap-2 whitespace-nowrap rounded-l-full py-1.5 pl-3 pr-3.5 text-left transition-colors hover:bg-[#F7F7F7]"
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-l-full py-1.5 pl-3 pr-3.5 text-left transition-colors hover:bg-[#F7F7F7]"
       >
         <BellIcon />
-        <span className="text-[14px] font-semibold leading-none text-foreground">
-          Services in {locationLabel}
+        <span className="truncate text-[14px] font-semibold leading-none text-foreground">
+          <span className="hidden min-[400px]:inline">Services in </span>
+          {locationLabel}
         </span>
       </button>
 
@@ -50,9 +51,9 @@ export default function ResultsSearchPill({
       <button
         type="button"
         onClick={() => onExpand?.('service')}
-        className="whitespace-nowrap py-1.5 pl-3.5 pr-2.5 text-left transition-colors hover:bg-[#F7F7F7]"
+        className="min-w-0 max-w-[40%] truncate py-1.5 pl-3.5 pr-2.5 text-left transition-colors hover:bg-[#F7F7F7]"
       >
-        <span className="text-[14px] font-semibold leading-none text-foreground">
+        <span className="truncate text-[14px] font-semibold leading-none text-foreground">
           {serviceLabel}
         </span>
       </button>

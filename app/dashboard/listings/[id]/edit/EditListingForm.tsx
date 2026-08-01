@@ -24,12 +24,6 @@ import {
   getLocationLabel,
   locationIdFromCity,
 } from '@/lib/locations'
-import {
-  CANCELLATION_POLICIES,
-  isCancellationPolicyId,
-  type CancellationPolicyId,
-} from '@/lib/cancellation-policies'
-
 type Service = {
   id: string
   title: string | null
@@ -41,7 +35,7 @@ type Service = {
   location_id?: string | null
   price_range_min: number | null
   price_range_max: number | null
-  cancellation_policy?: string | null
+  can_travel?: boolean | null
   photos: string[] | null
 }
 
@@ -61,9 +55,7 @@ export default function EditListingForm({ service, userId }: { service: Service;
     location_id: service.location_id ?? locationIdFromCity(service.city) ?? DEFAULT_LOCATION_ID,
     price_range_min: service.price_range_min?.toString() ?? '',
     price_range_max: service.price_range_max?.toString() ?? '',
-    cancellation_policy: (isCancellationPolicyId(service.cancellation_policy)
-      ? service.cancellation_policy
-      : null) as CancellationPolicyId | null,
+    can_travel: !!service.can_travel,
     photos: service.photos ?? [],
   })
 
@@ -126,7 +118,7 @@ export default function EditListingForm({ service, userId }: { service: Service;
         location_id: form.location_id,
         price_range_min: form.price_range_min ? Number(form.price_range_min) : null,
         price_range_max: form.price_range_max ? Number(form.price_range_max) : null,
-        cancellation_policy: form.cancellation_policy,
+        can_travel: form.can_travel,
         photos: form.photos,
       })
       .eq('id', service.id)
@@ -287,41 +279,43 @@ export default function EditListingForm({ service, userId }: { service: Service;
             </div>
           </SettingsSection>
 
-          <SettingsSection
-            title="Avbokningspolicy"
-            description="Vad händer om planeraren avbokar? Visas på tjänsten och i offerter."
-          >
-            <div className="space-y-2">
-              {CANCELLATION_POLICIES.map(policy => {
-                const active = form.cancellation_policy === policy.id
-                return (
-                  <button
-                    key={policy.id}
-                    type="button"
-                    onClick={() =>
-                      setForm(prev => ({ ...prev, cancellation_policy: policy.id }))
-                    }
-                    className={cn(
-                      'w-full rounded-xl border px-4 py-3 text-left transition-colors',
-                      active
-                        ? 'border-[#222222] bg-[#f7f7f7]'
-                        : 'border-[#dddddd] hover:border-[#222222]'
-                    )}
-                  >
-                    <p className="text-[14px] font-semibold text-[#222222]">{policy.label}</p>
-                    <p className="mt-0.5 text-[13px] text-[#6a6a6a]">{policy.short}</p>
-                  </button>
-                )
-              })}
-            </div>
-          </SettingsSection>
-
           <SettingsSection title="Plats" description="Var erbjuder du din tjänst?">
             <LocationSelect
               value={form.location_id}
               onChange={location_id => setForm(prev => ({ ...prev, location_id }))}
               showComingSoon
             />
+          </SettingsSection>
+
+          <SettingsSection
+            title="Kan resa"
+            description="Visa dig i sökningar utanför din basstad när planerare filtrerar på plats."
+          >
+            <label
+              className={cn(
+                'flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 transition-colors',
+                form.can_travel
+                  ? 'border-[#222222] bg-[#f7f7f7]'
+                  : 'border-[#dddddd] hover:border-[#222222]'
+              )}
+            >
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={form.can_travel}
+                onChange={e =>
+                  setForm(prev => ({ ...prev, can_travel: e.target.checked }))
+                }
+              />
+              <span>
+                <span className="block text-[14px] font-semibold text-[#222222]">
+                  Jag kan resa till andra städer
+                </span>
+                <span className="mt-0.5 block text-[13px] text-[#6a6a6a]">
+                  På tjänsten visas “Kan resa”. Annars “Endast lokalt”.
+                </span>
+              </span>
+            </label>
           </SettingsSection>
         </div>
 

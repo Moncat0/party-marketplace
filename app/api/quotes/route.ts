@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 import { isMessagingAllowedStatus } from '@/lib/message-access'
 import { getCancellationPolicy, isCancellationPolicyId } from '@/lib/cancellation-policies'
+import { validateQuoteLockedFields } from '@/lib/quotes'
 import { trackServer } from '@/lib/track-server'
 
 export async function POST(request: NextRequest) {
@@ -32,7 +33,6 @@ export async function POST(request: NextRequest) {
       *,
       services!service_id(
         id,
-        cancellation_policy,
         provider_profiles(user_id, stripe_account_id, stripe_onboarded)
       )
     `
@@ -49,10 +49,17 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const locked = validateQuoteLockedFields(
+    { event_date: booking.event_date, event_location: booking.event_location },
+    { event_date, location }
+  )
+  if (!locked.ok) {
+    return NextResponse.json({ error: locked.error }, { status: 400 })
+  }
+
   const serviceRaw = booking.services as unknown
   const service = (Array.isArray(serviceRaw) ? serviceRaw[0] : serviceRaw) as {
     id: string
-    cancellation_policy: string | null
     provider_profiles:
       | { user_id: string; stripe_account_id: string | null; stripe_onboarded: boolean }
       | { user_id: string; stripe_account_id: string | null; stripe_onboarded: boolean }[]
@@ -81,17 +88,12 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const policyId = isCancellationPolicyId(cancellation_policy)
-    ? cancellation_policy
-    : isCancellationPolicyId(service?.cancellation_policy)
-      ? service!.cancellation_policy
-      : null
+  const policyId = isCancellationPolicyId(cancellation_policy) ? cancellation_policy : null
 
   if (!policyId) {
     return NextResponse.json(
       {
-        error:
-          'Välj en avbokningspolicy på tjänsten (Flexibel, Måttlig eller Strikt) innan du skickar offert.',
+        error: 'Välj en avbokningspolicy i offerten (Flexibel, Måttlig eller Strikt).',
         code: 'cancellation_policy_required',
       },
       { status: 400 }
@@ -109,8 +111,8 @@ export async function POST(request: NextRequest) {
       price_ore,
       description: description || null,
       duration: duration || null,
-      event_date: event_date || null,
-      location: location || null,
+      event_date: locked.event_date,
+      location: locked.location,
       cancellation_policy: policy?.detail ?? policyId,
       status: 'pending',
     })

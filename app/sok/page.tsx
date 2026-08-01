@@ -15,6 +15,8 @@ type Props = {
     occasion?: string
     q?: string
     sort?: string
+    travel?: string
+    rating?: string
   }
 }
 
@@ -42,7 +44,7 @@ export default async function SokPage({ searchParams }: Props) {
   const { data: services } = await supabase
     .from('services')
     .select(
-      `id, title, city, location_id, photos, category_slug, category_tags, occasions, created_at, price_range_min, provider_profiles(users(${HOST_USERS_SELECT})), reviews(rating)`
+      `id, title, city, location_id, can_travel, photos, category_slug, category_tags, occasions, created_at, price_range_min, provider_profiles(users(${HOST_USERS_SELECT})), reviews(rating)`
     )
     .eq('is_published', true)
     .eq('is_disabled', false)
@@ -64,6 +66,7 @@ export default async function SokPage({ searchParams }: Props) {
       title: s.title,
       city: s.city,
       location_id: s.location_id,
+      can_travel: !!s.can_travel,
       photos: s.photos ?? [],
       category_slug: s.category_slug ?? null,
       category_tags: s.category_tags ?? [],
@@ -86,6 +89,8 @@ export default async function SokPage({ searchParams }: Props) {
       initialOccasion={searchParams.occasion ?? null}
       initialQuery={searchParams.q ?? ''}
       initialSort={searchParams.sort ?? 'relevant'}
+      initialCanTravelOnly={searchParams.travel === '1'}
+      initialReviewFilter={searchParams.rating}
     />
   )
 }

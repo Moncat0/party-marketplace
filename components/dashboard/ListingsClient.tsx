@@ -106,7 +106,17 @@ export default function ListingsClient({
           ) : null}
         </div>
       ) : (
-        <ListingTable listings={listings} />
+        <>
+          {/* Force card grid on small screens — table is desktop-only */}
+          <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:hidden">
+            {listings.map(listing => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+          <div className="hidden md:block">
+            <ListingTable listings={listings} />
+          </div>
+        </>
       )}
     </div>
   )
@@ -287,6 +297,11 @@ function ListingActions({ listing }: { listing: HostListing }) {
       </div>
       {error ? <p className="text-[13px] text-[#c13515]">{error}</p> : null}
       {shareHint ? <p className="text-[13px] text-[#6a6a6a]">{shareHint}</p> : null}
+      {confirmDelete ? (
+        <p className="text-[12px] text-[#6a6a6a]">
+          Tipsa: pausa hellre än att ta bort. Omdömen behålls på din profil.
+        </p>
+      ) : null}
       {!live && listing.is_published === false ? (
         <p className="text-[12px] text-[#6a6a6a]">Publicera för att kunna dela länken.</p>
       ) : null}

@@ -9,6 +9,7 @@ import MessageThread from '@/app/booking/[id]/messages/MessageThread'
 import { fetchMessagesWithReadReceiptPrivacy } from '@/lib/messages-privacy'
 import { bookingOccasionLabel } from '@/lib/booking-labels'
 import { markThreadRead } from '@/lib/message-access'
+import { resolveBookingCancellationPolicyId } from '@/lib/booking-cancel'
 import {
   formatInboxLastText,
   loadInboxMessageMeta,
@@ -37,7 +38,7 @@ export default async function PlannerMessagesPage({
         `id, event_date, event_type, occasions, status, event_location, guest_count, description,
          price_ore, payment_status, created_at,
          services!service_id(
-           id, title, photos,
+           id, title, photos, cancellation_policy,
            provider_profiles(user_id, stripe_onboarded, users(name))
          )`
       )
@@ -58,6 +59,7 @@ export default async function PlannerMessagesPage({
       id: string
       title: string | null
       photos: string[] | null
+      cancellation_policy?: string | null
       provider_profiles:
         | {
             user_id: string
@@ -107,14 +109,26 @@ export default async function PlannerMessagesPage({
 
   if (active) {
     const otherUserId = active.profile?.user_id
-    const messages = otherUserId
-      ? await fetchMessagesWithReadReceiptPrivacy(
-          supabase,
-          active.booking.id,
-          user.id,
-          otherUserId
-        )
-      : []
+    const [{ data: quoteRows }, messages] = await Promise.all([
+      supabase
+        .from('quotes')
+        .select('status, cancellation_policy')
+        .eq('booking_request_id', active.booking.id),
+      otherUserId
+        ? fetchMessagesWithReadReceiptPrivacy(
+            supabase,
+            active.booking.id,
+            user.id,
+            otherUserId
+          )
+        : Promise.resolve([]),
+    ])
+
+    const acceptedQuote = (quoteRows ?? []).find(q => q.status === 'accepted')
+    const cancellationPolicyId = resolveBookingCancellationPolicyId({
+      acceptedQuotePolicy: acceptedQuote?.cancellation_policy,
+      servicePolicy: active.service?.cancellation_policy ?? null,
+    })
 
     embeddedThread = (
       <MessageThread
@@ -150,6 +164,7 @@ export default async function PlannerMessagesPage({
           description: active.booking.description,
           price_ore: active.booking.price_ore,
           payment_status: active.booking.payment_status,
+          cancellationPolicyId,
         }}
         side={{
           role: 'planner',

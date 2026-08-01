@@ -33,7 +33,7 @@ export function OverviewStatGrid({
   stats: { value: number; label: string; emphasize?: boolean }[]
 }) {
   return (
-    <div className="mb-8 grid grid-cols-3 gap-3 sm:gap-4">
+    <div className="mb-8 grid grid-cols-1 gap-3 min-[400px]:grid-cols-3 sm:gap-4">
       {stats.map(stat => (
         <div
           key={stat.label}

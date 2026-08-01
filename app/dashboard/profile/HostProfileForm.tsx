@@ -11,6 +11,8 @@ import SettingsButton from '@/components/settings/SettingsButton'
 import { Button } from '@/components/ui/button'
 import { settingsTokens as t } from '@/components/settings/tokens'
 import { hostDisplayName } from '@/lib/host-display-name'
+import LocationSelect from '@/components/ui/LocationSelect'
+import { DEFAULT_LOCATION_ID, getLocationLabel } from '@/lib/locations'
 
 type Props = {
   userId: string
@@ -19,6 +21,7 @@ type Props = {
   preferredFirstName: string
   avatarUrl: string | null
   bio: string
+  basedInLocationId: string | null
 }
 
 export default function HostProfileForm({
@@ -28,6 +31,7 @@ export default function HostProfileForm({
   preferredFirstName,
   avatarUrl,
   bio,
+  basedInLocationId,
 }: Props) {
   const supabase = createClient()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -35,6 +39,9 @@ export default function HostProfileForm({
   const initialPreferred = preferredFirstName.trim() || firstName.trim()
   const [preferred, setPreferred] = useState(initialPreferred)
   const [bioValue, setBioValue] = useState(bio)
+  const [locationId, setLocationId] = useState(
+    basedInLocationId?.trim() || DEFAULT_LOCATION_ID
+  )
   const [avatar, setAvatar] = useState(avatarUrl)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -93,9 +100,14 @@ export default function HostProfileForm({
     }
 
     const trimmedBio = bioValue.trim()
+    const nextLocationId = locationId || DEFAULT_LOCATION_ID
     const { error: bioError } = await supabase
       .from('provider_profiles')
-      .update({ bio: trimmedBio || null })
+      .update({
+        bio: trimmedBio || null,
+        location_id: nextLocationId,
+        city: getLocationLabel(nextLocationId),
+      })
       .eq('user_id', userId)
 
     if (bioError) {
@@ -106,6 +118,7 @@ export default function HostProfileForm({
 
     setPreferred(nextPreferred)
     setBioValue(trimmedBio)
+    setLocationId(nextLocationId)
     setMsg({ type: 'success', text: 'Profilen sparad!' })
     setSaving(false)
   }
@@ -219,6 +232,13 @@ export default function HostProfileForm({
           }}
         />
         <p className="mt-1.5 text-right text-[13px] text-[#929292]">{bioValue.trim().length}/600</p>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Baserad i"
+        description="Var du är baserad — planerare använder det för att hitta lokal talent."
+      >
+        <LocationSelect value={locationId} onChange={setLocationId} showComingSoon />
       </SettingsSection>
 
       <p className="text-[13px] leading-[1.4] text-[#6a6a6a]">

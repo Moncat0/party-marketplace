@@ -85,11 +85,26 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error('stripe connect failed', err)
 
-    const message =
-      err instanceof Stripe.errors.StripeInvalidRequestError &&
-      /signed up for Connect/i.test(err.message)
-        ? 'connect_not_enabled'
-        : 'error'
+    let message = 'error'
+    if (err instanceof Stripe.errors.StripeError) {
+      if (/signed up for Connect/i.test(err.message)) {
+        message = 'connect_not_enabled'
+      } else if (/No such account/i.test(err.message)) {
+        // Stale stripe_account_id in DB — clear and ask them to retry
+        if (profile.stripe_account_id) {
+          await supabase
+            .from('provider_profiles')
+            .update({ stripe_account_id: null, stripe_onboarded: false })
+            .eq('id', profile.id)
+          message = 'retry'
+        }
+      }
+      console.error('stripe connect detail', {
+        type: err.type,
+        code: err.code,
+        message: err.message,
+      })
+    }
 
     return NextResponse.redirect(
       `${SITE_URL}/dashboard/account?s=payments&stripe=${message}`

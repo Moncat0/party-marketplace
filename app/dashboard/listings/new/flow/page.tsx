@@ -53,7 +53,7 @@ export default async function NewServiceFlowPage({ searchParams }: Props) {
         photos: service.photos ?? [],
         price_range_min: service.price_range_min,
         price_range_max: service.price_range_max,
-        cancellation_policy: service.cancellation_policy ?? null,
+        can_travel: service.can_travel ?? false,
         is_published: service.is_published,
         created_at: service.created_at,
       }}

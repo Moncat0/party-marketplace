@@ -26,7 +26,7 @@ export const HOME_SHELL =
  * --explore_padding-inline: 24px (32px at larger breakpoints)
  */
 export const RESULTS_SHELL =
-  'mx-auto w-full max-w-[1920px] px-6 min-[744px]:px-8 min-[1128px]:px-10 min-[1440px]:px-12'
+  'mx-auto w-full max-w-[1920px] px-4 min-[375px]:px-6 min-[744px]:px-8 min-[1128px]:px-10 min-[1440px]:px-12'
 
 /** Airbnb --peek_* visible card counts by viewport. */
 function columnsForViewport(w: number) {
@@ -176,7 +176,7 @@ function ArrowBtn({
       aria-label={direction === 'prev' ? 'Föregående' : 'Nästa'}
       disabled={disabled}
       onClick={onClick}
-      className="h-8 w-8 rounded-full border-border bg-background text-foreground shadow-none hover:scale-105 hover:bg-background disabled:opacity-30 disabled:hover:scale-100"
+      className="h-10 w-10 rounded-full border-border bg-background text-foreground shadow-none hover:scale-105 hover:bg-background disabled:opacity-30 disabled:hover:scale-100"
     >
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
         <path

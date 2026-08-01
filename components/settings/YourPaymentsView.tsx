@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { settingsTokens as t } from '@/components/settings/tokens'
-import { paymentStatusLabelSv } from '@/lib/payments'
+import { paymentStatusLabelSv } from '@/lib/payment-status'
 
 export type PaymentRow = {
   id: string

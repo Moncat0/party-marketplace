@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import PayButton from '@/components/PayButton'
 import { Button } from '@/components/ui/button'
-import SettingsButton from '@/components/settings/SettingsButton'
+import CancelBookingModal from '@/components/bookings/CancelBookingModal'
 import { settingsTokens as t } from '@/components/settings/tokens'
 import { bookingOccasionLabel } from '@/lib/booking-labels'
+import type { CancellationPolicyId } from '@/lib/cancellation-policies'
 
 export type TripBooking = {
   id: string
@@ -17,6 +19,7 @@ export type TripBooking = {
   occasions?: string[] | null
   price_ore: number | null
   payment_status: string | null
+  cancellationPolicyId: CancellationPolicyId
   services: {
     id: string
     title: string | null
@@ -31,6 +34,7 @@ const STATUS_LABEL: Record<string, string> = {
   accepted: 'Bekräftad',
   declined: 'Avböjd',
   completed: 'Avslutad',
+  cancelled: 'Avbokad',
 }
 
 type Tab = 'upcoming' | 'past' | 'declined'
@@ -42,7 +46,7 @@ function startOfToday() {
 }
 
 function classify(booking: TripBooking, today: Date): Tab {
-  if (booking.status === 'declined') return 'declined'
+  if (booking.status === 'declined' || booking.status === 'cancelled') return 'declined'
   if (booking.event_date && new Date(booking.event_date) < today) return 'past'
   if (booking.status === 'completed') return 'past'
   return 'upcoming'
@@ -82,9 +86,18 @@ export default function TripsList({ bookings }: { bookings: TripBooking[] }) {
           </h1>
           <p className="text-[14px] text-[#6a6a6a] mt-2">{bookings.length} totalt</p>
         </div>
-        <Link href="/">
-          <SettingsButton size="sm">+ Boka ny talang</SettingsButton>
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/">
+            <Button variant="outline" size="sm" className="rounded-full border-[#dddddd]">
+              + Boka ny talang
+            </Button>
+          </Link>
+          <Link href="/planner/messages">
+            <Button variant="outline" size="sm" className="rounded-full border-[#dddddd]">
+              Öppna chatt
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div
@@ -130,7 +143,9 @@ export default function TripsList({ bookings }: { bookings: TripBooking[] }) {
           </p>
           {tab === 'upcoming' && (
             <Link href="/">
-              <SettingsButton>Hitta underhållning →</SettingsButton>
+              <Button variant="dark" size="sm" className="rounded-xl">
+                Hitta underhållning →
+              </Button>
             </Link>
           )}
         </div>
@@ -146,6 +161,8 @@ export default function TripsList({ bookings }: { bookings: TripBooking[] }) {
 }
 
 function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
+  const router = useRouter()
+  const [cancelOpen, setCancelOpen] = useState(false)
   const profile = booking.services
   const providerName = profile?.users?.name ?? profile?.title ?? 'Okänd'
   const photo = profile?.photos?.[0]
@@ -153,6 +170,7 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
   const canReview =
     (booking.status === 'accepted' || booking.status === 'completed') && eventPast
   const canChat = booking.status === 'accepted' || booking.status === 'completed'
+  const canCancel = booking.status === 'accepted'
   const needsPayment =
     booking.status === 'accepted' &&
     booking.payment_status === 'unpaid' &&
@@ -232,24 +250,37 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
           )}
           {canReview && (
             <Link href={`/review/${booking.id}`}>
-              <SettingsButton size="sm">Omdöme</SettingsButton>
+              <Button variant="outline" size="sm" className="rounded-full border-[#dddddd]">
+                Omdöme
+              </Button>
             </Link>
           )}
           {canChat && (
             <Link href={`/planner/messages?c=${booking.id}`}>
-              <SettingsButton size="sm" variant="secondary">
-                Chatt →
-              </SettingsButton>
+              <Button variant="outline" size="sm" className="rounded-full border-[#dddddd]">
+                Chatt
+              </Button>
             </Link>
+          )}
+          {canCancel && (
+            <Button
+              type="button"
+              variant="dangerOutline"
+              size="sm"
+              onClick={() => setCancelOpen(true)}
+              className="rounded-full"
+            >
+              Avboka
+            </Button>
           )}
           {booking.status === 'pending' && (
             <span className="text-[12px] text-[#6a6a6a]">Väntar på svar...</span>
           )}
           {booking.status === 'declined' && (
             <Link href="/">
-              <SettingsButton size="sm" variant="secondary">
+              <Button variant="outline" size="sm" className="rounded-full border-[#dddddd]">
                 Hitta annan →
-              </SettingsButton>
+              </Button>
             </Link>
           )}
           {profile?.id && (
@@ -262,6 +293,20 @@ function TripCard({ booking, today }: { booking: TripBooking; today: Date }) {
           )}
         </div>
       </div>
+
+      {canCancel && (
+        <CancelBookingModal
+          open={cancelOpen}
+          onOpenChange={setCancelOpen}
+          bookingId={booking.id}
+          role="planner"
+          eventDate={booking.event_date}
+          priceOre={booking.price_ore}
+          paymentStatus={booking.payment_status}
+          cancellationPolicyId={booking.cancellationPolicyId}
+          onSuccess={() => router.refresh()}
+        />
+      )}
     </article>
   )
 }

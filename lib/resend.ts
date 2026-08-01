@@ -133,6 +133,43 @@ export async function sendDataExportReady(
   })
 }
 
+export async function sendBookingCancelled(opts: {
+  to: string
+  recipientName: string
+  otherName: string
+  serviceTitle: string
+  bookingId: string
+  cancelledBy: 'planner' | 'provider'
+  refundOre: number
+}) {
+  const refundSek =
+    opts.refundOre > 0
+      ? Math.round(opts.refundOre / 100).toLocaleString('sv-SE')
+      : null
+  const byLabel = opts.cancelledBy === 'planner' ? 'Arrangören' : 'Talangen'
+  const messagesPath =
+    opts.cancelledBy === 'planner'
+      ? `${siteUrl()}/dashboard/messages?c=${opts.bookingId}`
+      : `${siteUrl()}/planner/messages?c=${opts.bookingId}`
+
+  await resend.emails.send({
+    from: FROM,
+    to: opts.to,
+    subject: `Avbokning: ${opts.serviceTitle}`,
+    html: `
+      <p>Hej ${escapeHtml(opts.recipientName)}!</p>
+      <p><strong>${escapeHtml(byLabel)}</strong> (${escapeHtml(opts.otherName)}) har avbokat bokningen för <strong>${escapeHtml(opts.serviceTitle)}</strong>.</p>
+      ${
+        refundSek
+          ? `<p>Återbetalning: <strong>${refundSek} kr</strong> (behandlas inom några bankdagar).</p>`
+          : '<p>Ingen återbetalning gäller enligt avbokningspolicyn.</p>'
+      }
+      <p><a href="${messagesPath}">Öppna konversationen →</a></p>
+      <p>/ FESTEN.</p>
+    `,
+  })
+}
+
 /** Receipt after escrow Checkout — Stripe holds funds on FESTEN. */
 export async function sendPaymentHeldReceipt(opts: {
   to: string

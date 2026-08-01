@@ -25,7 +25,7 @@ export default async function ProviderProfilePage({ searchParams }: Props) {
 
   const { data: provider } = await supabase
     .from('provider_profiles')
-    .select('id, bio')
+    .select('id, bio, location_id')
     .eq('user_id', user.id)
     .maybeSingle()
 
@@ -46,6 +46,7 @@ export default async function ProviderProfilePage({ searchParams }: Props) {
         preferredFirstName={userData?.preferred_first_name ?? ''}
         avatarUrl={userData?.avatar_url ?? null}
         bio={provider.bio ?? ''}
+        basedInLocationId={provider.location_id ?? null}
       />
     </ProviderHostShell>
   )
