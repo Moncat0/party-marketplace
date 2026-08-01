@@ -1,6 +1,18 @@
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+/** Strip quotes/newlines from pasted Vercel/.env values (avoids ERR_INVALID_CHAR on Authorization). */
+function stripeSecretKey(): string {
+  let key = (process.env.STRIPE_SECRET_KEY ?? '').trim()
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).trim()
+  }
+  return key.replace(/[\r\n]/g, '')
+}
+
+export const stripe = new Stripe(stripeSecretKey(), {
   apiVersion: '2026-06-24.dahlia',
 })
 

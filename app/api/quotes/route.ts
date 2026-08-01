@@ -126,14 +126,19 @@ export async function POST(request: NextRequest) {
     .insert({
       booking_request_id,
       sender_id: user.id,
-      content: null,
+      // Empty string keeps older DBs with NOT NULL content happy; null is fine after migration.
+      content: '',
       quote_id: quote.id,
     })
     .select('*, users!sender_id(name), quotes(*)')
     .single()
 
   if (msgError || !message) {
-    return NextResponse.json({ error: 'Failed to create message' }, { status: 500 })
+    console.error('quote message insert failed', msgError)
+    return NextResponse.json(
+      { error: 'Failed to create message', detail: msgError?.message },
+      { status: 500 }
+    )
   }
 
   await trackServer(
