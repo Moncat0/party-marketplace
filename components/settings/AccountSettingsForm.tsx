@@ -175,8 +175,8 @@ export default function AccountSettingsForm({
   const phoneDisplay = savedPhone ? formatPhoneDisplay(savedPhone) : null
   const phoneDescription =
     role === 'planner'
-      ? 'Lägg till ett nummer så att talanger och FESTEN. kan nå dig.'
-      : 'Lägg till ett nummer så att planerare och FESTEN. kan nå dig.'
+      ? 'Lägg till ett nummer så att talanger och Festly kan nå dig.'
+      : 'Lägg till ett nummer så att planerare och Festly kan nå dig.'
 
   function openEdit(key: string) {
     setMsg(null)
@@ -535,7 +535,7 @@ export default function AccountSettingsForm({
                       autoComplete="nickname"
                     />
                     <p className="text-[13px] leading-[1.4] text-[#6a6a6a]">
-                      Visas för andra på FESTEN. Om du lämnar det tomt används ditt förnamn.
+                      Visas för andra på Festly Om du lämnar det tomt används ditt förnamn.
                     </p>
                     <SettingsButton onClick={handleSavePreferred} disabled={saving}>
                       {saving ? 'Sparar...' : 'Spara'}
@@ -926,7 +926,7 @@ export default function AccountSettingsForm({
                 <SettingsNavRow
                   asCard
                   label="Cookie-preferenser"
-                  description="Välj vilka cookies du vill tillåta på FESTEN."
+                  description="Välj vilka cookies du vill tillåta på Festly"
                   onClick={() => setCookieModalOpen(true)}
                 />
 
@@ -992,12 +992,12 @@ export default function AccountSettingsForm({
                       width="14"
                       height="10"
                       rx="2"
-                      stroke="#FF6B35"
+                      stroke="#FF2E8A"
                       strokeWidth="1.75"
                     />
                     <path
                       d="M8 11V8a4 4 0 0 1 8 0v3"
-                      stroke="#FF6B35"
+                      stroke="#FF2E8A"
                       strokeWidth="1.75"
                       strokeLinecap="round"
                     />

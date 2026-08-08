@@ -18,7 +18,7 @@ type Props = {
 }
 
 function fireConfetti() {
-  const colors = ['#FF6B35', '#1A1A2E', '#FFF8F3', '#F0EDE8']
+  const colors = ['#FF2E8A', '#1A1A2E', '#FFF8F3', '#F0EDE8']
   const end = Date.now() + 1200
 
   const frame = () => {
@@ -96,7 +96,7 @@ export default function PublishSuccessScreen({ serviceId, draft, afterPublishPat
 
   return (
     <div className="w-full max-w-[480px] text-center">
-      <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#FF6B35]">
+      <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[#FF2E8A]">
         Publicerad
       </p>
       <h1 className="mt-2 text-[28px] font-semibold leading-tight tracking-[-0.5px] text-[#222222] sm:text-[34px]">

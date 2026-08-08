@@ -24,7 +24,7 @@ const jetbrains = JetBrains_Mono({
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export const viewport: Viewport = {
-  themeColor: '#FF6B35',
+  themeColor: '#FF2E8A',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
@@ -32,16 +32,16 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'FESTEN. — Hitta underhållning till ditt kalas',
-    template: '%s | FESTEN.',
+    default: 'Festly — Hitta underhållning till ditt kalas',
+    template: '%s | Festly',
   },
   description: 'Hitta och boka lokala talanger till ditt nästa kalas i Stockholm.',
   metadataBase: new URL(siteUrl),
   openGraph: {
-    siteName: 'FESTEN.',
+    siteName: 'Festly',
     locale: 'sv_SE',
     type: 'website',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'FESTEN.' }],
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Festly' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'FESTEN.',
+    title: 'Festly',
     startupImage: '/icons/icon-512.png',
   },
   icons: {

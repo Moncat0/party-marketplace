@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import {
@@ -20,6 +19,7 @@ import AuthPasswordInput from '@/components/auth/AuthPasswordInput'
 import PasswordHint from '@/components/auth/PasswordHint'
 import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Button } from '@/components/ui/button'
+import BrandLogo from '@/components/shared/BrandLogo'
 
 export default function SetPasswordClient({
   previewMode = false,
@@ -156,9 +156,9 @@ export default function SetPasswordClient({
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-8">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 text-center">
-            <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
-              FESTEN.
-            </Link>
+            <div className="flex justify-center">
+              <BrandLogo height={36} />
+            </div>
             <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-[#222222]">
               Säkra ditt konto
             </h1>

@@ -56,7 +56,7 @@ function statusStyle(status: string): { bg: string; color: string } {
   if (status === 'accepted') return { bg: 'rgba(29, 158, 117, 0.1)', color: t.colors.success }
   if (status === 'declined') return { bg: t.colors.surfaceStrong, color: t.colors.muted }
   if (status === 'completed') return { bg: 'rgba(34, 34, 34, 0.08)', color: t.colors.ink }
-  return { bg: 'rgba(255, 107, 53, 0.1)', color: t.colors.primary }
+  return { bg: 'rgba(255, 46, 138, 0.1)', color: t.colors.primary }
 }
 
 export default function TripsList({ bookings }: { bookings: TripBooking[] }) {

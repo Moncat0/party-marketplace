@@ -60,22 +60,20 @@
   --tracking-display: 0.5px;
   --tracking-eyebrow: 1.5px;
 
-  /* Semantic */
-  --color-primary: var(--orange-500);
-  --color-primary-hover: var(--orange-600);
-  --color-secondary: var(--pink-500);
-  --color-secondary-hover: var(--pink-600);
+  /* Semantic — match design system/tokens/colors.css */
+  --color-primary: var(--pink-500);
+  --color-primary-hover: var(--pink-600);
+  --color-secondary: var(--orange-500);
+  --color-secondary-hover: var(--orange-600);
   --color-accent: var(--pink-500);
 
-  /* Remap app chrome away from ember #FF6B35 → pink CTAs (handoff secondary) */
+  /* Marketing chrome: cream borders + Quicksand (primary already Festly pink app-wide) */
   --primary: 334 100% 59%;
   --primary-foreground: 0 0% 100%;
   --ring: 334 100% 59%;
   --foreground: 0 0% 7%;
   --border: 33 33% 86%;
   --input: 33 33% 86%;
-  --color-ember: var(--pink-500);
-  --color-ember-hover: var(--pink-600);
   --font-jakarta: var(--font-supply-body);
 
   background: var(--white);
@@ -265,29 +263,6 @@
 .supply-landing .fs-caption {
   font-size: var(--fs-caption);
   line-height: var(--lh-normal);
-}
-
-/* Kill ember / amber utilities */
-.supply-landing .bg-ember,
-.supply-landing .bg-primary,
-.supply-landing .hover\:bg-primary\/90:hover {
-  background-color: var(--pink-500) !important;
-}
-
-.supply-landing .hover\:bg-ember-hover:hover,
-.supply-landing .hover\:bg-primary\/90:hover {
-  background-color: var(--pink-600) !important;
-}
-
-.supply-landing .text-ember,
-.supply-landing .text-primary {
-  color: var(--pink-500) !important;
-}
-
-.supply-landing .ring-primary,
-.supply-landing .focus\:ring-primary:focus,
-.supply-landing .focus-visible\:ring-ring:focus-visible {
-  --tw-ring-color: var(--pink-500);
 }
 
 .supply-landing .supply-cta {

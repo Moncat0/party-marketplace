@@ -11,7 +11,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="inline-block rounded-xl bg-[#FF6B35] px-6 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
+          className="inline-block rounded-xl bg-[#FF2E8A] px-6 py-3 text-sm font-semibold text-white hover:bg-[#E01F74] transition-colors"
         >
           Tillbaka till startsidan
         </Link>

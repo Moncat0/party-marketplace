@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import {
@@ -10,6 +9,7 @@ import {
 } from '@/lib/auth-compliance'
 import { buildDisplayName } from '@/lib/profile-completeness'
 import FinishSignupFields, { isAtLeast18 } from '@/components/auth/FinishSignupFields'
+import BrandLogo from '@/components/shared/BrandLogo'
 
 /**
  * Airbnb-style post-OAuth step for new Google users:
@@ -91,7 +91,7 @@ export default function CompleteSignupClient({
       return
     }
     if (!isAtLeast18(birthDate)) {
-      setError('Du måste vara minst 18 år för att använda FESTEN.')
+      setError('Du måste vara minst 18 år för att använda Festly')
       return
     }
 
@@ -154,9 +154,9 @@ export default function CompleteSignupClient({
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-8">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 text-center">
-            <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
-              FESTEN.
-            </Link>
+            <div className="flex justify-center">
+              <BrandLogo height={36} />
+            </div>
             <h1 className="mt-4 text-[26px] font-semibold tracking-tight text-[#222222]">
               Slutför registreringen
             </h1>

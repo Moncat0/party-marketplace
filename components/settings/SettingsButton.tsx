@@ -22,7 +22,7 @@ const variantMap = {
   ghost: 'ghost',
 } as const
 
-/** Settings / account CTAs — thin wrapper over shadcn Button + FESTEN variants. */
+/** Settings / account CTAs — thin wrapper over shadcn Button + Festly variants. */
 export default function SettingsButton({
   variant = 'primary',
   size = 'default',

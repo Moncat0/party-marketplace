@@ -17,7 +17,7 @@ type Props = {
   size?: 'md' | 'sm'
 }
 
-/** Multi-select occasion chips — ToggleGroup (shadcn) + FESTEN pill styling. */
+/** Multi-select occasion chips — ToggleGroup (shadcn) + Festly pill styling. */
 export default function OccasionMultiSelect({
   value,
   onChange,

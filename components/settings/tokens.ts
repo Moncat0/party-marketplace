@@ -1,26 +1,26 @@
-/** Airbnb-inspired settings tokens (VoltAgent Source 1) + FESTEN ember as brand primary. */
+/** Airbnb-inspired settings tokens + Festly brand primary (pink). */
 
 export { settingsLayout } from './layout'
 
 export const settingsTokens = {
   colors: {
-    primary: '#FF6B35', // FESTEN brand (maps to Source 1 primary role)
-    primaryActive: '#e55a26',
-    primaryDisabled: '#ffd4c2',
-    error: '#c13515',
-    errorHover: '#b32505',
-    ink: '#222222',
-    body: '#3f3f3f',
-    muted: '#6a6a6a',
-    mutedSoft: '#929292',
-    hairline: '#dddddd',
-    hairlineSoft: '#ebebeb',
-    borderStrong: '#c1c1c1',
-    canvas: '#ffffff',
-    surfaceSoft: '#f7f7f7',
-    surfaceStrong: '#f2f2f2',
-    onPrimary: '#ffffff',
-    success: '#1D9E75',
+    primary: '#FF2E8A', // Festly pink
+    primaryActive: '#E01F74',
+    primaryDisabled: '#FFD0E6',
+    error: '#D62B2B',
+    errorHover: '#B0165C',
+    ink: '#111111',
+    body: '#2B2B2B',
+    muted: '#5C5C5C',
+    mutedSoft: '#9A9A9A',
+    hairline: '#DDDDDD',
+    hairlineSoft: '#EBEBEB',
+    borderStrong: '#C1C1C1',
+    canvas: '#FFFFFF',
+    surfaceSoft: '#F7F7F7',
+    surfaceStrong: '#F2F2F2',
+    onPrimary: '#FFFFFF',
+    success: '#1F8A52',
   },
   rounded: {
     sm: '8px',
@@ -36,6 +36,6 @@ export const settingsTokens = {
   motion: {
     fast: '160ms',
     easeWarm: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-    easeStandard: 'cubic-bezier(0.2, 0, 0, 1)',
+    easeStandard: 'cubic-bezier(0.22, 1, 0.36, 1)',
   },
-} as const
+}

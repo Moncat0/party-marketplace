@@ -10,10 +10,11 @@ import {
   articlesForRole,
   type HelpRole,
 } from '@/lib/help'
+import BrandLogo from '@/components/shared/BrandLogo'
 import { cn } from '@/lib/utils'
 
 /**
- * Airbnb Help Center layout for FESTEN.
+ * Airbnb Help Center layout for Festly.
  * Structure audited from airbnb.com/help (Jul 2026):
  * hero + search → role tabs → login card → guides → top articles → explore → contact
  */
@@ -146,8 +147,8 @@ export default function HelpCenterClient() {
                       guide.accent
                     )}
                   >
-                    <span className="text-[28px] font-semibold tracking-[-0.03em] text-[#222222]/opacity-90">
-                      FESTEN.
+                    <span className="opacity-90">
+                      <BrandLogo href={null} height={28} />
                     </span>
                   </div>
                   <div className="p-5">

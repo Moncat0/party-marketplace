@@ -2,13 +2,13 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'FESTEN.',
-    short_name: 'FESTEN.',
+    name: 'Festly',
+    short_name: 'Festly',
     description: 'Hitta och boka lokala talanger till ditt kalas i Stockholm.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
-    theme_color: '#FF6B35',
+    theme_color: '#FF2E8A',
     orientation: 'portrait',
     icons: [
       {

@@ -12,4 +12,5 @@ export const siteHeaderHeight = 'h-20 min-[1440px]:h-24'
 /** Default header row (logo · optional center · right chrome). */
 export const siteHeaderRow = `relative flex items-center ${siteHeaderHeight}`
 
+/** @deprecated Prefer `BrandLogo` — text wordmark class kept for rare fallbacks. */
 export const siteLogoClass = 'text-xl font-bold tracking-tight text-primary'

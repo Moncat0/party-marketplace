@@ -49,7 +49,7 @@ export default function DevOnboardingIndexPage() {
 
   return (
     <main className="mx-auto min-h-screen max-w-lg px-6 py-12">
-      <p className="text-[12px] font-semibold uppercase tracking-wide text-[#FF6B35]">
+      <p className="text-[12px] font-semibold uppercase tracking-wide text-[#FF2E8A]">
         Local preview
       </p>
       <h1 className="mt-2 text-[28px] font-semibold tracking-tight text-[#222222]">

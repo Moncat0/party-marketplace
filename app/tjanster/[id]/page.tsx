@@ -30,9 +30,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   const title = service.title ?? (hostName || 'Talang')
   const description =
     service.description?.slice(0, 160) ??
-    `Boka ${title} i ${service.city ?? 'Stockholm'} via FESTEN.`
+    `Boka ${title} i ${service.city ?? 'Stockholm'} via Festly`
   const image = service.photos?.[0]
-  const ogTitle = `${title} | FESTEN.`
+  const ogTitle = `${title} | Festly`
 
   return {
     title,
@@ -42,10 +42,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       description,
       type: 'website',
       locale: 'sv_SE',
-      siteName: 'FESTEN.',
+      siteName: 'Festly',
       images: image
         ? [{ url: image, width: 1200, height: 630, alt: title }]
-        : [{ url: '/og-default.png', width: 1200, height: 630, alt: 'FESTEN.' }],
+        : [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Festly' }],
     },
     twitter: {
       card: 'summary_large_image',

@@ -1,4 +1,4 @@
-# CLAUDE.md — Party Services Marketplace
+# CLAUDE.md — Festly (party services marketplace)
 
 Read this file at the start of every session before writing any code.
 Also read SPEC.md / `party-marketplace-spec.md` for the full product specification.
@@ -69,7 +69,7 @@ party-marketplace/
 │   ├── planner/               ← planner guest chrome
 │   └── …
 ├── components/
-│   ├── ui/                    ← shadcn + FESTEN primitives
+│   ├── ui/                    ← shadcn + Festly primitives
 │   ├── marketing/supply/      ← /for-talanger sections
 │   ├── listings/
 │   ├── messages/
@@ -87,31 +87,46 @@ party-marketplace/
 
 ---
 
-## Brand
+## Brand — shared colors, two surfaces for type/density
 
-### Source of truth (app chrome)
+**Policy:** Festly **colors** app-wide (pink primary, orange secondary, ink). Website vs app still differ in **type, density, and cream atmosphere**. Full rules: `docs/design-system/README.md`.
 
-Marketplace UI (browse, dashboard, listings) uses FESTEN tokens in `app/globals.css` + `tailwind.config.js`:
-- Primary ember `#FF6B35`, ink `#222222`, white canvas, Plus Jakarta Sans.
+| | Website (marketing) | App (product) |
+|---|---|---|
+| Job | Acquire, explain | Daily tasks |
+| Colors | Pink `#FF2E8A`, orange `#FF6A00`, cream, ink `#111` | **Same** pink / orange / ink; **white** canvas |
+| Type | Anton · Quicksand · Caveat | Plus Jakarta Sans |
+| CSS | `.supply-landing` + supply-landing.css | `:root` in `app/globals.css` (Festly palette) |
+| Code | `components/marketing/*` | `components/ui/*` + feature folders |
+| Docs | `docs/design-system/`, `design system/`, `festly-design` | App tokens + listing-card skill |
+| Examples | `/for-talanger`, `/dev/design-lab` | `/sok`, `/dashboard`, `/planner`, onboarding, settings |
 
-### Supply marketing landing (`/for-talanger`)
+**Quick test:** Anton/Caveat/cream bands → website. Jakarta/white tool chrome → app. CTAs are pink on both.
 
-Uses the **Festly handoff visual system** scoped under `.supply-landing`:
-- Colors: orange `#FF6A00`, pink `#FF2E8A` (primary actions), cream `#FFF3E6`, ink `#111` — **no ember/amber**
-- Fonts + sizes from handoff tokens (`--fs-display-xl: 88px`, `--fs-display-md: 44px`, `--fs-h3: 22px`, `--fs-body-lg: 19px`, etc.)
+### Website (Festly marketing)
+
+- Live: `/for-talanger` → `components/marketing/supply/*`; SiteNav excluded; owns `MarketplaceHeader` + `BrowseSearch`
+- Kit: `design system/` · Claude summary: `docs/design-system/marketing/DESIGN.md` · Lab: `/dev/design-lab`
 - Wordmark: `public/images/supply/festly-wordmark.svg`
-- Tokens stylesheet: `components/marketing/supply/supply-landing.css`
-- Owns `MarketplaceHeader` + `BrowseSearch`; SiteNav is excluded
-- Design ref: `docs/design-handoffs/supply-landing/`
-- “Erbjud din tjänst” across the app links here
+- “Erbjud din tjänst” links here
 
-Do **not** apply Festly pink/cream/Anton to the rest of the product unless a handoff explicitly says so.
+### App (Festly colors × product density)
+
+- Tokens in `app/globals.css` + `tailwind.config.js` — primary/ring = pink; `ember` Tailwind aliases map to pink for compat
+- Do **not** use Anton/Caveat or cream page backgrounds in app chrome
+- Settings TS tokens: `components/settings/tokens.ts`
+
+### Shared (both surfaces)
+
+- Festly color tokens + Swedish tone (`design system/uploads/festly-tone-of-voice-guide-sv.md`)
+- Star-rating rules, soft signup gate, mobile-first 390px
 
 ### Design principles
 - Mobile first — design every screen at 390px wide first
 - Soft signup gate — never show login wall on page load, only on action
 - Never show empty star ratings — see star system rules below
-- Marketing handoffs: match layout, copy, **and** visual system when the handoff includes a design system; restyle only when the brief says the product brand overrides it
+- Marketing handoffs: match layout, copy, **and** visual system when the handoff includes a design system
+- Pick the surface for **type/layout** before building; colors are already shared
 
 ---
 
@@ -270,4 +285,4 @@ Work through phases in order. Complete and test each step before moving to the n
 - Test in the browser after every change
 - Commit to GitHub after every working feature
 - If something is unclear, ask — do not guess
-- Design handoffs: layout/copy/interaction only; always restyle with FESTEN tokens
+- Design handoffs: layout/copy/interaction only; always restyle with Festly tokens

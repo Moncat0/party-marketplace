@@ -168,8 +168,8 @@ function EmptyIllustration() {
       <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
         <rect x="14" y="18" width="44" height="40" rx="6" fill="#fff" stroke="#dddddd" strokeWidth="2" />
         <path d="M14 28h44" stroke="#dddddd" strokeWidth="2" />
-        <path d="M36 18v-6" stroke="#FF6B35" strokeWidth="3" strokeLinecap="round" />
-        <circle cx="36" cy="10" r="3" fill="#FF6B35" />
+        <path d="M36 18v-6" stroke="#FF2E8A" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="36" cy="10" r="3" fill="#FF2E8A" />
         <path d="M24 40h16M24 48h10" stroke="#c1c1c1" strokeWidth="2" strokeLinecap="round" />
       </svg>
     </div>

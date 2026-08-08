@@ -717,7 +717,7 @@ function ProviderNameStep({
         Vad ska gäster kalla dig?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Förnamnet blir ditt föredragna namn på FESTEN — det syns under “Träffa din leverantör” på
+        Förnamnet blir ditt föredragna namn på Festly — det syns under “Träffa din leverantör” på
         dina tjänster och i chatten med planerare.
       </p>
       <div className="mt-8 space-y-5">

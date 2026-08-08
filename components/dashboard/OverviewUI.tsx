@@ -78,8 +78,8 @@ export function OverviewBanner({
         }
       : variant === 'warning' || variant === 'primary'
         ? {
-            background: 'rgba(255, 107, 53, 0.08)',
-            border: '1px solid rgba(255, 107, 53, 0.2)',
+            background: 'rgba(255, 46, 138, 0.08)',
+            border: '1px solid rgba(255, 46, 138, 0.2)',
             dot: t.colors.primary,
           }
         : {

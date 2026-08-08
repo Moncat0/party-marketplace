@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { siteLogoClass } from '@/components/siteChrome'
+import BrandLogo from '@/components/shared/BrandLogo'
 import { settingsTokens as t } from '@/components/settings/tokens'
 
 type NavItem = {
@@ -25,7 +25,7 @@ type Props = {
   flush?: boolean
 }
 
-/** Host / provider shell — FESTEN tokens + Airbnb hosting left rail. */
+/** Host / provider shell — Festly tokens + Airbnb hosting left rail. */
 export default function DashboardShell({
   name,
   role,
@@ -50,9 +50,7 @@ export default function DashboardShell({
         className="px-6 py-5"
         style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
       >
-        <Link href="/" className={siteLogoClass}>
-          FESTEN.
-        </Link>
+        <BrandLogo />
       </div>
 
       <div
@@ -207,9 +205,7 @@ export default function DashboardShell({
               <line x1="3" y1="18" x2="21" y2="18" />
             </svg>
           </Button>
-          <Link href="/" className={siteLogoClass}>
-            FESTEN.
-          </Link>
+          <BrandLogo />
           <span
             className="ml-auto max-w-[40%] truncate text-sm font-medium"
             style={{ color: t.colors.ink }}

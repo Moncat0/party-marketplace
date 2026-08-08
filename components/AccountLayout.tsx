@@ -3,7 +3,8 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { settingsTokens as t } from '@/components/settings/tokens'
-import { siteChromePad, siteHeaderRow, siteLogoClass } from '@/components/siteChrome'
+import BrandLogo from '@/components/shared/BrandLogo'
+import { siteChromePad, siteHeaderRow } from '@/components/siteChrome'
 
 type Props = {
   doneHref: string
@@ -23,9 +24,7 @@ export default function AccountLayout({ doneHref, children }: Props) {
       >
         <div className={siteChromePad}>
           <div className={siteHeaderRow}>
-            <Link href="/" className={siteLogoClass}>
-              FESTEN.
-            </Link>
+            <BrandLogo />
             <Link
               href={doneHref}
               className="ml-auto inline-flex h-10 items-center justify-center rounded-full bg-[#f2f2f2] px-5 text-[14px] font-medium text-[#222222] transition-colors hover:bg-[#ebebeb]"

@@ -1,5 +1,5 @@
 /**
- * Controlled service locations for FESTEN.
+ * Controlled service locations for Festly
  * Launch: Stockholm only. Add more Swedish cities here as we expand.
  */
 

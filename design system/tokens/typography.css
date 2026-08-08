@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap');
+:root{
+--font-display:'Anton',Impact,'Arial Narrow Bold',sans-serif;
+--font-body:'Quicksand',system-ui,sans-serif;
+--font-hand:'Caveat',cursive;
+--fs-display-xl:88px;
+--fs-display-lg:64px;
+--fs-display-md:44px;
+--fs-h1:36px;
+--fs-h2:28px;
+--fs-h3:22px;
+--fs-body-lg:19px;
+--fs-body:16px;
+--fs-body-sm:14px;
+--fs-caption:12px;
+--fs-hand-lg:34px;
+--fs-hand:24px;
+--lh-tight:0.94; /* @kind other */
+--lh-snug:1.15; /* @kind other */
+--lh-normal:1.5; /* @kind other */
+--lh-relaxed:1.65; /* @kind other */
+--fw-regular:400; /* @kind other */
+--fw-medium:500; /* @kind other */
+--fw-semibold:600; /* @kind other */
+--fw-bold:700; /* @kind other */
+--tracking-display:0.5px; /* @kind other */
+--tracking-eyebrow:1.5px; /* @kind other */
+}

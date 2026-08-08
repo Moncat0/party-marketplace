@@ -125,7 +125,7 @@ export default function CancelBookingModal({
               ) : (
                 <>
                   <p>
-                    Avbokning påverkar din tillförlitlighet på FESTEN och kan synas för
+                    Avbokning påverkar din tillförlitlighet på Festly och kan synas för
                     arrangörer som planerar framtida evenemang.
                   </p>
                   {paidHeld && (

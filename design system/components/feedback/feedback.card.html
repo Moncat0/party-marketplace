@@ -1,0 +1,25 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Feedback: Dialog, Tooltip, Toast" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<div id="root" style="background:var(--color-bg);padding:20px"></div>
+<script type="text/babel">
+const {Dialog,Tooltip,Toast,Button,IconButton}=window.FestlyDesignSystem_65deb2;
+function Demo(){
+const [open,setOpen]=React.useState(false);
+return (<div style={{display:'flex',flexDirection:'column',gap:16}}>
+<div style={{display:'flex',gap:12,alignItems:'center'}}>
+<Button onClick={()=>setOpen(true)}>Open dialog</Button>
+<Tooltip label="Add to favorites"><IconButton icon="♡" label="Save"/></Tooltip>
+</div>
+<Toast tone="success">Request sent to 3 vendors</Toast>
+<Toast tone="danger" onClose={()=>{}}>Booking failed — try again</Toast>
+<Dialog open={open} onClose={()=>setOpen(false)} title="Confirm booking" footer={<Button onClick={()=>setOpen(false)}>Confirm</Button>}>
+<p style={{fontFamily:'var(--font-body)',color:'var(--ink-500)'}}>You're booking Sunset Loft for Aug 20, 6:00 PM.</p>
+</Dialog>
+</div>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>

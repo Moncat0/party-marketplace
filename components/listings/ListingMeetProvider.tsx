@@ -12,7 +12,7 @@ type Props = {
 }
 
 function yearsOnPlatform(iso: string | null): string {
-  if (!iso) return 'Ny på FESTEN'
+  if (!iso) return 'Ny på Festly'
   const ms = Date.now() - new Date(iso).getTime()
   const years = Math.floor(ms / (365.25 * 24 * 60 * 60 * 1000))
   if (years < 1) {
@@ -65,7 +65,7 @@ export default function ListingMeetProvider({
                 <p className="mt-3 text-[22px] font-semibold text-[#222222] leading-tight">
                   {name}
                 </p>
-                <p className="text-[14px] text-[#6a6a6a] mt-0.5">Talang på FESTEN.</p>
+                <p className="text-[14px] text-[#6a6a6a] mt-0.5">Talang på Festly</p>
               </div>
 
               <div className="flex-1 w-full sm:border-l sm:border-[#ebebeb] sm:pl-6 space-y-3">
@@ -76,7 +76,7 @@ export default function ListingMeetProvider({
                 {reviewCount > 0 && avgRating != null && (
                   <StatRow value={`${avgRating.toFixed(2)}★`} label="Betyg" />
                 )}
-                <StatRow value={tenure} label="På FESTEN" last />
+                <StatRow value={tenure} label="På Festly" last />
               </div>
             </div>
           </div>
@@ -100,10 +100,10 @@ export default function ListingMeetProvider({
         <div className="flex flex-col gap-6">
           <div>
             <h3 className="text-[18px] font-semibold text-[#222222] mb-2">
-              {name} är talang på FESTEN.
+              {name} är talang på Festly
             </h3>
             <p className="text-[16px] text-[#222222] leading-[1.5]">
-              Talanger på FESTEN. är lokala proffs — DJ:s, fotografer, sminkartister och mer —
+              Talanger på Festly är lokala proffs — DJ:s, fotografer, sminkartister och mer —
               som hjälper dig skapa oförglömliga fester i Stockholm.
             </p>
           </div>
@@ -118,10 +118,10 @@ export default function ListingMeetProvider({
 
           <div className="border-t border-[#ebebeb] pt-6 mt-auto">
             <p className="text-[12px] text-[#6a6a6a] leading-relaxed flex items-start gap-2">
-              <span className="flex-shrink-0 mt-0.5 text-[#FF6B35]" aria-hidden>
+              <span className="flex-shrink-0 mt-0.5 text-[#FF2E8A]" aria-hidden>
                 <ShieldIcon />
               </span>
-              För att skydda din betalning och kommunikation, använd alltid FESTEN. när du bokar
+              För att skydda din betalning och kommunikation, använd alltid Festly när du bokar
               och pratar med talanger.
             </p>
           </div>

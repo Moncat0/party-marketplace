@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import SetPasswordClient from './SetPasswordClient'
 
-export const metadata = { title: 'Säkra ditt konto — FESTEN.' }
+export const metadata = { title: 'Säkra ditt konto — Festly' }
 
 export default function SetPasswordPage() {
   return (

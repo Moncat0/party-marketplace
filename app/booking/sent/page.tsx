@@ -98,7 +98,7 @@ function NextStep({ children }: { children: ReactNode }) {
   return (
     <li className="flex gap-3 text-[15px] leading-[1.45] text-[#6a6a6a]">
       <span
-        className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#FF6B35]"
+        className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#FF2E8A]"
         aria-hidden
       />
       <span>{children}</span>

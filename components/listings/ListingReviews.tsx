@@ -131,7 +131,7 @@ function ReviewCard({
             {review.users?.name ?? 'Anonym'}
           </p>
           <p className="text-[14px] text-[#6a6a6a]">
-            {review.locationLabel ?? 'Medlem på FESTEN.'}
+            {review.locationLabel ?? 'Medlem på Festly'}
           </p>
         </div>
       </div>

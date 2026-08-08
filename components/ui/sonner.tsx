@@ -4,7 +4,7 @@ import { Toaster as Sonner } from 'sonner'
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
-/** App toaster — light theme to match FESTEN (no next-themes dependency). */
+/** App toaster — light theme to match Festly (no next-themes dependency). */
 const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner

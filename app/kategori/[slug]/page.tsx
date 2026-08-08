@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${category.label} i Stockholm`,
     description: category.description,
     openGraph: {
-      title: `${category.label} i Stockholm — FESTEN.`,
+      title: `${category.label} i Stockholm — Festly`,
       description: category.description,
     },
   }
@@ -107,7 +107,7 @@ export default async function CategoryPage({ params }: Props) {
               <p className="text-sm text-neutral-500 mb-4">
                 Inga talanger i den här kategorin ännu. Kom tillbaka snart!
               </p>
-              <Link href="/" className="text-sm font-medium text-[#FF6B35] hover:underline">
+              <Link href="/" className="text-sm font-medium text-[#FF2E8A] hover:underline">
                 Se alla talanger →
               </Link>
             </div>

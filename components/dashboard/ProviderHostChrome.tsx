@@ -8,7 +8,8 @@ import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { siteChromePad, siteHeaderHeight, siteLogoClass } from '@/components/siteChrome'
+import BrandLogo from '@/components/shared/BrandLogo'
+import { siteChromePad, siteHeaderHeight } from '@/components/siteChrome'
 import {
   ArrowLeftRight,
   Calendar,
@@ -162,9 +163,7 @@ export default function ProviderHostChrome({
             )}
           >
             <div className="flex items-center justify-self-start">
-              <Link href="/" className={siteLogoClass}>
-                FESTEN.
-              </Link>
+              <BrandLogo />
             </div>
 
             <nav className="hidden items-center gap-1 md:flex" aria-label="Talangdashboard">

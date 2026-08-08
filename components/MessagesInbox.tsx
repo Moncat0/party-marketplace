@@ -39,7 +39,7 @@ export default function MessagesInbox({
 }: Props) {
   const router = useRouter()
   const avatarBg =
-    accent === 'ember' ? 'rgba(255, 107, 53, 0.1)' : 'rgba(34, 34, 34, 0.08)'
+    accent === 'ember' ? 'rgba(255, 46, 138, 0.1)' : 'rgba(34, 34, 34, 0.08)'
   const avatarColor = accent === 'ember' ? t.colors.primary : t.colors.ink
 
   function hrefForThread(id: string) {
@@ -122,7 +122,7 @@ export default function MessagesInbox({
               )}
             </div>
             {hasUnread && (
-              <span className="h-5 w-5 rounded-full bg-[#FF6B35] flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0">
+              <span className="h-5 w-5 rounded-full bg-[#FF2E8A] flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0">
                 {thread.unread}
               </span>
             )}

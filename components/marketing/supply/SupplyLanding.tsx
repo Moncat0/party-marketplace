@@ -194,16 +194,6 @@ export default function SupplyLanding() {
         className="supply-header"
         scrolled={scrolled}
         currentMode="planner"
-        logo={
-          <Image
-            src="/images/supply/festly-wordmark.svg"
-            alt="Festly"
-            width={120}
-            height={32}
-            className="block h-8 w-auto"
-            priority
-          />
-        }
         center={
           <BrowseSearch
             query={query}

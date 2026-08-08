@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import BrandLogo from '@/components/shared/BrandLogo'
 
 export const metadata: Metadata = {
   title: 'Så funkar det — för arrangörer',
@@ -36,7 +37,7 @@ const steps = [
 const faqs = [
   {
     q: 'Kostar det något att boka?',
-    a: 'Nej, det är helt gratis att skapa konto och skicka förfrågningar på FESTEN.',
+    a: 'Nej, det är helt gratis att skapa konto och skicka förfrågningar på Festly',
   },
   {
     q: 'Hur snabbt svarar talangerna?',
@@ -47,8 +48,8 @@ const faqs = [
     a: 'Inga problem — du kan enkelt skicka en ny förfrågan till en annan talang på din lista.',
   },
   {
-    q: 'Sker betalningen via FESTEN.?',
-    a: 'Ja, du betalar säkert via FESTEN. och vi ser till att talangen får sin ersättning.',
+    q: 'Sker betalningen via Festly?',
+    a: 'Ja, du betalar säkert via Festly och vi ser till att talangen får sin ersättning.',
   },
 ]
 
@@ -63,12 +64,12 @@ export default function HowItWorksPage() {
           Ditt drömkalas på 4 enkla steg
         </h1>
         <p className="text-lg text-[#6A6A6A] leading-relaxed max-w-xl mx-auto mb-10">
-          FESTEN. kopplar ihop dig med de bästa lokala talangerna i Stockholm. Snabbt, enkelt och gratis.
+          Festly kopplar ihop dig med de bästa lokala talangerna i Stockholm. Snabbt, enkelt och gratis.
         </p>
         <div className="flex items-center justify-center gap-4">
           <Link
             href="/signup?intent=planner&next=/"
-            className="rounded-xl bg-[#FF6B35] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
+            className="rounded-xl bg-[#FF2E8A] px-8 py-3.5 text-sm font-semibold text-white hover:bg-[#E01F74] transition-colors"
           >
             Skapa konto gratis
           </Link>
@@ -91,7 +92,7 @@ export default function HowItWorksPage() {
               <div className="relative inline-flex items-center justify-center h-16 w-16 rounded-full bg-[#FFFFFF] border border-[#DDDDDD] mb-4 mx-auto">
                 <span className="text-2xl">{step.emoji}</span>
               </div>
-              <span className="block text-xs font-bold text-[#FF6B35] mb-2 tracking-wide">{step.number}</span>
+              <span className="block text-xs font-bold text-[#FF2E8A] mb-2 tracking-wide">{step.number}</span>
               <h2 className="font-bold text-[#222222] mb-2">{step.title}</h2>
               <p className="text-sm text-[#6A6A6A] leading-relaxed">{step.description}</p>
             </div>
@@ -115,7 +116,7 @@ export default function HowItWorksPage() {
             </Link>
             <Link
               href="/signup?intent=planner&next=/"
-              className="rounded-xl bg-[#FF6B35] px-6 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors whitespace-nowrap"
+              className="rounded-xl bg-[#FF2E8A] px-6 py-3 text-sm font-semibold text-white hover:bg-[#E01F74] transition-colors whitespace-nowrap"
             >
               Skapa konto gratis
             </Link>
@@ -139,7 +140,7 @@ export default function HowItWorksPage() {
       {/* Footer */}
       <footer className="border-t border-[#DDDDDD]">
         <div className="mx-auto max-w-6xl px-6 py-8 flex items-center justify-between">
-          <Link href="/" className="text-sm font-bold text-[#222222]">FESTEN.</Link>
+          <BrandLogo />
           <div className="flex gap-6">
             <Link href="/privacy" className="text-xs text-[#6A6A6A] hover:text-[#222222] transition-colors">Integritetspolicy</Link>
             <Link href="/terms" className="text-xs text-[#6A6A6A] hover:text-[#222222] transition-colors">Användarvillkor</Link>

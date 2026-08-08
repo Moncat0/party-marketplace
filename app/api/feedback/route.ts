@@ -21,9 +21,9 @@ export async function POST(req: Request) {
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY)
       await resend.emails.send({
-        from: 'FESTEN. <onboarding@resend.dev>',
+        from: 'Festly <onboarding@resend.dev>',
         to: process.env.FEEDBACK_EMAIL ?? 'delivered@resend.dev',
-        subject: 'Feedback om meddelanden — FESTEN.',
+        subject: 'Feedback om meddelanden — Festly',
         text: `Från: ${row?.name ?? 'Okänd'} <${row?.email ?? user.email}>\n\n${message}`,
       })
     }

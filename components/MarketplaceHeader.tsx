@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { siteChromePad, siteHeaderRow, siteLogoClass } from '@/components/siteChrome'
+import { siteChromePad, siteHeaderRow } from '@/components/siteChrome'
+import BrandLogo from '@/components/shared/BrandLogo'
 import { openAuth } from '@/lib/open-auth'
 import {
   Calendar,
@@ -49,7 +50,7 @@ type Props = {
   currentMode?: NavMode
   /** Extra actions before the menu (e.g. Share / Save on profiles) */
   actions?: ReactNode
-  /** Override default “FESTEN.” wordmark (e.g. supply landing SVG) */
+  /** Override default Festly wordmark */
   logo?: ReactNode
   className?: string
   scrolled?: boolean
@@ -161,9 +162,13 @@ export default function MarketplaceHeader({
   const initial = (user?.name ?? '?').charAt(0).toUpperCase()
 
   const brand = (
-    <Link href="/" className={logo ? 'inline-flex items-center leading-none' : siteLogoClass}>
-      {logo ?? 'FESTEN.'}
-    </Link>
+    logo ? (
+      <Link href="/" className="inline-flex items-center leading-none">
+        {logo}
+      </Link>
+    ) : (
+      <BrandLogo priority />
+    )
   )
 
   const switchCta = (() => {

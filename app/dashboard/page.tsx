@@ -99,7 +99,7 @@ export default async function DashboardOverviewPage() {
         <OverviewBanner
           variant="neutral"
           title="Anslut ditt bankkonto"
-          description="För att ta emot betalningar via FESTEN. behöver du ansluta Stripe."
+          description="För att ta emot betalningar via Festly behöver du ansluta Stripe."
         >
           <OverviewBannerButton href="/api/stripe/connect" variant="dark">
             Anslut Stripe →

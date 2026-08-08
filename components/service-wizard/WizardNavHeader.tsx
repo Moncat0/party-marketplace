@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { siteChromePad, siteHeaderHeight, siteLogoClass } from '@/components/siteChrome'
+import BrandLogo from '@/components/shared/BrandLogo'
+import { siteChromePad, siteHeaderHeight } from '@/components/siteChrome'
 
 type Props = {
   /** Where Avsluta / Spara & avsluta goes when using a link exit */
@@ -38,13 +38,9 @@ export default function WizardNavHeader({
       )}
     >
       {trapNavigation ? (
-        <span className={siteLogoClass} aria-hidden>
-          FESTEN.
-        </span>
+        <BrandLogo href={null} />
       ) : (
-        <Link href="/" className={siteLogoClass}>
-          FESTEN.
-        </Link>
+        <BrandLogo />
       )}
       <div className="flex items-center gap-2">
         <Button

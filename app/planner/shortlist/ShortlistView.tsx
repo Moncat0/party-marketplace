@@ -57,7 +57,7 @@ export default function ShortlistView({
     track('shortlist_shared', { shortlist_id: shortlistId, item_count: items.length })
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: `${name} på FESTEN.`, url })
+        await navigator.share({ title: `${name} på Festly`, url })
         return
       } catch {
         // fall through
