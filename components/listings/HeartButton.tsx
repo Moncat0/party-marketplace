@@ -43,7 +43,7 @@ export default function HeartButton({ saved, onClick, size = 24 }: Props) {
         focusable="false"
         className="block overflow-visible drop-shadow-[0_1px_2px_rgba(0,0,0,0.35)]"
         style={{
-          fill: saved ? '#FF6B35' : 'rgba(0,0,0,0.5)',
+          fill: saved ? '#FF2E8A' : 'rgba(0,0,0,0.5)',
           stroke: 'rgb(255,255,255)',
           strokeWidth: 2,
         }}

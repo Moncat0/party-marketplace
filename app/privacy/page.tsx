@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Integritetspolicy',
-  description: 'Hur FESTEN. samlar in, använder och skyddar dina personuppgifter.',
+  description: 'Hur Festly samlar in, använder och skyddar dina personuppgifter.',
 }
 
 export default function PrivacyPage() {
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="font-semibold mb-2">Vem vi är</h2>
-            <p className="text-[#6A6A6A]">FESTEN. är en tjänst för att hitta och boka underhållning till evenemang i Stockholm. Vi värnar om din integritet och behandlar dina personuppgifter i enlighet med GDPR (EU:s dataskyddsförordning).</p>
+            <p className="text-[#6A6A6A]">Festly är en tjänst för att hitta och boka underhållning till evenemang i Stockholm. Vi värnar om din integritet och behandlar dina personuppgifter i enlighet med GDPR (EU:s dataskyddsförordning).</p>
           </section>
 
           <section>
@@ -73,7 +73,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="font-semibold mb-2">Kontakta oss</h2>
-            <p className="text-[#6A6A6A]">Har du frågor om hur vi hanterar dina uppgifter? Kontakta oss på <a href="mailto:hej@festen.se" className="text-[#FF6B35] hover:underline">hej@festen.se</a></p>
+            <p className="text-[#6A6A6A]">Har du frågor om hur vi hanterar dina uppgifter? Kontakta oss på <a href="mailto:hej@festen.se" className="text-[#FF2E8A] hover:underline">hej@festen.se</a></p>
           </section>
 
         </div>

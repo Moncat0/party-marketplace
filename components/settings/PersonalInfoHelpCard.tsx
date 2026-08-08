@@ -42,7 +42,7 @@ const ITEMS: { title: string; body: string; icon: ReactNode }[] = [
   },
   {
     title: 'Vilken info delas med andra?',
-    body: 'FESTEN. delar endast kontaktuppgifter mellan talanger och planerare efter att en bokning bekräftats.',
+    body: 'Festly delar endast kontaktuppgifter mellan talanger och planerare efter att en bokning bekräftats.',
     icon: (
       <svg width="32" height="32" viewBox="0 0 40 40" fill="none" aria-hidden>
         <path

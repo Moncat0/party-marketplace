@@ -13,6 +13,7 @@ import AuthPasswordInput from '@/components/auth/AuthPasswordInput'
 import PasswordHint from '@/components/auth/PasswordHint'
 import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Button } from '@/components/ui/button'
+import BrandLogo from '@/components/shared/BrandLogo'
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('')
@@ -54,9 +55,9 @@ export default function ResetPasswordPage() {
     <main className="flex min-h-screen items-center justify-center bg-white px-4 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Link href="/" className="text-[28px] font-bold tracking-tight text-[#FF6B35]">
-            FESTEN.
-          </Link>
+          <div className="flex justify-center">
+            <BrandLogo height={36} />
+          </div>
           <p className="mt-2 text-[14px] leading-[1.43] text-[#6a6a6a]">Välj ett nytt lösenord</p>
         </div>
 

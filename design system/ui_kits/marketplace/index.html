@@ -1,0 +1,43 @@
+<!-- @dsCard group="Marketplace" viewport="1280x800" name="Festly Marketplace" subtitle="Browse, vendor profile, booking request, host dashboard" -->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<script src="./image-slot.js"></script>
+<style>body{margin:0;background:var(--color-bg)}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="./Browse.jsx"></script>
+<script type="text/babel" src="./VendorProfile.jsx"></script>
+<script type="text/babel" src="./BookingRequest.jsx"></script>
+<script type="text/babel" src="./HostDashboard.jsx"></script>
+<script type="text/babel">
+const {IconButton}=window.FestlyDesignSystem_65deb2;
+function App(){
+const [screen,setScreen]=React.useState('browse');
+const [vendor,setVendor]=React.useState(null);
+const [nav,setNav]=React.useState('marketplace');
+return (
+<div style={{minHeight:'100vh',display:'flex',flexDirection:'column'}}>
+<header style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'20px 40px',borderBottom:'var(--border-width) solid var(--ink-900)',background:'var(--white)'}}>
+<img src="../../assets/logos/festly-wordmark-letters.svg" style={{height:32}}/>
+<nav style={{display:'flex',gap:24,fontFamily:'var(--font-body)',fontWeight:700,fontSize:15}}>
+<span onClick={()=>{setNav('marketplace');setScreen('browse');}} style={{cursor:'pointer',color:nav==='marketplace'?'var(--ink-900)':'var(--ink-500)'}}>Marketplace</span>
+<span onClick={()=>setNav('dashboard')} style={{cursor:'pointer',color:nav==='dashboard'?'var(--ink-900)':'var(--ink-500)'}}>Your requests</span>
+</nav>
+<IconButton icon={<img src="https://cdn.jsdelivr.net/npm/lucide-static@latest/icons/user.svg" alt="" style={{width:18,height:18}}/>} label="Account" variant="outline"/>
+</header>
+<main style={{flex:1,padding:'40px',maxWidth:1100,margin:'0 auto',width:'100%',boxSizing:'border-box'}}>
+{nav==='dashboard'?<window.HostDashboard/>:
+screen==='browse'?<window.Browse onSelectVendor={v=>{setVendor(v);setScreen('vendor');}}/>:
+screen==='vendor'?<window.VendorProfile vendor={vendor} onBook={()=>setScreen('booking')} onBack={()=>setScreen('browse')}/>:
+<window.BookingRequest vendor={vendor} onBack={()=>setScreen('vendor')} onConfirm={()=>{setNav('dashboard');}}/>}
+</main>
+</div>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body></html>

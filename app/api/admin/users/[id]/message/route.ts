@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 type Params = { params: { id: string } }
 
-/** POST — email the user from FESTEN support (admin chat proxy). */
+/** POST — email the user from Festly support (admin chat proxy). */
 export async function POST(request: Request, { params }: Params) {
   const gate = await requireAdmin()
   if (gate.error) return gate.error

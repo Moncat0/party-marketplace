@@ -4,10 +4,10 @@ import type { Metadata } from 'next'
 import { HOST_USERS_SELECT, hostUserForDisplay } from '@/lib/host-display-name'
 
 export const metadata: Metadata = {
-  title: 'FESTEN. — Hitta underhållning till ditt kalas',
+  title: 'Festly — Hitta underhållning till ditt kalas',
   description: 'Boka lokala artister, fotografer, kockar och mer till ditt nästa kalas i Stockholm. Gratis att använda.',
   openGraph: {
-    title: 'FESTEN. — Hitta underhållning till ditt kalas',
+    title: 'Festly — Hitta underhållning till ditt kalas',
     description: 'Boka lokala artister, fotografer, kockar och mer till ditt nästa kalas i Stockholm.',
     url: '/',
   },

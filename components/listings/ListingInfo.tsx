@@ -66,7 +66,7 @@ export default function ListingInfo({
           <div className="text-[16px] font-semibold text-[#222222]">
             Erbjuds av {hostName ?? 'talang'}
           </div>
-          <div className="text-[14px] text-[#6a6a6a]">Talang på FESTEN.</div>
+          <div className="text-[14px] text-[#6a6a6a]">Talang på Festly</div>
         </div>
       </div>
 

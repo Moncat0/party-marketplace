@@ -30,7 +30,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     loc ? `i ${loc}` : null,
   ].filter(Boolean)
   return {
-    title: `${parts.join(' · ')} — FESTEN.`,
+    title: `${parts.join(' · ')} — Festly`,
     description: cat?.description ?? 'Hitta lokala talanger till ditt kalas.',
   }
 }

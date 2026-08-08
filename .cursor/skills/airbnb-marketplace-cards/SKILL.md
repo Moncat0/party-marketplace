@@ -1,20 +1,20 @@
 ---
 name: airbnb-marketplace-cards
 description: >-
-  Airbnb-accurate marketplace listing cards for FESTEN (Services-style search
+  Airbnb-accurate marketplace listing cards for Festly (Services-style search
   and browse grids). Use when building, auditing, or restyling ListingCard,
   search results grids, homepage rows, or any photo+meta listing tile.
 ---
 
-# Airbnb marketplace listing cards (FESTEN)
+# Airbnb marketplace listing cards (Festly)
 
 Primary references (priority order — do not mix values across sources for the same property):
 
 1. **Live audit** — `airbnb.com/s/Stockholm/services` (Jul 2026) ← **source of truth for /sok**
 2. **[VoltAgent Airbnb DESIGN.md](airbnb-DESIGN.md)** — Homes/Experiences patterns only
-3. FESTEN brand — ember `#FF6B35` replaces Rausch for CTAs/hearts/search orb; neutrals stay Airbnb
+3. Festly brand — pink `#FF2E8A` replaces Rausch for CTAs/hearts/search orb; neutrals stay Airbnb
 
-## Why FESTEN looked different (Jul 2026 audit)
+## Why Festly looked different (Jul 2026 audit)
 
 | Token | We had (wrong) | Live Services search |
 |-------|----------------|----------------------|
@@ -61,7 +61,7 @@ Data from live `ServiceSearchResult`:
 | Homes `property-card` | `1 / 1` | Homes search |
 | Experiences | `4 / 5` | Experiences |
 | Homepage rails | often `103 / 100` | Explore carousels |
-| **Services search** | **`3 / 2`** | **`/s/.../services` ← FESTEN `/sok`** |
+| **Services search** | **`3 / 2`** | **`/s/.../services` ← Festly `/sok`** |
 
 ## Implementation checklist
 

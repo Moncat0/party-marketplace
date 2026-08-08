@@ -18,7 +18,7 @@ export default function Error({ reset }: { reset: () => void }) {
           </Button>
           <Link
             href="/"
-            className="rounded-xl bg-[#FF6B35] px-5 py-3 text-sm font-semibold text-white hover:bg-[#e55a26] transition-colors"
+            className="rounded-xl bg-[#FF2E8A] px-5 py-3 text-sm font-semibold text-white hover:bg-[#E01F74] transition-colors"
           >
             Startsidan
           </Link>

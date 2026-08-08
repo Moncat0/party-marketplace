@@ -12,7 +12,7 @@ type BookingForCheckout = {
 }
 
 /**
- * Create a platform Checkout Session (funds stay on FESTEN until release).
+ * Create a platform Checkout Session (funds stay on Festly until release).
  * Uses admin client for booking updates (RLS: planners cannot update booking_requests).
  */
 export async function createEscrowCheckoutSession(
@@ -39,9 +39,9 @@ export async function createEscrowCheckoutSession(
           currency: 'sek',
           unit_amount: booking.price_ore,
           product_data: {
-            name: booking.serviceTitle || 'Bokning via FESTEN',
+            name: booking.serviceTitle || 'Bokning via Festly',
             description:
-              'Beloppet hålls säkert av FESTEN tills du godkänner utbetalning efter evenemanget. 20% serviceavgift ingår (täcker betalning och plattform — inte ren vinst).',
+              'Beloppet hålls säkert av Festly tills du godkänner utbetalning efter evenemanget. 20% serviceavgift ingår (täcker betalning och plattform — inte ren vinst).',
           },
         },
         quantity: 1,

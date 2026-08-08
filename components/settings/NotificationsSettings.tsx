@@ -294,8 +294,8 @@ export default function NotificationsSettings({ email, initial, role }: Props) {
           </SectionBlock>
 
           <SectionBlock
-            title="FESTEN.-uppdateringar"
-            description="Håll dig uppdaterad om nyheter från FESTEN. och hjälp oss bli bättre."
+            title="Festly-uppdateringar"
+            description="Håll dig uppdaterad om nyheter från Festly och hjälp oss bli bättre."
             isLast
           >
             <NotifRow
@@ -345,7 +345,7 @@ export default function NotificationsSettings({ email, initial, role }: Props) {
         <div>
           <SectionBlock
             title="Kontoaktivitet och policyer"
-            description="Bekräfta bokningar och kontoaktivitet, och lär dig om viktiga FESTEN.-policyer."
+            description="Bekräfta bokningar och kontoaktivitet, och lär dig om viktiga Festly-policyer."
           >
             <NotifRow
               label={role === 'provider' ? 'Bokningsförfrågningar' : 'Bokningsbekräftelser'}

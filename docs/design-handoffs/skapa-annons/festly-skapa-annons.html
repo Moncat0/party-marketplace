@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Festly — Skapa din annons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink:#D4437E;--pink-dark:#9A2E5B;--pink-light:#FBEAF0;
+    --cream:#FBF1E3;--cream-border:#EFE2C8;
+    --ink:#171412;--ink-soft:#4B463F;--muted:#8A8479;--line:#EBE6DC;--white:#FFFFFF;
+    --amber:#F0A63B;--amber-light:#FBEFDA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--white);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:'Archivo Black',sans-serif;text-transform:uppercase;letter-spacing:-0.01em;line-height:0.98;}
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+  .pill-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--pink);color:#fff;font-weight:700;font-size:16px;padding:16px 30px;border-radius:100px;border:none;cursor:pointer;transition:transform .15s ease, background .15s ease;white-space:nowrap;}
+  .pill-btn:hover{background:var(--pink-dark);transform:translateY(-1px);}
+  .eyebrow{display:inline-block;background:var(--pink-light);color:var(--pink-dark);font-size:12.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:8px 16px;border-radius:100px;}
+
+  /* HEADER */
+  header{padding:26px 0;}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;}
+  .logo{font-family:'Archivo Black',sans-serif;font-size:26px;}
+  header nav a{font-size:15px;font-weight:600;color:var(--ink-soft);}
+
+  /* HERO */
+  .hero{padding:44px 0 96px;}
+  .hero .wrap{display:grid;grid-template-columns:1.05fr 0.95fr;gap:64px;align-items:center;}
+  .hero h1{font-size:56px;margin:22px 0 22px;}
+  .hero h1 .hl{color:var(--pink);}
+  .hero p.lead{font-size:18px;color:var(--ink-soft);max-width:480px;margin-bottom:30px;}
+  .hero .cta-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:16px;}
+  .hero .cta-row .time{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--ink-soft);}
+  .founder-note{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted);}
+  .founder-note .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+
+  .hero-visual{position:relative;}
+  .phone-frame{background:var(--cream);border:1px solid var(--cream-border);border-radius:28px;padding:16px;box-shadow:0 30px 60px -20px rgba(23,20,18,0.18);}
+  .profile-card{background:#fff;border-radius:20px;overflow:hidden;border:1px solid var(--line);}
+  .cover{height:92px;background:linear-gradient(135deg,#F3D9E4,#FBEAF0);position:relative;}
+  .avatar{width:64px;height:64px;border-radius:50%;background:var(--pink);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;border:4px solid #fff;position:absolute;left:20px;bottom:-32px;}
+  .profile-body{padding:44px 20px 20px;}
+  .profile-body .name{font-size:19px;font-weight:700;}
+  .profile-body .role{font-size:13.5px;color:var(--muted);margin-top:2px;}
+  .badge-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .stars{color:var(--amber);font-size:13px;}
+  .rating-num{font-size:13px;font-weight:700;}
+  .founder-badge{font-size:11px;font-weight:700;color:var(--pink-dark);background:var(--pink-light);padding:3px 10px;border-radius:100px;}
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:16px;}
+  .gallery div{aspect-ratio:1;border-radius:10px;background:var(--cream);}
+  .review{display:flex;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .review .ra{width:26px;height:26px;border-radius:50%;background:var(--amber-light);flex-shrink:0;}
+  .review p{font-size:12.5px;color:var(--ink-soft);}
+  .review .rn{font-weight:700;color:var(--ink);}
+  .share-link{text-align:center;font-size:12.5px;color:var(--muted);margin-top:14px;background:#fff;border:1px dashed var(--line);padding:8px;border-radius:10px;}
+  .floating-tag{position:absolute;background:#fff;border-radius:14px;box-shadow:0 12px 30px -8px rgba(23,20,18,0.2);padding:10px 16px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+  .ft1{top:20px;right:-18px;}
+  .ft1 .dotcol{width:8px;height:8px;border-radius:50%;background:#4CAF7D;}
+  .ft2{bottom:56px;left:-24px;font-family:'Caveat',cursive;font-size:18px;}
+
+  /* WHY */
+  .why{padding:96px 0;}
+  .section-head{text-align:center;max-width:560px;margin:0 auto 52px;}
+  .section-head .eyebrow{margin-bottom:16px;}
+  .section-head h2{font-size:34px;}
+  .section-head p{color:var(--ink-soft);font-size:15.5px;margin-top:12px;}
+  .why-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  .why-card{border:1px solid var(--line);border-radius:18px;padding:26px 22px;transition:border-color .15s ease, transform .15s ease;}
+  .why-card:hover{border-color:var(--pink);transform:translateY(-3px);}
+  .why-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px;}
+  .icon-pink{background:var(--pink-light);}
+  .icon-amber{background:var(--amber-light);}
+  .why-card h3{font-family:'Inter',sans-serif;text-transform:none;font-size:16px;font-weight:700;letter-spacing:0;margin-bottom:7px;}
+  .why-card p{font-size:14px;color:var(--ink-soft);}
+
+  /* SHOWCASE */
+  .showcase{background:var(--ink);color:#fff;padding:96px 0;border-radius:32px;margin:0 24px;}
+  .showcase .wrap{display:grid;grid-template-columns:0.9fr 1.1fr;gap:64px;align-items:center;}
+  .showcase .eyebrow{background:rgba(212,67,126,0.2);color:#F2A4C1;}
+  .showcase h2{font-size:32px;color:#fff;margin:16px 0 16px;}
+  .showcase p.lead{color:#C9C4BA;font-size:15.5px;margin-bottom:26px;max-width:420px;}
+  .feature-list{display:flex;flex-direction:column;gap:16px;}
+  .feature-item{display:flex;gap:14px;align-items:flex-start;}
+  .feature-item .fi{width:32px;height:32px;border-radius:10px;background:rgba(212,67,126,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#F2A4C1;font-weight:700;font-size:14px;}
+  .feature-item h4{font-size:15px;font-weight:700;margin-bottom:3px;}
+  .feature-item p{font-size:13.5px;color:#B5B0A6;}
+
+  /* HOW IT WORKS */
+  .how{padding:96px 0;}
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:52px;}
+  .step{text-align:left;}
+  .step-visual{
+    background:var(--cream);border:1px solid var(--cream-border);border-radius:16px;
+    height:200px;padding:16px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;position:relative;
+  }
+  .step-badge{display:inline-block;background:var(--pink-light);color:var(--pink-dark);font-size:12px;font-weight:700;padding:5px 12px;border-radius:100px;margin-bottom:12px;}
+  .step h3{font-family:'Inter',sans-serif;text-transform:none;font-size:16px;font-weight:700;letter-spacing:0;margin-bottom:7px;}
+  .step p{font-size:13.5px;color:var(--ink-soft);}
+
+  /* step 1 visual: mini profile */
+  .mini-profile{background:#fff;border:1px solid var(--line);border-radius:12px;width:100%;padding:10px;box-shadow:0 8px 20px -10px rgba(23,20,18,0.15);}
+  .mini-profile .mp-photo{height:56px;border-radius:8px;background:linear-gradient(135deg,#F3D9E4,#FBEAF0);margin-bottom:8px;}
+  .mini-profile .mp-name{font-size:12.5px;font-weight:700;}
+  .mini-profile .mp-role{font-size:10.5px;color:var(--muted);margin-bottom:6px;}
+  .mini-profile .mp-line{height:5px;background:var(--line);border-radius:3px;margin-bottom:4px;}
+  .mini-profile .mp-line:nth-child(4){width:70%;}
+
+  /* step 2 visual: leads list */
+  .mini-leads{width:100%;display:flex;flex-direction:column;gap:8px;}
+  .lead-row{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 14px -10px rgba(23,20,18,0.12);}
+  .lead-row .lr-icon{width:22px;height:22px;border-radius:7px;background:var(--pink-light);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+  .lead-row .lr-text{font-size:11px;font-weight:700;}
+  .lead-row .lr-sub{font-size:9.5px;color:var(--muted);}
+
+  /* step 3 visual: quote screen */
+  .mini-quote{background:#fff;border:1px solid var(--line);border-radius:12px;width:100%;padding:12px;box-shadow:0 8px 20px -10px rgba(23,20,18,0.15);}
+  .mini-quote .mq-hello{font-size:11.5px;font-weight:700;margin-bottom:8px;}
+  .mini-quote .mq-line{height:5px;background:var(--line);border-radius:3px;margin-bottom:5px;}
+  .mini-quote .mq-line:nth-child(3){width:60%;}
+  .mini-quote .mq-quote-row{display:flex;justify-content:space-between;align-items:center;background:var(--pink-light);border-radius:8px;padding:8px 10px;margin:8px 0;}
+  .mini-quote .mq-quote-row span:first-child{font-size:10.5px;color:var(--pink-dark);}
+  .mini-quote .mq-quote-row span:last-child{font-size:13px;font-weight:700;color:var(--pink-dark);}
+  .mini-quote .mq-btn{background:var(--ink);color:#fff;font-size:11px;font-weight:700;text-align:center;padding:8px;border-radius:8px;}
+
+  /* step 4 visual: payment confirmation */
+  .mini-payment{background:#fff;border:1px solid var(--line);border-radius:12px;width:100%;padding:16px;text-align:center;box-shadow:0 8px 20px -10px rgba(23,20,18,0.15);}
+  .mini-payment .mpay-check{width:36px;height:36px;border-radius:50%;background:var(--amber-light);color:#8A5A0B;display:flex;align-items:center;justify-content:center;font-size:16px;margin:0 auto 8px;}
+  .mini-payment .mpay-amount{font-size:20px;font-weight:700;color:var(--ink);}
+  .mini-payment .mpay-label{font-size:10.5px;color:var(--muted);margin-top:2px;}
+
+  /* FEATURES GRID */
+  .features{padding:96px 0;}
+  .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+  .feat-card{border:1px solid var(--line);border-radius:18px;padding:22px;transition:border-color .15s ease, transform .15s ease;}
+  .feat-card:hover{border-color:var(--pink);transform:translateY(-3px);}
+  .feat-visual{background:var(--cream);border-radius:12px;height:150px;padding:14px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .feat-card h3{font-family:'Inter',sans-serif;text-transform:none;font-size:15.5px;font-weight:700;letter-spacing:0;margin-bottom:6px;}
+  .feat-card p{font-size:13px;color:var(--ink-soft);}
+
+  /* mini chat */
+  .mini-chat{width:100%;display:flex;flex-direction:column;gap:6px;}
+  .chat-bubble{max-width:80%;padding:7px 10px;border-radius:10px;font-size:10.5px;}
+  .chat-bubble.them{background:#fff;border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:2px;}
+  .chat-bubble.me{background:var(--ink);color:#fff;align-self:flex-end;border-bottom-right-radius:2px;}
+
+  /* mini stripe connect */
+  .mini-stripe{background:#fff;border:1px solid var(--line);border-radius:10px;width:100%;padding:12px;box-shadow:0 8px 20px -10px rgba(23,20,18,0.15);}
+  .mini-stripe .ms-title{font-size:11px;font-weight:700;margin-bottom:2px;}
+  .mini-stripe .ms-sub{font-size:9.5px;color:var(--muted);margin-bottom:10px;}
+  .mini-stripe .ms-btn{background:var(--ink);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:7px;border-radius:7px;}
+
+  /* mini schedule */
+  .mini-schedule{width:100%;display:flex;flex-direction:column;gap:6px;}
+  .sched-row{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px;display:flex;align-items:center;gap:8px;}
+  .sched-row .sr-dot{width:6px;height:6px;border-radius:50%;background:var(--pink);flex-shrink:0;}
+  .sched-row span{font-size:10px;font-weight:600;}
+
+  /* mini requests stat */
+  .mini-stats{width:100%;display:flex;gap:8px;}
+  .stat-box{flex:1;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 8px;text-align:center;}
+  .stat-box .sb-num{font-size:18px;font-weight:700;color:var(--pink-dark);}
+  .stat-box .sb-label{font-size:8.5px;color:var(--muted);margin-top:2px;}
+
+  /* mini reviews */
+  .mini-reviews{width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 8px 20px -10px rgba(23,20,18,0.15);}
+  .mini-reviews .rv-stars{color:var(--amber);font-size:14px;margin-bottom:4px;}
+  .mini-reviews .rv-line{height:5px;background:var(--line);border-radius:3px;margin-bottom:4px;}
+  .mini-reviews .rv-line:last-child{width:65%;}
+
+  /* mini gallery */
+  .mini-gallery-feat{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+  .mini-gallery-feat div{aspect-ratio:1;border-radius:7px;background:#fff;border:1px solid var(--line);}
+
+  /* CATEGORIES */
+  .categories{margin:0 24px 96px;background:var(--cream);border-radius:28px;padding:60px 48px;text-align:center;}
+  .categories h2{font-size:28px;}
+  .categories p{color:var(--ink-soft);margin-top:10px;margin-bottom:28px;font-size:15px;}
+  .cat-pills{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;}
+  .cat-pill{background:#fff;border:1px solid var(--cream-border);padding:11px 20px;border-radius:100px;font-size:14px;font-weight:600;}
+
+  /* ALREADY HAVE SITE */
+  .objection{padding:0 0 96px;}
+  .objection-card{max-width:920px;margin:0 auto;background:var(--cream);border:1px solid var(--cream-border);border-radius:24px;padding:44px 52px;display:grid;grid-template-columns:0.9fr 1.1fr;gap:44px;align-items:center;}
+  .objection-card h2{font-size:24px;margin:14px 0 10px;text-transform:none;font-family:'Inter',sans-serif;letter-spacing:0;}
+  .objection-card p.lead{font-size:14.5px;color:var(--ink-soft);}
+  .objection-points{display:flex;flex-direction:column;gap:14px;}
+  .objection-point{display:flex;gap:12px;align-items:flex-start;}
+  .objection-point .op-icon{width:30px;height:30px;border-radius:9px;background:#fff;border:1px solid var(--cream-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;}
+  .objection-point h4{font-size:14.5px;font-weight:700;margin-bottom:2px;}
+  .objection-point p{font-size:13px;color:var(--ink-soft);}
+
+  /* FAQ */
+  .faq{padding:0 0 96px;}
+  .faq-list{max-width:780px;margin:52px auto 0;display:flex;flex-direction:column;gap:14px;}
+  .faq-item{border:1px solid var(--line);border-radius:16px;padding:24px 28px;}
+  .faq-item .q{display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:16px;gap:20px;}
+  .faq-item .q .x{color:var(--pink);font-size:16px;flex-shrink:0;}
+  .faq-item .a{font-size:14.5px;color:var(--ink-soft);margin-top:12px;}
+
+  /* CTA + FOOTER */
+  .cta-band{margin:0 24px 24px;background:var(--ink);border-radius:28px;padding:56px;}
+  .cta-band .wrap{padding:0;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;}
+  .cta-band h2{color:#fff;font-size:32px;margin-bottom:10px;}
+  .cta-band p{color:#B5B0A6;font-size:15px;}
+
+  footer{background:var(--ink);color:#fff;padding:56px 0 28px;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:36px;}
+  footer .logo{color:#fff;margin-bottom:12px;}
+  footer .footer-desc{color:#B5B0A6;font-size:14px;max-width:280px;}
+  footer h5{font-size:12px;letter-spacing:0.06em;color:#8A8479;text-transform:uppercase;margin-bottom:14px;}
+  footer ul{list-style:none;display:flex;flex-direction:column;gap:10px;}
+  footer ul a{color:#D8D3C8;font-size:14px;}
+  .footer-bottom{display:flex;justify-content:space-between;margin-top:40px;padding-top:22px;border-top:1px solid rgba(255,255,255,0.1);font-size:12.5px;color:#8A8479;}
+
+  @media(max-width:920px){
+    .hero .wrap, .showcase .wrap, .objection-card{grid-template-columns:1fr;}
+    .why-grid{grid-template-columns:repeat(2,1fr);}
+    .feat-grid{grid-template-columns:repeat(2,1fr);}
+    .steps{grid-template-columns:repeat(2,1fr);gap:28px;}
+    .footer-grid{grid-template-columns:1fr;gap:32px;}
+    .hero h1{font-size:38px;}
+    .cta-band .wrap{flex-direction:column;align-items:flex-start;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">Festly</div>
+    <nav><a href="#">Redan medlem? Logga in</a></nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Festly lanseras nu i Stockholm</span>
+      <h1>Din egen<br>proffs<span class="hl">sida.</span><br>På 10 minuter.</h1>
+      <p class="lead">Visa upp ditt arbete, samla kundomdömen som alla kan se, och dela en länk som ser lika proffsig ut som du är. Helt gratis att skapa.</p>
+      <div class="cta-row">
+        <button class="pill-btn">Skapa din sida — gratis</button>
+        <div class="time">⏱ Tar under 10 minuter</div>
+      </div>
+      <div class="founder-note"><span class="dot"></span>Vi bygger Festly i Stockholm just nu — var med och forma det tidigt</div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="phone-frame">
+        <div class="profile-card">
+          <div class="cover"><div class="avatar">EL</div></div>
+          <div class="profile-body">
+            <div class="name">Elin Lund</div>
+            <div class="role">DJ · Stockholm</div>
+            <div class="badge-row">
+              <span class="stars">★★★★★</span>
+              <span class="rating-num">4.9</span>
+              <span class="founder-badge">Tidig medlem</span>
+            </div>
+            <div class="gallery"><div></div><div></div><div></div></div>
+            <div class="review">
+              <div class="ra"></div>
+              <p><span class="rn">Sara J.</span> — Bokade Elin till vårt bröllop, alla gäster stannade kvar på dansgolvet hela kvällen.</p>
+            </div>
+            <div class="share-link">festly.se/elin-lund</div>
+          </div>
+        </div>
+      </div>
+      <div class="floating-tag ft1"><span class="dotcol"></span>Ny förfrågan</div>
+      <div class="floating-tag ft2">☆ Alltid en vibe</div>
+    </div>
+  </div>
+</section>
+
+<section class="why">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Varför Festly</span>
+      <h2>Byggt för dig som<br>jobbar med fest</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon icon-pink">🖼️</div>
+        <h3>Visa upp ditt arbete</h3>
+        <p>Ladda upp bilder, beskriv dina tjänster och sätt dina priser — precis som en portfolio.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon icon-amber">⭐</div>
+        <h3>Recensioner som syns</h3>
+        <p>Samla omdömen från riktiga kunder direkt på din sida, synliga för alla som hittar dig.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon icon-pink">🔗</div>
+        <h3>En länk att dela överallt</h3>
+        <p>Lägg din Festly-sida i Instagram-bion, i offerter eller i nästa DM till en kund.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon icon-amber">◯</div>
+        <h3>Inga startavgifter</h3>
+        <p>Det kostar ingenting att skapa din sida. Du betalar aldrig för att synas.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="how">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Så funkar det</span>
+      <h2>Från idé till<br>proffsig sida</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-visual">
+          <div class="mini-profile">
+            <div class="mp-photo"></div>
+            <div class="mp-name">Elin Lund</div>
+            <div class="mp-role">DJ · Stockholm</div>
+            <div class="mp-line"></div>
+            <div class="mp-line"></div>
+            <div class="mp-line"></div>
+          </div>
+        </div>
+        <span class="step-badge">Steg 1</span>
+        <h3>Bygg din sida</h3>
+        <p>Lägg till bilder av ditt arbete, beskriv dina tjänster och sätt dina priser.</p>
+      </div>
+      <div class="step">
+        <div class="step-visual">
+          <div class="mini-leads">
+            <div class="lead-row"><div class="lr-icon">🎂</div><div><div class="lr-text">Födelsedag</div><div class="lr-sub">Lör 14 sep · Södermalm</div></div></div>
+            <div class="lead-row"><div class="lr-icon">💍</div><div><div class="lr-text">Bröllop</div><div class="lr-sub">Lör 21 sep · Djurgården</div></div></div>
+            <div class="lead-row"><div class="lr-icon">🏢</div><div><div class="lr-text">Företagsfest</div><div class="lr-sub">Fre 4 okt · Kista</div></div></div>
+          </div>
+        </div>
+        <span class="step-badge">Steg 2</span>
+        <h3>Ta emot förfrågningar</h3>
+        <p>Kunder skickar förfrågningar direkt till dig. Du väljer själv vilka du svarar på.</p>
+      </div>
+      <div class="step">
+        <div class="step-visual">
+          <div class="mini-quote">
+            <div class="mq-hello">Hej Sara,</div>
+            <div class="mq-line"></div>
+            <div class="mq-line"></div>
+            <div class="mq-line"></div>
+            <div class="mq-quote-row"><span>Offert</span><span>3 500 kr</span></div>
+            <div class="mq-btn">Skicka</div>
+          </div>
+        </div>
+        <span class="step-badge">Steg 3</span>
+        <h3>Skicka en offert</h3>
+        <p>Svara i chatten och skicka ett pris direkt — inget krångel med separata mejl.</p>
+      </div>
+      <div class="step">
+        <div class="step-visual">
+          <div class="mini-payment">
+            <div class="mpay-check">✓</div>
+            <div class="mpay-amount">3 500 kr</div>
+            <div class="mpay-label">Betalning mottagen</div>
+          </div>
+        </div>
+        <span class="step-badge">Steg 4</span>
+        <h3>Bli bokad, få betalt</h3>
+        <p>Kunden betalar via Festly. Pengarna är dina så snart jobbet är klart.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Allt på ett ställe</span>
+      <h2>Allt verktyget<br>innehåller</h2>
+      <p>Chatt, offerter och säker betalning — utöver sidan du precis sett. Allt samlat i samma app.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-visual">
+          <div class="mini-gallery-feat"><div></div><div></div><div></div><div></div><div></div><div></div></div>
+        </div>
+        <h3>Bilder, priser &amp; recensioner</h3>
+        <p>En sida som samlar ditt arbete, dina priser och kundomdömen — redo att delas.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-visual">
+          <div class="mini-chat">
+            <div class="chat-bubble them">Hej! Är du ledig 14 sep?</div>
+            <div class="chat-bubble me">Ja, absolut 🙌</div>
+            <div class="chat-bubble them">Perfekt, vad kostar det?</div>
+          </div>
+        </div>
+        <h3>Chatt med kunder</h3>
+        <p>Svara på frågor och kom överens om detaljerna direkt i appen — allt samlat på ett ställe.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-visual">
+          <div class="mini-quote" style="box-shadow:none;">
+            <div class="mq-hello">Hej Sara,</div>
+            <div class="mq-line"></div>
+            <div class="mq-line"></div>
+            <div class="mq-quote-row"><span>Offert</span><span>3 500 kr</span></div>
+            <div class="mq-btn">Skicka</div>
+          </div>
+        </div>
+        <h3>Skräddarsydda offerter</h3>
+        <p>Sätt ett eget pris för varje förfrågan utifrån kundens behov — inget fast pris passar alla event.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-visual">
+          <div class="mini-stripe">
+            <div class="ms-title">Anslut ditt bankkonto</div>
+            <div class="ms-sub">För att ta emot betalningar behöver du ansluta Stripe.</div>
+            <div class="ms-btn">Anslut Stripe →</div>
+          </div>
+        </div>
+        <h3>Säker betalning via Stripe</h3>
+        <p>Kunden betalar tryggt genom Festly. Pengarna går direkt till ditt konto när jobbet är klart.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-visual">
+          <div class="mini-stats">
+            <div class="stat-box"><div class="sb-num">3</div><div class="sb-label">Nya förfrågningar</div></div>
+            <div class="stat-box"><div class="sb-num">1</div><div class="sb-label">Bokning idag</div></div>
+            <div class="stat-box"><div class="sb-num">5</div><div class="sb-label">Kommande</div></div>
+          </div>
+        </div>
+        <h3>Hantera förfrågningar</h3>
+        <p>Se alla dina förfrågningar på ett ställe. Acceptera eller tacka nej — du bestämmer.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-visual">
+          <div class="mini-schedule">
+            <div class="sched-row"><span class="sr-dot"></span><span>Lör 14 sep — Bröllop, Djurgården</span></div>
+            <div class="sched-row"><span class="sr-dot"></span><span>Fre 20 sep — Företagsfest, Kista</span></div>
+            <div class="sched-row"><span class="sr-dot"></span><span>Lör 21 sep — Födelsedag, Solna</span></div>
+          </div>
+        </div>
+        <h3>Ditt schema, samlat</h3>
+        <p>Se dagens och kommande bokningar i en tydlig kalender — inga dubbelbokningar.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-visual">
+          <div class="mini-reviews">
+            <div class="rv-stars">★★★★★</div>
+            <div class="rv-line"></div>
+            <div class="rv-line"></div>
+            <div class="rv-line"></div>
+          </div>
+        </div>
+        <h3>Recensioner byggs av sig själv</h3>
+        <p>Efter varje bokning kan kunden lämna ett omdöme som visas öppet på din sida.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="categories">
+  <h2>Oavsett vad du erbjuder</h2>
+  <p>Festly är öppet för alla typer av fest- och eventtjänster.</p>
+  <div class="cat-pills">
+    <div class="cat-pill">DJ</div>
+    <div class="cat-pill">Fotograf</div>
+    <div class="cat-pill">Musik &amp; artister</div>
+    <div class="cat-pill">Makeup &amp; styling</div>
+    <div class="cat-pill">Underhållning</div>
+    <div class="cat-pill">Catering &amp; kock</div>
+  </div>
+</section>
+
+<section class="objection">
+  <div class="wrap">
+    <div class="objection-card">
+      <div>
+        <span class="eyebrow">Redan etablerad?</span>
+        <h2>Har du redan en hemsida eller portfolio?</h2>
+        <p class="lead">Bra. Festly ersätter ingenting — det är en till plats där arrangörer i Stockholm kan hitta dig.</p>
+      </div>
+      <div class="objection-points">
+        <div class="objection-point">
+          <div class="op-icon">⚡</div>
+          <div><h4>Klart på 2 minuter</h4><p>Du har redan bilder, priser och text — klistra bara in det.</p></div>
+        </div>
+        <div class="objection-point">
+          <div class="op-icon">★</div>
+          <div><h4>Nya, oberoende omdömen</h4><p>Recensioner på Festly väger tyngre än de på din egen sajt.</p></div>
+        </div>
+        <div class="objection-point">
+          <div class="op-icon">↗</div>
+          <div><h4>En ny kanal, inte en ersättning</h4><p>Länka mellan din sajt och din Festly-profil. Fler dörrar in, samma du.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="faq">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Vanliga frågor</span>
+      <h2>Vanliga frågor</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="q">Kostar det något att skapa en sida? <span class="x">✕</span></div>
+        <div class="a">Nej, det är helt gratis att skapa din sida och bygga upp din profil på Festly.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Vad får jag ut av en Festly-sida? <span class="x">✕</span></div>
+        <div class="a">En egen sida med bilder av ditt arbete, dina priser och kundomdömen — och en länk du kan dela var du vill.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Vem kan skapa en sida? <span class="x">✕</span></div>
+        <div class="a">Alla som erbjuder tjänster till fester och event i Stockholm — DJ:s, fotografer, kockar, makeupartister och mer.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Hur tar jag emot bokningar? <span class="x">✕</span></div>
+        <div class="a">Arrangörer skickar förfrågningar direkt till dig i appen. Du väljer själv vilka du vill acceptera.</div>
+      </div>
+      <div class="faq-item">
+        <div class="q">Hur lång tid tar det? <span class="x">✕</span></div>
+        <div class="a">Att skapa din sida tar under 10 minuter. Du kan börja dela den samma dag.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-band">
+  <div class="wrap">
+    <div>
+      <h2>Redo att börja?</h2>
+      <p>Skapa din sida gratis — det tar mindre än 10 minuter.</p>
+    </div>
+    <button class="pill-btn">Skapa din annons — gratis</button>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="logo">Festly</div>
+        <p class="footer-desc">Festly kopplar ihop dig med de bästa leverantörerna och lokalerna. Så att du kan fokusera på det som betyder något.</p>
+      </div>
+      <div>
+        <h5>Kategorier</h5>
+        <ul>
+          <li><a href="#">DJ</a></li>
+          <li><a href="#">Fotograf</a></li>
+          <li><a href="#">Musik &amp; artister</a></li>
+          <li><a href="#">Makeup &amp; styling</a></li>
+          <li><a href="#">Underhållning</a></li>
+          <li><a href="#">Catering &amp; kock</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Info</h5>
+        <ul>
+          <li><a href="#">Så funkar det</a></li>
+          <li><a href="#">Hjälpcenter</a></li>
+          <li><a href="#">Integritetspolicy</a></li>
+          <li><a href="#">Användarvillkor</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Festly Stockholm</span>
+      <span>Gjord för fest och kalas</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

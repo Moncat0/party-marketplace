@@ -14,7 +14,8 @@ import {
   UserRound,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { siteChromePad, siteLogoClass } from '@/components/siteChrome'
+import BrandLogo from '@/components/shared/BrandLogo'
+import { siteChromePad } from '@/components/siteChrome'
 
 const navLinks = [
   { href: '/admin', label: 'Översikt', icon: LayoutDashboard, match: (p: string) => p === '/admin' },
@@ -71,9 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className={siteChromePad}>
           <div className="flex h-16 items-center justify-between gap-4 min-[1440px]:h-20">
             <div className="flex items-center gap-3">
-              <Link href="/admin" className={siteLogoClass}>
-                FESTEN.
-              </Link>
+              <BrandLogo href="/admin" />
               <span className="hidden text-[13px] font-medium text-muted-foreground sm:inline">
                 Admin
               </span>

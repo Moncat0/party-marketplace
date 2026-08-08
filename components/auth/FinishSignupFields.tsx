@@ -16,7 +16,7 @@ export function AgreeAndContinueLegal() {
   return (
     <p className="text-[11px] leading-snug text-muted-foreground">
       Genom att välja <span className="font-medium text-foreground">Godkänn och fortsätt</span>{' '}
-      godkänner du FESTEN:s{' '}
+      godkänner du Festly:s{' '}
       <Link href="/terms" target="_blank" className="font-medium text-foreground underline underline-offset-2">
         användarvillkor
       </Link>{' '}

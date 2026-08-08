@@ -1,0 +1,38 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Core: Button, IconButton, Badge, Tag, Card" -->
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<div id="root" style="background:var(--color-bg);padding:20px"></div>
+<script type="text/babel">
+const {Button,IconButton,Badge,Tag,Card}=window.FestlyDesignSystem_65deb2;
+function Demo(){
+const [tag,setTag]=React.useState('Catering');
+return (<div style={{display:'flex',flexDirection:'column',gap:16,fontFamily:'var(--font-body)'}}>
+<div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+<Button variant="primary" icon="→">Book now</Button>
+<Button variant="secondary">Send request</Button>
+<Button variant="outline">Save for later</Button>
+<Button variant="ghost">Cancel</Button>
+<Button variant="primary" disabled>Unavailable</Button>
+</div>
+<div style={{display:'flex',gap:10,alignItems:'center'}}>
+<IconButton icon="♡" label="Save" variant="outline"/>
+<IconButton icon="↗" label="Share" variant="solid"/>
+<IconButton icon="✕" label="Close" variant="ghost"/>
+<Badge tone="primary">Chef's pick</Badge>
+<Badge tone="success">Available</Badge>
+<Badge tone="outline">3 spots left</Badge>
+</div>
+<div style={{display:'flex',gap:8}}>
+{['Catering','Photography','Music','Venues'].map(t=>(<Tag key={t} selected={tag===t} onClick={()=>setTag(t)}>{t}</Tag>))}
+</div>
+<Card hover style={{maxWidth:260}}>
+<div style={{fontWeight:700,fontSize:18}}>Sunset Loft</div>
+<div style={{color:'var(--ink-500)',fontSize:14,marginTop:4}}>Downtown venue · up to 120 guests</div>
+</Card>
+</div>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Demo/>);
+</script>

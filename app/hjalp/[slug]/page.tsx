@@ -64,7 +64,7 @@ export default function HelpArticlePage({ params }: Props) {
             variant="outline"
             className="h-12 rounded-lg border-[#222222] px-6 text-[16px] font-medium shadow-none"
           >
-            <Link href="/">Till FESTEN.</Link>
+            <Link href="/">Till Festly</Link>
           </Button>
         </div>
       </article>

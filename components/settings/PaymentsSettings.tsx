@@ -239,11 +239,11 @@ export default function PaymentsSettings({
               aria-hidden
             >
               <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
-                <rect x="6" y="12" width="28" height="18" rx="3" stroke="#FF6B35" strokeWidth="1.75" />
-                <path d="M6 18h28" stroke="#FF6B35" strokeWidth="1.75" />
+                <rect x="6" y="12" width="28" height="18" rx="3" stroke="#FF2E8A" strokeWidth="1.75" />
+                <path d="M6 18h28" stroke="#FF2E8A" strokeWidth="1.75" />
                 <path
                   d="M20 22c1.5 0 2.5 1 2.5 2.2 0 1.8-2.5 3.3-2.5 3.3s-2.5-1.5-2.5-3.3c0-1.2 1-2.2 2.5-2.2z"
-                  stroke="#FF6B35"
+                  stroke="#FF2E8A"
                   strokeWidth="1.5"
                   strokeLinejoin="round"
                 />
@@ -251,10 +251,10 @@ export default function PaymentsSettings({
             </div>
             <div>
               <p className="text-[16px] font-semibold text-[#222222]">
-                Betala alltid via FESTEN.
+                Betala alltid via Festly
               </p>
               <p className="mt-1 text-[14px] leading-[1.43] text-[#6a6a6a]">
-                Betala och kommunicera alltid via FESTEN. så att du skyddas av våra{' '}
+                Betala och kommunicera alltid via Festly så att du skyddas av våra{' '}
                 <Link href="/terms" className="underline text-[#222222]">
                   användarvillkor
                 </Link>
@@ -291,7 +291,7 @@ export default function PaymentsSettings({
                 ) : (
                   <p className="text-[14px] leading-[1.43] text-[#6a6a6a]">
                     Du måste koppla Stripe innan du kan skicka prissatta offerter. Kortuppgifter och
-                    kontonummer hanteras endast av Stripe — FESTEN sparar dem inte.
+                    kontonummer hanteras endast av Stripe — Festly sparar dem inte.
                   </p>
                 )}
                 <a

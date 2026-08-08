@@ -1,0 +1,393 @@
+/**
+ * Scoped design tokens for /for-talanger — from Festly Join (Supply).dc.html
+ * + tokens/*.css. Desktop sizes match the prototype; soft scale only on small phones.
+ */
+
+.supply-landing {
+  /* Palette — tokens/colors.css */
+  --orange-50: #fff3e6;
+  --orange-100: #ffe0c2;
+  --orange-300: #ffb066;
+  --orange-500: #ff6a00;
+  --orange-600: #e05e00;
+  --orange-700: #b34b00;
+  --pink-50: #ffe6f2;
+  --pink-100: #ffd0e6;
+  --pink-300: #ff8ec4;
+  --pink-500: #ff2e8a;
+  --pink-600: #e01f74;
+  --pink-700: #b0165c;
+  --ink-900: #111111;
+  --ink-700: #2b2b2b;
+  --ink-500: #5c5c5c;
+  --ink-300: #9a9a9a;
+  --cream-50: #fff3e6;
+  --cream-100: #fff8ef;
+  --white: #ffffff;
+  --border-subtle: #e8ddce;
+  --color-border-subtle: #e8ddce;
+
+  /* Radius — tokens/radius.css */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+  --radius-full: 999px;
+
+  /* Shadows — tokens/shadows.css */
+  --shadow-soft-sm: 0 2px 8px rgba(17, 17, 17, 0.08);
+  --shadow-soft-md: 0 6px 20px rgba(17, 17, 17, 0.1);
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Type — tokens/typography.css (exact desktop values) */
+  --fs-display-xl: 88px;
+  --fs-display-lg: 64px;
+  --fs-display-md: 44px;
+  --fs-h1: 36px;
+  --fs-h2: 28px;
+  --fs-h3: 22px;
+  --fs-body-lg: 19px;
+  --fs-body: 16px;
+  --fs-body-sm: 14px;
+  --fs-caption: 12px;
+  --fs-hand-lg: 34px;
+  --fs-hand: 24px;
+  --lh-tight: 0.94;
+  --lh-snug: 1.15;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.65;
+  --tracking-display: 0.5px;
+  --tracking-eyebrow: 1.5px;
+
+  /* Semantic — match design system/tokens/colors.css */
+  --color-primary: var(--pink-500);
+  --color-primary-hover: var(--pink-600);
+  --color-secondary: var(--orange-500);
+  --color-secondary-hover: var(--orange-600);
+  --color-accent: var(--pink-500);
+
+  /* Marketing chrome: cream borders + Quicksand (primary already Festly pink app-wide) */
+  --primary: 334 100% 59%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 334 100% 59%;
+  --foreground: 0 0% 7%;
+  --border: 33 33% 86%;
+  --input: 33 33% 86%;
+  --font-jakarta: var(--font-supply-body);
+
+  background: var(--white);
+  color: var(--ink-900);
+  font-family: var(--font-supply-body), system-ui, sans-serif;
+  font-size: var(--fs-body);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Prototype is desktop-fixed; only shrink on narrow phones so 88px doesn’t overflow */
+@media (max-width: 639px) {
+  .supply-landing {
+    --fs-display-xl: 44px;
+    --fs-display-md: 32px;
+    --fs-h1: 28px;
+    --fs-h3: 20px;
+    --fs-body-lg: 17px;
+  }
+}
+
+/* Content shell — HTML: max-width:1280px; padding:0 32px */
+.supply-landing .supply-shell {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+@media (max-width: 639px) {
+  .supply-landing .supply-shell {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Header chrome — match top bar padding / gutters from HTML */
+.supply-landing .supply-header > div:first-child {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+}
+
+/* Keep a fixed bar height so logo / search / menu share one vertical center */
+.supply-landing .supply-header .relative.flex.items-center {
+  height: 80px !important;
+  min-height: 80px !important;
+  padding-top: 0;
+  padding-bottom: 0;
+  gap: 24px;
+  align-items: center;
+}
+
+.supply-landing .supply-header a.inline-flex {
+  align-items: center;
+  line-height: 0;
+}
+
+.supply-landing .supply-header a.inline-flex img {
+  display: block;
+  height: 32px;
+  width: auto;
+}
+
+@media (max-width: 639px) {
+  .supply-landing .supply-header > div:first-child {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* Search pill — cream border + soft shadow like prototype */
+.supply-landing .supply-header [class*='rounded-full'][style] {
+  border-color: var(--border-subtle) !important;
+}
+
+.supply-landing .font-sans,
+.supply-landing .font-display,
+.supply-landing .font-body {
+  font-family: var(--font-supply-body), system-ui, sans-serif;
+}
+
+/* Typography helpers */
+.supply-landing .supply-display {
+  font-family: var(--font-supply-display), Impact, 'Arial Narrow Bold', sans-serif;
+  letter-spacing: var(--tracking-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: var(--lh-snug);
+}
+
+.supply-landing .supply-display.supply-display-plain {
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* Animated hero words — gap comes from flex gap-x on the parent row */
+.supply-landing .supply-hero-word {
+  display: inline-block;
+}
+
+.supply-landing .supply-hand {
+  font-family: var(--font-supply-hand), cursive;
+  font-weight: 600;
+  font-size: var(--fs-hand);
+  line-height: 1;
+}
+
+.supply-landing .supply-body {
+  font-family: var(--font-supply-body), system-ui, sans-serif;
+}
+
+.supply-landing .fs-display-xl {
+  font-size: var(--fs-display-xl);
+  line-height: 1.35;
+}
+
+/*
+ * Hero title — match design reference punch (large Anton, tight stack).
+ * Higher specificity so nothing in app chrome can shrink it.
+ */
+.supply-landing h1.supply-hero-title {
+  font-family: var(--font-supply-display), Impact, 'Arial Narrow Bold', sans-serif;
+  font-size: 88px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1023px) {
+  .supply-landing h1.supply-hero-title {
+    font-size: 64px;
+  }
+}
+
+@media (max-width: 639px) {
+  .supply-landing h1.supply-hero-title {
+    font-size: 44px;
+  }
+}
+
+.supply-landing .fs-display-md {
+  font-size: var(--fs-display-md);
+  line-height: var(--lh-snug);
+}
+
+.supply-landing .fs-h1 {
+  font-size: var(--fs-h1);
+  line-height: var(--lh-snug);
+}
+
+.supply-landing .fs-h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-snug);
+}
+
+.supply-landing .fs-h3 {
+  font-size: var(--fs-h3);
+  line-height: var(--lh-snug);
+}
+
+.supply-landing .fs-body-lg {
+  font-size: var(--fs-body-lg);
+  line-height: var(--lh-relaxed);
+}
+
+.supply-landing .fs-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+}
+
+.supply-landing .fs-body-sm {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-normal);
+}
+
+.supply-landing .fs-body-sm-relaxed {
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-relaxed);
+}
+
+.supply-landing .fs-caption {
+  font-size: var(--fs-caption);
+  line-height: var(--lh-normal);
+}
+
+.supply-landing .supply-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 54px;
+  padding: 0 28px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--pink-500);
+  color: var(--white);
+  font-family: var(--font-supply-body), system-ui, sans-serif;
+  font-size: var(--fs-body);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms var(--ease-standard), transform 160ms var(--ease-standard);
+}
+
+.supply-landing .supply-cta:hover {
+  background: var(--pink-600);
+}
+
+.supply-landing .supply-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--pink-50);
+  color: var(--ink-900);
+  font-family: var(--font-supply-body), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+
+/* tone="primary" in prototype → orange wash */
+.supply-landing .supply-badge-orange {
+  background: var(--orange-50);
+}
+
+.supply-landing .supply-card {
+  background: var(--white);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft-sm);
+  transition:
+    transform 200ms var(--ease-standard),
+    box-shadow 200ms var(--ease-standard),
+    border-color 200ms var(--ease-standard);
+}
+
+.supply-landing .supply-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-soft-md);
+  border-color: var(--pink-500);
+}
+
+.supply-landing .supply-faq {
+  background: var(--white);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  transition: border-color 200ms var(--ease-standard);
+}
+
+.supply-landing .supply-faq:hover,
+.supply-landing .supply-faq[open] {
+  border-color: var(--pink-500);
+}
+
+.supply-landing .supply-faq[open] .supply-faq-chevron {
+  transform: rotate(45deg);
+}
+
+.supply-landing .supply-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+@keyframes supplyHeroWord {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes supplyFloatSlow {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(4px, -10px);
+  }
+}
+
+@keyframes supplyPulseNote {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(1.5deg) scale(1.04);
+  }
+}
+
+@keyframes supplyHeroZoom {
+  0% {
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1.14);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .supply-landing .supply-hero-word,
+  .supply-landing .supply-hero-panel,
+  .supply-landing .supply-hero-note,
+  .supply-landing .supply-hero-zoom {
+    animation: none !important;
+  }
+}

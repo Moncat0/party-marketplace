@@ -40,6 +40,7 @@ import AuthPasswordInput from '@/components/auth/AuthPasswordInput'
 import PasswordHint from '@/components/auth/PasswordHint'
 import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Button } from '@/components/ui/button'
+import BrandLogo from '@/components/shared/BrandLogo'
 import { cn } from '@/lib/utils'
 
 export type AuthView =
@@ -488,7 +489,7 @@ export default function AuthPanel({
       return
     }
     if (!isAtLeast18(birthDate)) {
-      setError('Du måste vara minst 18 år för att använda FESTEN.')
+      setError('Du måste vara minst 18 år för att använda Festly')
       setLoading(false)
       return
     }
@@ -777,7 +778,9 @@ export default function AuthPanel({
       {view === 'fresh' && (
         <div className="pt-1">
           <div className="mb-6 text-center">
-            <p className="text-[28px] font-bold tracking-tight text-primary">FESTEN.</p>
+            <div className="flex justify-center">
+              <BrandLogo href={null} height={36} />
+            </div>
             <h2 className="mt-3 text-[26px] font-semibold tracking-tight text-foreground">
               Logga in eller skapa konto
             </h2>
@@ -1173,7 +1176,7 @@ export default function AuthPanel({
 
 function MailIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden className="text-[#FF6B35]">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden className="text-[#FF2E8A]">
       <path
         d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.5v-11Z"
         stroke="currentColor"

@@ -213,7 +213,7 @@ export default function ConversationDetails({
                 />
               </span>
             ) : (
-              <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(255,107,53,0.1)] text-[16px] font-semibold text-[#FF6B35]">
+              <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[rgba(255, 46, 138,0.1)] text-[16px] font-semibold text-[#FF2E8A]">
                 {initial}
               </span>
             )}
@@ -287,7 +287,7 @@ export default function ConversationDetails({
               booking.status !== 'accepted' &&
                 booking.status !== 'completed' &&
                 booking.status !== 'cancelled' &&
-                'bg-[rgba(255,107,53,0.12)] text-[#FF6B35]'
+                'bg-[rgba(255, 46, 138,0.12)] text-[#FF2E8A]'
             )}
           >
             {statusLabel}
@@ -303,7 +303,7 @@ export default function ConversationDetails({
           {booking.guest_count != null && (
             <DetailRow label="Gäster" value={`${booking.guest_count}`} />
           )}
-          {fundsHeld && <DetailRow label="Betalning" value="Betald (hålls av FESTEN)" />}
+          {fundsHeld && <DetailRow label="Betalning" value="Betald (hålls av Festly)" />}
           {booking.payment_status === 'released' && (
             <DetailRow label="Betalning" value="Utbetald" />
           )}

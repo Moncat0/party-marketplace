@@ -15,20 +15,29 @@ const config = {
         mono: ['var(--font-jetbrains)', 'monospace'],
       },
       colors: {
+        /* Compat alias — ember utilities now resolve to Festly pink */
         ember: {
-          DEFAULT: '#FF6B35',
-          hover: '#e55a26',
+          DEFAULT: '#FF2E8A',
+          hover: '#E01F74',
+        },
+        festly: {
+          pink: '#FF2E8A',
+          'pink-hover': '#E01F74',
+          orange: '#FF6A00',
+          cream: '#FFF3E6',
+          ink: '#111111',
         },
         canvas: '#ffffff',
-        night: '#222222',
+        night: '#111111',
         'warm-white': '#ffffff',
         disabled: '#c1c1c1',
         surface: {
           DEFAULT: '#f2f2f2',
           soft: '#ebebeb',
+          sunken: '#fff8ef',
         },
         divider: '#dddddd',
-        success: '#1D9E75',
+        success: '#1F8A52',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

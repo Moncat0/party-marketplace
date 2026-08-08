@@ -39,7 +39,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     summary:
       'Det är gratis att skapa konto, spara talanger och skicka förfrågningar. Du betalar först när ni går vidare med en bokning.',
     body: [
-      'Det är gratis att skapa konto, spara talanger på din önskelista och skicka förfrågningar på FESTEN.',
+      'Det är gratis att skapa konto, spara talanger på din önskelista och skicka förfrågningar på Festly',
       'När du och talangen kommit överens betalar du säkert via plattformen. Du betalar inget förrän bokningen är bekräftad.',
     ],
   },
@@ -81,9 +81,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     role: 'planner',
     title: 'När och hur betalar jag?',
     summary:
-      'Du betalar säkert via FESTEN när ni kommit överens. Vi ser till att talangen får sin ersättning.',
+      'Du betalar säkert via Festly när ni kommit överens. Vi ser till att talangen får sin ersättning.',
     body: [
-      'Betalning sker via FESTEN när bokningen är bekräftad och ni är överens om villkoren.',
+      'Betalning sker via Festly när bokningen är bekräftad och ni är överens om villkoren.',
       'Du behöver inte betala utanför plattformen. Det skyddar både dig och talangen.',
     ],
   },
@@ -105,7 +105,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Det är gratis att skapa profil. Vi tar en serviceavgift på genomförda betalningar — du betalar inget om du inte tjänar.',
     body: [
       'Att skapa och publicera din profil är gratis.',
-      'FESTEN tar en serviceavgift först när en betalning genomförs. Inga bokningar — ingen avgift.',
+      'Festly tar en serviceavgift först när en betalning genomförs. Inga bokningar — ingen avgift.',
     ],
   },
   {
@@ -132,10 +132,10 @@ export const HELP_ARTICLES: HelpArticle[] = [
     slug: 'utbetalning',
     role: 'provider',
     title: 'Hur fungerar utbetalning?',
-    summary: 'Via Stripe Connect. Du ansluter ditt konto en gång, sedan sköter FESTEN betalningsflödet.',
+    summary: 'Via Stripe Connect. Du ansluter ditt konto en gång, sedan sköter Festly betalningsflödet.',
     body: [
       'Anslut Stripe Connect från din instrumentpanel så utbetalningar kan nå dig.',
-      'När en planerare betalar via FESTEN hanteras flödet automatiskt enligt våra villkor.',
+      'När en planerare betalar via Festly hanteras flödet automatiskt enligt våra villkor.',
     ],
   },
   {
@@ -156,7 +156,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     summary:
       'Ja. Börja som planerare och klicka Erbjud din tjänst när du vill skapa en talangprofil — eller byt läge i menyn.',
     body: [
-      'Många använder FESTEN både för att boka till egna fester och för att erbjuda sin egen tjänst.',
+      'Många använder Festly både för att boka till egna fester och för att erbjuda sin egen tjänst.',
       'Byt till talangläge eller planerarläge från kontomenyn när du behöver byta perspektiv.',
     ],
   },

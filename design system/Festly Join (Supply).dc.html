@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/festly-design-system-65deb28a-c9ff-44dc-91ac-b497f2e96e75/tokens/colors.css">
+<link rel="stylesheet" href="_ds/festly-design-system-65deb28a-c9ff-44dc-91ac-b497f2e96e75/tokens/typography.css">
+<link rel="stylesheet" href="_ds/festly-design-system-65deb28a-c9ff-44dc-91ac-b497f2e96e75/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/festly-design-system-65deb28a-c9ff-44dc-91ac-b497f2e96e75/tokens/radius.css">
+<link rel="stylesheet" href="_ds/festly-design-system-65deb28a-c9ff-44dc-91ac-b497f2e96e75/tokens/shadows.css">
+<link rel="stylesheet" href="_ds/festly-design-system-65deb28a-c9ff-44dc-91ac-b497f2e96e75/styles.css">
+<script src="_ds/festly-design-system-65deb28a-c9ff-44dc-91ac-b497f2e96e75/_ds_bundle.js"></script>
+<script src="./image-slot.js"></script>
+<style>
+body{margin:0;background:var(--white);font-family:var(--font-body);}
+a{color:var(--color-primary);text-decoration:none;}
+a:hover{color:var(--color-primary-hover);}
+.faq-item summary::-webkit-details-marker{display:none;}
+.faq-item[open] .faq-chevron{transform:rotate(45deg);}
+@keyframes heroWordIn{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+@keyframes floatSlow{0%,100%{transform:translate(0,0);}50%{transform:translate(4px,-10px);}}
+@keyframes pulseNote{0%,100%{transform:rotate(0deg) scale(1);}50%{transform:rotate(1.5deg) scale(1.04);}}
+@keyframes heroZoom{0%{transform:scale(1.03);}100%{transform:scale(1.14);}}
+[data-reveal]{opacity:0;transform:translateY(28px);transition:opacity 700ms cubic-bezier(.22,1,.36,1),transform 700ms cubic-bezier(.22,1,.36,1);}
+[data-reveal].is-visible{opacity:1;transform:none;}
+</style>
+</helmet>
+
+<div class="festly-home" style="max-width:1280px;margin:0 auto;padding:0 32px;">
+
+<!-- top bar -->
+<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0;gap:24px;">
+  <img src="./assets/festly-wordmark.svg" alt="Festly" style="height:{{ logoHeightPx }};width:auto;flex-shrink:0;">
+  <div style="flex:1;max-width:480px;display:flex;align-items:center;background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-full);padding:6px 6px 6px 24px;box-shadow:var(--shadow-soft-sm);">
+    <div style="flex:1;padding-right:16px;">
+      <p style="font-family:var(--font-body);font-weight:700;font-size:13px;color:var(--ink-900);margin:0;">Var</p>
+      <p style="font-size:13px;color:var(--ink-500);margin:2px 0 0;">Var ska festen vara?</p>
+    </div>
+    <div style="width:1px;height:32px;background:var(--color-border-subtle);flex-shrink:0;"></div>
+    <div style="flex:1;padding-left:16px;">
+      <p style="font-family:var(--font-body);font-weight:700;font-size:13px;color:var(--ink-900);margin:0;">Tjänst</p>
+      <p style="font-size:13px;color:var(--ink-500);margin:2px 0 0;">Vilken tjänst söker du?</p>
+    </div>
+    <button style="width:44px;height:44px;border-radius:50%;background:var(--pink-500);border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+    </button>
+  </div>
+  <div style="display:flex;align-items:center;gap:20px;flex-shrink:0;">
+    <a href="#" style="font-family:var(--font-body);font-weight:600;font-size:15px;color:var(--ink-900);white-space:nowrap;">Erbjud din tjänst</a>
+    <button style="width:44px;height:44px;border-radius:50%;border:1px solid var(--color-border-subtle);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ink-900)" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+    </button>
+    <button style="width:44px;height:44px;border-radius:50%;background:var(--ink-900);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"></path></svg>
+    </button>
+  </div>
+</div>
+
+<!-- hero -->
+<div style="display:grid;grid-template-columns:1.1fr 0.9fr;gap:56px;align-items:center;padding:24px 0 88px;">
+  <div>
+    <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="secondary" hint-size="auto,26px">FÖR DIG SOM JOBBAR MED FEST OCH EVENT</x-import>
+    <h1 style="font-family:var(--font-display);font-size:var(--fs-display-xl);line-height:1.35;letter-spacing:var(--tracking-display);color:var(--ink-900);margin:20px 0 24px;"><span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:0ms;">GÖR</span> <span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:70ms;">DET</span> <span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:140ms;">DU</span> <span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:210ms;">ÄLSKAR.</span><br><span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:300ms;">FÅ</span> <span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:370ms;">BETALT</span> <span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:440ms;">FÖR</span> <span style="display:inline-block;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:510ms;">DET.</span></h1>
+    <p style="font-size:var(--fs-body-lg);line-height:var(--lh-relaxed);color:var(--ink-700);max-width:480px;margin:0 0 32px;">Skapa din sida och bli hittad av arrangörer som redan letar efter dig. Helt gratis.</p>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;animation:heroWordIn 600ms cubic-bezier(.22,1,.36,1) both;animation-delay:600ms;">
+      <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Button" variant="secondary" size="lg" hint-size="auto,54px">Skapa din sida – gratis</x-import>
+      <span style="font-family:var(--font-hand);font-size:var(--fs-hand);color:var(--ink-900);transform:rotate(-3deg);display:inline-flex;align-items:center;gap:6px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>Tar under 10 minuter</span>
+    </div>
+  </div>
+  <div style="position:relative;">
+    <div style="position:absolute;top:-18px;left:-18px;width:100%;height:100%;background:var(--pink-500);border-radius:var(--radius-xl);border:1px solid var(--color-border-subtle);z-index:0;animation:floatSlow 7s ease-in-out infinite;"></div>
+    <div style="position:relative;z-index:1;width:100%;aspect-ratio:4/5;border-radius:var(--radius-xl);border:1px solid var(--color-border-subtle);overflow:hidden;box-shadow:var(--shadow-soft-md);background:var(--ink-900);">
+      <sc-for list="{{ heroImages }}" as="im" hint-placeholder-count="4">
+        <img src="{{ im.src }}" alt="{{ im.label }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:{{ im.opacity }};transition:opacity 900ms ease;animation:heroZoom 11s ease-in-out infinite alternate;">
+      </sc-for>
+      <span style="position:absolute;bottom:14px;left:14px;background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:4px 12px;font-family:var(--font-body);font-weight:700;font-size:13px;color:var(--ink-900);">{{ heroLabel }}</span>
+    </div>
+    <div style="position:absolute;bottom:-22px;right:-16px;background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);padding:14px 20px;box-shadow:var(--shadow-soft-md);z-index:2;display:flex;align-items:center;gap:8px;animation:pulseNote 4s ease-in-out infinite;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M12 3l2.6 6.2L21 10l-5 4.4L17.4 21 12 17.3 6.6 21 8 14.4 3 10l6.4-.8z"></path></svg>
+      <span style="font-family:var(--font-hand);font-size:var(--fs-hand);color:var(--ink-900);">Alltid en vibe</span>
+    </div>
+  </div>
+</div>
+
+<!-- benefits -->
+<div data-reveal="" style="padding:64px 0;">
+  <h2 style="font-family:var(--font-display);font-size:var(--fs-display-md);color:var(--ink-900);text-align:center;margin:0 0 48px;">VARFÖR FESTLY?</h2>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+    <div style="background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);padding:28px 22px;box-shadow:var(--shadow-soft-sm);transition:transform 200ms var(--ease-standard),box-shadow 200ms var(--ease-standard),border-color 200ms var(--ease-standard);" style-hover="transform:translateY(-5px);box-shadow:var(--shadow-soft-md);border-color:var(--pink-500);">
+      <div style="width:44px;height:44px;border-radius:var(--radius-md);background:var(--pink-50);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8.5" cy="9.5" r="1.5"></circle><path d="M21 15l-5-5-9 9"></path></svg>
+      </div>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:0 0 8px;">Visa upp ditt arbete</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-normal);color:var(--ink-500);margin:0;">Ladda upp bilder, beskriv dina tjänster och sätt dina priser — precis som en portfolio.</p>
+    </div>
+    <div style="background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);padding:28px 22px;box-shadow:var(--shadow-soft-sm);transition:transform 200ms var(--ease-standard),box-shadow 200ms var(--ease-standard),border-color 200ms var(--ease-standard);" style-hover="transform:translateY(-5px);box-shadow:var(--shadow-soft-md);border-color:var(--pink-500);">
+      <div style="width:44px;height:44px;border-radius:var(--radius-md);background:var(--orange-50);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M12 3l2.6 6.2L21 10l-5 4.4L17.4 21 12 17.3 6.6 21 8 14.4 3 10l6.4-.8z"></path></svg>
+      </div>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:0 0 8px;">Recensioner som syns</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-normal);color:var(--ink-500);margin:0;">Samla omdömen från riktiga kunder direkt på din sida, synliga för alla som hittar dig.</p>
+    </div>
+    <div style="background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);padding:28px 22px;box-shadow:var(--shadow-soft-sm);transition:transform 200ms var(--ease-standard),box-shadow 200ms var(--ease-standard),border-color 200ms var(--ease-standard);" style-hover="transform:translateY(-5px);box-shadow:var(--shadow-soft-md);border-color:var(--pink-500);">
+      <div style="width:44px;height:44px;border-radius:var(--radius-md);background:var(--pink-50);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><path d="M9 12a4 4 0 004 4h1a4 4 0 000-8h-1"></path><path d="M15 12a4 4 0 00-4-4H10a4 4 0 000 8h1"></path></svg>
+      </div>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:0 0 8px;">En länk att dela överallt</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-normal);color:var(--ink-500);margin:0;">Lägg din Festly-sida i Instagram-bion, i offerter eller i nästa DM till en kund.</p>
+    </div>
+    <div style="background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);padding:28px 22px;box-shadow:var(--shadow-soft-sm);transition:transform 200ms var(--ease-standard),box-shadow 200ms var(--ease-standard),border-color 200ms var(--ease-standard);" style-hover="transform:translateY(-5px);box-shadow:var(--shadow-soft-md);border-color:var(--pink-500);">
+      <div style="width:44px;height:44px;border-radius:var(--radius-md);background:var(--orange-50);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2"><circle cx="12" cy="12" r="8"></circle></svg>
+      </div>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:0 0 8px;">Inga startavgifter</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-normal);color:var(--ink-500);margin:0;">Det kostar ingenting att skapa din sida. Du betalar aldrig för att synas.</p>
+    </div>
+  </div>
+</div>
+
+<!-- how it works -->
+<div data-reveal="" style="padding:72px 0;">
+  <div style="text-align:center;margin-bottom:48px;">
+    <h2 style="font-family:var(--font-display);font-size:var(--fs-display-md);color:var(--ink-900);margin:0;">SÅ FUNKAR DET</h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+
+    <div>
+      <div style="background:var(--cream-50);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;">
+        <div style="background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-soft-sm);padding:16px;height:160px;">
+          <div style="background:var(--pink-50);border-radius:var(--radius-sm);height:56px;margin-bottom:14px;"></div>
+          <p style="font-family:var(--font-body);font-weight:700;font-size:15px;color:var(--ink-900);margin:0 0 2px;">Elin Lund</p>
+          <p style="font-size:12px;color:var(--ink-500);margin:0 0 10px;">DJ · Stockholm</p>
+          <div style="height:6px;border-radius:3px;background:var(--color-border-subtle);margin-bottom:6px;width:90%;"></div>
+          <div style="height:6px;border-radius:3px;background:var(--color-border-subtle);width:70%;"></div>
+        </div>
+      </div>
+      <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="secondary" hint-size="auto,26px">STEG 1</x-import>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:14px 0 8px;">Bygg din sida</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-relaxed);color:var(--ink-500);margin:0;">Lägg till bilder av ditt arbete, beskriv dina tjänster och sätt dina priser.</p>
+    </div>
+
+    <div>
+      <div style="background:var(--cream-50);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;">
+        <div style="background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-soft-sm);padding:14px;height:160px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;background:var(--cream-50);border-radius:var(--radius-sm);padding:8px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--pink-100);flex-shrink:0;"></div>
+            <div><p style="font-size:12px;font-weight:700;color:var(--ink-900);margin:0;">Födelsedag</p><p style="font-size:11px;color:var(--ink-500);margin:0;">Lör 14 sep</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--cream-50);border-radius:var(--radius-sm);padding:8px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--orange-100);flex-shrink:0;"></div>
+            <div><p style="font-size:12px;font-weight:700;color:var(--ink-900);margin:0;">Bröllop</p><p style="font-size:11px;color:var(--ink-500);margin:0;">Lör 21 sep</p></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;background:var(--cream-50);border-radius:var(--radius-sm);padding:8px;">
+            <div style="width:26px;height:26px;border-radius:50%;background:var(--pink-100);flex-shrink:0;"></div>
+            <div><p style="font-size:12px;font-weight:700;color:var(--ink-900);margin:0;">Företagsfest</p><p style="font-size:11px;color:var(--ink-500);margin:0;">Fre 4 okt</p></div>
+          </div>
+        </div>
+      </div>
+      <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="secondary" hint-size="auto,26px">STEG 2</x-import>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:14px 0 8px;">Ta emot förfrågningar</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-relaxed);color:var(--ink-500);margin:0;">Kunder skickar förfrågningar direkt till dig. Du väljer själv vilka du svarar på.</p>
+    </div>
+
+    <div>
+      <div style="background:var(--cream-50);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;">
+        <div style="background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-soft-sm);padding:16px;height:160px;display:flex;flex-direction:column;gap:8px;">
+          <p style="font-family:var(--font-body);font-weight:700;font-size:13px;color:var(--ink-900);margin:0;">Hej Sara,</p>
+          <div style="height:5px;border-radius:3px;background:var(--color-border-subtle);width:95%;"></div>
+          <div style="height:5px;border-radius:3px;background:var(--color-border-subtle);width:80%;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--pink-50);border-radius:var(--radius-sm);padding:8px 10px;margin-top:4px;">
+            <span style="font-size:12px;color:var(--ink-700);">Offert</span>
+            <span style="font-family:var(--font-display);font-size:14px;color:var(--ink-900);">3 500 kr</span>
+          </div>
+          <div style="background:var(--ink-900);border-radius:var(--radius-sm);text-align:center;padding:8px;margin-top:auto;">
+            <span style="font-family:var(--font-body);font-weight:700;font-size:12px;color:#fff;">Skicka</span>
+          </div>
+        </div>
+      </div>
+      <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="secondary" hint-size="auto,26px">STEG 3</x-import>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:14px 0 8px;">Skicka en offert</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-relaxed);color:var(--ink-500);margin:0;">Svara i chatten och skicka ett pris direkt — inget krångel med separata mejl.</p>
+    </div>
+
+    <div>
+      <div style="background:var(--cream-50);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px;">
+        <div style="background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-soft-sm);padding:16px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--orange-100);display:flex;align-items:center;justify-content:center;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange-600)" stroke-width="2.5"><path d="M4 12l5 5L20 6"></path></svg>
+          </div>
+          <p style="font-family:var(--font-display);font-size:22px;color:var(--ink-900);margin:0;">3 500 kr</p>
+          <p style="font-size:12px;color:var(--ink-500);margin:0;">Betalning mottagen</p>
+        </div>
+      </div>
+      <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="secondary" hint-size="auto,26px">STEG 4</x-import>
+      <h3 style="font-family:var(--font-body);font-weight:700;font-size:var(--fs-h3);color:var(--ink-900);margin:14px 0 8px;">Bli bokad, få betalt</h3>
+      <p style="font-size:var(--fs-body-sm);line-height:var(--lh-relaxed);color:var(--ink-500);margin:0;">Kunden betalar via Festly. Pengarna är dina så snart jobbet är klart.</p>
+    </div>
+
+  </div>
+</div>
+
+<div data-reveal="" style="text-align:center;padding:0 0 24px;">
+  <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Button" variant="secondary" size="lg" hint-size="auto,54px">Skapa din sida – gratis</x-import>
+</div>
+
+<!-- feature showcase -->
+<div data-reveal="" style="padding:72px 0;">
+  <div style="text-align:center;margin-bottom:48px;">
+    <h2 style="font-family:var(--font-display);font-size:var(--fs-display-md);color:var(--ink-900);margin:0;">ALLT DU BEHÖVER</h2>
+    <p style="font-size:var(--fs-body);color:var(--ink-500);margin:12px 0 0;">Från första bilden till betald bokning.</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:32px;">
+
+    <div>
+      <image-slot id="feat-din-sida" shape="rounded" placeholder="skärmdump: profilsida med bildgalleri, priser och recensioner" style="width:100%;height:480px;border-radius:var(--radius-lg);"></image-slot>
+      <div style="margin-top:24px;">
+        <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="secondary" hint-size="auto,26px">DIN SIDA</x-import>
+        <h3 style="font-family:var(--font-display);font-size:var(--fs-h1);color:var(--ink-900);margin:16px 0 10px;">Bygg en sida som säljer åt dig</h3>
+        <p style="font-size:var(--fs-body);line-height:var(--lh-relaxed);color:var(--ink-500);margin:0;">Bildgalleri, priser och tjänster — allt på en egen delbar länk. Recensionerna byggs upp av sig själv, bokning efter bokning.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:32px;">
+      <div>
+        <image-slot id="feat-kommunikation" shape="rounded" placeholder="skärmdump: chatt, offert och förfrågningslista" style="width:100%;height:224px;border-radius:var(--radius-lg);"></image-slot>
+        <div style="margin-top:20px;">
+          <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="primary" hint-size="auto,26px">KOMMUNIKATION &amp; BOKNING</x-import>
+          <h3 style="font-family:var(--font-display);font-size:var(--fs-h3);color:var(--ink-900);margin:14px 0 8px;">Sköt hela affären på ett ställe</h3>
+          <p style="font-size:var(--fs-body-sm);line-height:var(--lh-relaxed);color:var(--ink-500);margin:0;">Chatt, offerter och schema — allt samlat på ett ställe. Inget som studsar mellan mejl och SMS.</p>
+        </div>
+      </div>
+      <div>
+        <image-slot id="feat-betalning" shape="rounded" placeholder="skärmdump: bokning betald via Stripe" style="width:100%;height:224px;border-radius:var(--radius-lg);"></image-slot>
+        <div style="margin-top:20px;">
+          <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Badge" tone="secondary" hint-size="auto,26px">BETALNING</x-import>
+          <h3 style="font-family:var(--font-display);font-size:var(--fs-h3);color:var(--ink-900);margin:14px 0 8px;">Trygg betalning, varje gång</h3>
+          <p style="font-size:var(--fs-body-sm);line-height:var(--lh-relaxed);color:var(--ink-500);margin:0;">Kunden betalar via Stripe. Pengarna går till ditt konto när jobbet är klart.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div data-reveal="" style="text-align:center;padding:0 0 24px;">
+  <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Button" variant="secondary" size="lg" hint-size="auto,54px">Skapa din sida – gratis</x-import>
+</div>
+
+<!-- categories -->
+<div data-reveal="" style="padding:56px 40px;text-align:center;background:var(--cream-50);border-radius:var(--radius-xl);margin:56px 0;">
+  <h2 style="font-family:var(--font-display);font-size:var(--fs-h1);color:var(--ink-900);margin:0 0 8px;">OAVSETT VAD DU ERBJUDER</h2>
+  <p style="font-size:var(--fs-body);color:var(--ink-500);margin:0 0 32px;">Festly är öppet för alla typer av fest- och eventtjänster.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;">
+    <sc-for list="{{ categories }}" as="c" hint-placeholder-count="6">
+      <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Tag" hint-size="auto,40px">{{ c }}</x-import>
+    </sc-for>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div data-reveal="" style="padding:64px 0;max-width:760px;margin:0 auto;">
+  <h2 style="font-family:var(--font-display);font-size:var(--fs-display-md);color:var(--ink-900);text-align:center;margin:0 0 40px;">VANLIGA FRÅGOR</h2>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="9">
+      <details class="faq-item" style="background:#fff;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);padding:18px 22px;transition:border-color 200ms var(--ease-standard);" style-hover="border-color:var(--pink-500);">
+        <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;font-family:var(--font-body);font-weight:700;font-size:var(--fs-body-lg);color:var(--ink-900);">
+          {{ f.q }}
+          <span class="faq-chevron" style="font-family:var(--font-display);font-size:22px;color:var(--pink-500);transition:transform 150ms ease;">+</span>
+        </summary>
+        <p style="margin:14px 0 0;font-size:var(--fs-body);line-height:var(--lh-relaxed);color:var(--ink-500);">{{ f.a }}</p>
+      </details>
+    </sc-for>
+  </div>
+</div>
+
+<!-- final CTA -->
+<div data-reveal="" style="margin:24px 0 56px;background:var(--ink-900);border-radius:var(--radius-xl);padding:56px 48px;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap;">
+  <div>
+    <h2 style="font-family:var(--font-display);font-size:var(--fs-display-md);color:#fff;margin:0 0 8px;">REDO ATT BÖRJA?</h2>
+    <p style="font-size:var(--fs-body-lg);color:rgba(255,255,255,0.65);margin:0;">Skapa din annons gratis – det tar mindre än 10 minuter.</p>
+  </div>
+  <x-import component-from-global-scope="FestlyDesignSystem_65deb2.Button" variant="secondary" size="lg" hint-size="auto,54px">Skapa din annons – gratis</x-import>
+</div>
+
+</div>
+
+<!-- footer -->
+<footer style="background:var(--ink-900);margin-top:0;">
+  <div style="max-width:1280px;margin:0 auto;padding:56px 32px 32px;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;margin-bottom:40px;">
+      <div>
+        <img src="./assets/festly-wordmark.svg" alt="Festly" style="height:28px;width:auto;filter:brightness(0) invert(1);margin-bottom:14px;">
+        <p style="font-size:var(--fs-body-sm);color:rgba(255,255,255,0.6);line-height:var(--lh-relaxed);max-width:320px;margin:0;">Festly kopplar ihop dig med de bästa leverantörerna och lokalerna. Så att du kan fokusera på det som betyder något.</p>
+      </div>
+      <div>
+        <p style="font-size:12px;font-weight:700;letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:rgba(255,255,255,0.4);margin:0 0 16px;">Kategorier</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ categories }}" as="c" hint-placeholder-count="6">
+            <a href="#" style="font-size:var(--fs-body-sm);color:rgba(255,255,255,0.65);">{{ c }}</a>
+          </sc-for>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:12px;font-weight:700;letter-spacing:var(--tracking-eyebrow);text-transform:uppercase;color:rgba(255,255,255,0.4);margin:0 0 16px;">Info</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <a href="#" style="font-size:var(--fs-body-sm);color:rgba(255,255,255,0.65);">Så funkar det</a>
+          <a href="#" style="font-size:var(--fs-body-sm);color:rgba(255,255,255,0.65);">Hjälpcenter</a>
+          <a href="#" style="font-size:var(--fs-body-sm);color:rgba(255,255,255,0.65);">Integritetspolicy</a>
+          <a href="#" style="font-size:var(--fs-body-sm);color:rgba(255,255,255,0.65);">Användarvillkor</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <p style="font-size:12px;color:rgba(255,255,255,0.3);margin:0;">© 2026 Festly Stockholm</p>
+      <p style="font-size:12px;color:rgba(255,255,255,0.3);margin:0;">Gjord för fest och kalas</p>
+    </div>
+  </div>
+</footer>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;logoHeight&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:64,&quot;min&quot;:32,&quot;max&quot;:120,&quot;step&quot;:4,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Branding&quot;}}">
+class Component extends DCLogic {
+  state = { heroIndex: 0 };
+  heroPhotos = [
+    { src: 'uploads/DJ picture.png', label: 'DJ' },
+    { src: 'uploads/chef.png', label: 'Catering' },
+    { src: 'uploads/playing band.png', label: 'Musik & Artister' },
+    { src: 'uploads/makeupartist.png', label: 'Makeup' },
+  ];
+  componentDidMount() {
+    this._heroTimer = setInterval(() => {
+      this.setState(s => ({ heroIndex: (s.heroIndex + 1) % this.heroPhotos.length }));
+    }, 2500);
+    this._revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          this._revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.festly-home [data-reveal]').forEach(el => this._revealObserver.observe(el));
+    this._countObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          this._animateCount(entry.target);
+          this._countObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    document.querySelectorAll('.festly-home [data-count-to]').forEach(el => this._countObserver.observe(el));
+  }
+  componentWillUnmount() {
+    clearInterval(this._heroTimer);
+    if (this._revealObserver) this._revealObserver.disconnect();
+    if (this._countObserver) this._countObserver.disconnect();
+  }
+  _animateCount(el) {
+    const target = parseFloat(el.getAttribute('data-count-to'));
+    const suffix = el.getAttribute('data-count-suffix') || '';
+    const duration = 900;
+    const start = performance.now();
+    const step = (now) => {
+      const p = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  renderVals() {
+    return {
+      logoHeightPx: (this.props.logoHeight ?? 64) + 'px',
+      heroImages: this.heroPhotos.map((im, i) => ({ ...im, opacity: i === this.state.heroIndex ? 1 : 0 })),
+      heroLabel: this.heroPhotos[this.state.heroIndex].label,
+      steps: [
+        { number: '01', title: 'Skapa din annons', desc: 'Berätta vad du erbjuder, lägg till bilder och sätt ditt pris.' },
+        { number: '02', title: 'Synas för arrangörer', desc: 'Din annons dyker upp för Stockholms arrangörer som söker det du erbjuder.' },
+        { number: '03', title: 'Ta emot förfrågningar', desc: 'Svara på förfrågningar, chatta med kunden och boka in jobbet.' },
+      ],
+      categories: ['DJ', 'Fotograf', 'Musik & Artister', 'Makeup & Styling', 'Underhållning', 'Catering & Kock'],
+      faqs: [
+        { q: 'Kostar det något att skapa min sida?', a: 'Nej, det är gratis att skapa din sida och bygga din profil på Festly. Vi tar 99 kr i avgift per bokning — det är så vi kan hålla Festly igång.' },
+        { q: 'Vem kan skapa en sida?', a: 'Alla som erbjuder tjänster till fester och event — DJ:s, fotografer, kockar, makeupartister och mer. Just nu satsar vi extra på Stockholm, så det är där du märker av flest förfrågningar.' },
+        { q: 'Jag har ingen erfarenhet, kan jag ändå skapa en sida?', a: 'Absolut. Festly handlar inte om hur många år du jobbat — det handlar om vad du kan visa upp. Lägg upp dina bästa bilder, sätt dina priser och låt kunderna hitta dig.' },
+        { q: 'Måste jag ha eget företag?', a: 'Vi rekommenderar det starkt — det gör bokföring och skatt betydligt enklare för dig. Men det är inget krav för att skapa en sida på Festly, och vi tar inget ansvar för hur du hanterar din egen beskattning.' },
+        { q: 'Hur får jag betalt?', a: 'Kunden betalar direkt när offerten accepteras. Stripe håller pengarna tills tjänsten är levererad — sen betalas de ut till dig, minus vår avgift på 99 kr.' },
+        { q: 'Hur fungerar avgiften?', a: 'Du sätter ditt pris som vanligt. När kunden bokar och betalar drar vi 99 kr — resten går till dig. Inga dolda kostnader, inget du behöver hålla koll på själv.' },
+        { q: 'Hur tar jag emot bokningar?', a: 'Arrangörer skickar förfrågningar direkt till dig i appen. Du väljer själv vilka du vill acceptera.' },
+        { q: 'Kan jag erbjuda tjänster riktade mot barn, som kalas eller barnprogramledare?', a: 'Inte just nu. Vi kan i dagsläget inte säkerställa utdrag ur belastningsregistret för dem som är aktiva på Festly, och det är en förutsättning vi inte vill kompromissa med när det gäller barn. Vi jobbar på en lösning för det här, men tills den finns på plats kan vi inte stödja tjänster riktade specifikt mot barn.' },
+        { q: 'Är Festly bara för Stockholm?', a: 'Nej. Du kan skapa din sida oavsett var du är. Just nu är det Stockholm där flest arrangörer söker, men vi växer vidare — och du vill helst redan vara på plats när vi gör det.' },
+      ],
+    };
+  }
+}
+
+</script>
+</body>
+</html>

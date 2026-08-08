@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CATEGORIES } from '@/lib/categories'
 import { Button } from '@/components/ui/button'
 import { HOME_SHELL } from '@/components/listings/ListingRow'
+import BrandLogo from '@/components/shared/BrandLogo'
 import { openAuth } from '@/lib/open-auth'
 
 type Props = {
@@ -36,7 +37,7 @@ function InviteFooterForm() {
     setSending(false)
   }
 
-  if (done) return <p className="text-sm text-[#FF6B35] font-medium">Inbjudan skickad!</p>
+  if (done) return <p className="text-sm text-[#FF2E8A] font-medium">Inbjudan skickad!</p>
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 max-w-xs">
@@ -46,7 +47,7 @@ function InviteFooterForm() {
         onChange={e => setEmail(e.target.value)}
         placeholder="deras@email.se"
         required
-        className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]"
+        className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#FF2E8A]"
       />
       <Button
         type="submit"
@@ -68,7 +69,9 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
       <div className={`${HOME_SHELL} py-14`}>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-12">
           <div className="md:col-span-2">
-            <p className="text-xl font-bold text-[#FF6B35] mb-3">FESTEN.</p>
+            <div className="mb-3 brightness-0 invert">
+              <BrandLogo href={null} />
+            </div>
             <p className="text-sm text-white/70 leading-relaxed max-w-xs">
               Marknadsplatsen för festunderhållning i Stockholm. Här bokar du DJ:s, fotografer,
               sminkartister och mer till ditt nästa kalas.
@@ -78,18 +81,17 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
               {isLoggedIn ? (
                 <Link
                   href="/onboarding"
-                  className="text-[#FF6B35] hover:underline font-medium"
+                  className="text-[#FF2E8A] hover:underline font-medium"
                 >
                   Erbjud din tjänst
                 </Link>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => openAuth({ intent: 'provider', next: '/onboarding', mode: 'signup' })}
-                  className="text-[#FF6B35] hover:underline font-medium"
+                <Link
+                  href="/for-talanger"
+                  className="text-[#FF2E8A] hover:underline font-medium"
                 >
                   Erbjud din tjänst
-                </button>
+                </Link>
               )}{' '}
               och nå fler kunder — helt gratis att komma igång.
             </p>
@@ -100,7 +102,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
                   Känner du någon som borde vara här?
                 </p>
                 <p className="text-xs text-white/50 mb-3">
-                  Bjud in en artist, fotograf eller kock till FESTEN.
+                  Bjud in en artist, fotograf eller kock till Festly
                 </p>
                 <InviteFooterForm />
               </div>
@@ -202,7 +204,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
         </div>
 
         <div className="border-t border-white/10 pt-6 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-white/30">© 2026 FESTEN. Stockholm</p>
+          <p className="text-xs text-white/30">© 2026 Festly Stockholm</p>
           <p className="text-xs text-white/30">Gjord med kärlek för kalas 🎉</p>
         </div>
       </div>

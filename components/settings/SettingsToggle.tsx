@@ -14,7 +14,7 @@ type Props = {
   learnMore?: { label: string; onClick: () => void }
   /**
    * ink = black track when on (privacy).
-   * brand = primary ember (notifications).
+   * brand = primary pink (notifications).
    */
   variant?: 'ink' | 'brand'
 }

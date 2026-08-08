@@ -5,9 +5,9 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 /**
- * FESTEN button system (Airbnb geometry + ember primary).
- * - default: ember CTA
- * - dark: ink #222 (Airbnb primary on services modals)
+ * App button system (Airbnb geometry + Festly pink primary).
+ * - default: pink CTA (#FF2E8A)
+ * - dark: ink #111 (Airbnb primary on services modals)
  * - outline / secondary / ghost / destructive / link / pill
  */
 const buttonVariants = cva(

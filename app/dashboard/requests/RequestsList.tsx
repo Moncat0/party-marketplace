@@ -41,7 +41,7 @@ const STATUS_META: Record<
   string,
   { label: string; color: string; bg: string }
 > = {
-  pending: { label: 'Väntar', color: t.colors.primary, bg: 'rgba(255, 107, 53, 0.1)' },
+  pending: { label: 'Väntar', color: t.colors.primary, bg: 'rgba(255, 46, 138, 0.1)' },
   accepted: { label: 'Accepterad', color: t.colors.success, bg: 'rgba(29, 158, 117, 0.1)' },
   declined: { label: 'Avböjd', color: t.colors.muted, bg: t.colors.surfaceStrong },
   cancelled: { label: 'Avbokad', color: t.colors.muted, bg: t.colors.surfaceStrong },
@@ -474,7 +474,7 @@ function RequestCard({
             <p className="text-[13px] text-[#6a6a6a]">{req.guest_count} gäster</p>
           ) : null}
           {req.unread > 0 ? (
-            <p className="mt-1 text-[12px] font-medium text-[#FF6B35]">{req.unread} olästa</p>
+            <p className="mt-1 text-[12px] font-medium text-[#FF2E8A]">{req.unread} olästa</p>
           ) : null}
           {req.hasOffer && req.status === 'accepted' ? (
             <p className="mt-1 text-[12px] text-[#6a6a6a]">Offert skickad</p>
@@ -522,7 +522,7 @@ function RequestRow({
           <div className="min-w-0">
             <p className="truncate text-[14px] font-semibold text-[#222222]">{plannerName}</p>
             {req.unread > 0 && (
-              <p className="text-[12px] font-medium text-[#FF6B35]">{req.unread} olästa</p>
+              <p className="text-[12px] font-medium text-[#FF2E8A]">{req.unread} olästa</p>
             )}
             {req.hasOffer && req.status === 'accepted' && (
               <p className="text-[12px] text-[#6a6a6a]">Offert skickad</p>

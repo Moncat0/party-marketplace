@@ -1,0 +1,13 @@
+:root{
+/* Festly UI favors soft, minimal shadows + thin subtle borders (Airbnb-style restraint); the flat offset shadows below are kept for expressive/marketing moments only (posters, hero cards), not default UI chrome */
+--shadow-soft-sm:0 2px 8px rgba(17,17,17,0.08);
+--shadow-soft-md:0 6px 20px rgba(17,17,17,0.10);
+--shadow-flat-sm:3px 3px 0 var(--ink-900);
+--shadow-flat-md:5px 5px 0 var(--ink-900);
+--shadow-flat-lg:8px 8px 0 var(--ink-900);
+--ease-standard:cubic-bezier(.22,1,.36,1); /* @kind other */
+--ease-bounce:cubic-bezier(.34,1.56,.64,1); /* @kind other */
+--duration-fast:120ms; /* @kind other */
+--duration-base:200ms; /* @kind other */
+--duration-slow:320ms; /* @kind other */
+}

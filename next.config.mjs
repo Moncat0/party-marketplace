@@ -3,6 +3,15 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/skapa-annons',
+        destination: '/for-talanger',
+        permanent: true,
+      },
+    ]
+  },
   images: {
     remotePatterns: [
       {

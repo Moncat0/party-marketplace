@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { siteChromePad, siteHeaderRow, siteLogoClass } from '@/components/siteChrome'
+import { siteChromePad, siteHeaderRow } from '@/components/siteChrome'
+import BrandLogo from '@/components/shared/BrandLogo'
 import { openAuth } from '@/lib/open-auth'
 import {
   Calendar,
@@ -49,6 +50,8 @@ type Props = {
   currentMode?: NavMode
   /** Extra actions before the menu (e.g. Share / Save on profiles) */
   actions?: ReactNode
+  /** Override default Festly wordmark */
+  logo?: ReactNode
   className?: string
   scrolled?: boolean
 }
@@ -66,6 +69,7 @@ export default function MarketplaceHeader({
   searchExpanded = false,
   currentMode = 'planner',
   actions,
+  logo,
   className = '',
   scrolled = false,
 }: Props) {
@@ -157,10 +161,20 @@ export default function MarketplaceHeader({
 
   const initial = (user?.name ?? '?').charAt(0).toUpperCase()
 
+  const brand = (
+    logo ? (
+      <Link href="/" className="inline-flex items-center leading-none">
+        {logo}
+      </Link>
+    ) : (
+      <BrandLogo priority />
+    )
+  )
+
   const switchCta = (() => {
     if (!user) {
       return {
-        onClick: () => openAuth({ intent: 'provider', next: '/onboarding', mode: 'signup' }),
+        href: '/for-talanger',
         label: 'Erbjud din tjänst',
       } as const
     }
@@ -208,26 +222,14 @@ export default function MarketplaceHeader({
   const rightChrome = (
     <div className="flex items-center justify-end gap-1 sm:gap-2">
       {actions}
-      {'onClick' in switchCta ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="pill"
-          className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
-          onClick={switchCta.onClick}
-        >
-          {switchCta.label}
-        </Button>
-      ) : (
-        <Button
-          asChild
-          variant="ghost"
-          size="pill"
-          className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
-        >
-          <Link href={switchCta.href}>{switchCta.label}</Link>
-        </Button>
-      )}
+      <Button
+        asChild
+        variant="ghost"
+        size="pill"
+        className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
+      >
+        <Link href={switchCta.href}>{switchCta.label}</Link>
+      </Button>
       {menuButton}
     </div>
   )
@@ -268,9 +270,7 @@ export default function MarketplaceHeader({
                 searchExpanded && 'md:min-h-16'
               )}
             >
-              <Link href="/" className={siteLogoClass}>
-                FESTEN.
-              </Link>
+              {brand}
               <div className="md:hidden">{rightChrome}</div>
             </div>
 
@@ -293,9 +293,7 @@ export default function MarketplaceHeader({
             {/* Mobile: logo row, then full-width search so it never sits under chrome */}
             <div className="flex flex-col gap-2 py-2.5 md:hidden">
               <div className="flex h-12 items-center justify-between">
-                <Link href="/" className={siteLogoClass}>
-                  FESTEN.
-                </Link>
+                {brand}
                 {rightChrome}
               </div>
               {center ? <div className="w-full min-w-0">{center}</div> : null}
@@ -308,10 +306,8 @@ export default function MarketplaceHeader({
                 transition: 'height 280ms cubic-bezier(0.2, 0, 0, 1)',
               }}
             >
-              <div className="relative z-[2] flex-shrink-0 bg-background">
-                <Link href="/" className={siteLogoClass}>
-                  FESTEN.
-                </Link>
+              <div className="relative z-[2] flex flex-shrink-0 items-center bg-background">
+                {brand}
               </div>
 
               {center && (
@@ -348,13 +344,10 @@ export default function MarketplaceHeader({
 
                 <Separator className="my-2" />
 
-                <button
-                  type="button"
+                <Link
+                  href="/for-talanger"
                   role="menuitem"
-                  onClick={() => {
-                    setOpen(false)
-                    openAuth({ intent: 'provider', next: '/onboarding', mode: 'signup' })
-                  }}
+                  onClick={() => setOpen(false)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-accent transition-colors"
                 >
                   <div className="min-w-0 flex-1">
@@ -366,7 +359,7 @@ export default function MarketplaceHeader({
                   <span className="text-3xl flex-shrink-0" aria-hidden>
                     🎤
                   </span>
-                </button>
+                </Link>
 
                 <Separator className="my-2" />
 

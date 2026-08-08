@@ -32,7 +32,7 @@ export default function AuthPreviewClient() {
   return (
     <main className="relative min-h-screen bg-[#1a1a1a]/[0.55] px-4 py-6 sm:py-10">
       <div className="relative z-10 mx-auto mb-6 max-w-lg text-center sm:mb-8">
-        <p className="text-[12px] font-semibold uppercase tracking-wide text-[#FF6B35]">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-[#FF2E8A]">
           Local preview
         </p>
         <h1 className="mt-1 text-[22px] font-semibold text-white">Auth modal</h1>
