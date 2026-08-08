@@ -83,13 +83,12 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
                   Erbjud din tjänst
                 </Link>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => openAuth({ intent: 'provider', next: '/onboarding', mode: 'signup' })}
+                <Link
+                  href="/for-talanger"
                   className="text-[#FF6B35] hover:underline font-medium"
                 >
                   Erbjud din tjänst
-                </button>
+                </Link>
               )}{' '}
               och nå fler kunder — helt gratis att komma igång.
             </p>

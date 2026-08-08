@@ -35,6 +35,12 @@ type Props = {
     category: string | null
     query: string
   }) => void
+  /** Desktop search pill max width (px). Defaults to Search’s 680. */
+  maxWidth?: number
+  /** Empty-state copy for the Var segment (default: Sök destinationer). */
+  emptyLocationLabel?: string
+  /** Empty-state copy for the Tjänst segment (default: Lägg till tjänst). */
+  emptyServiceLabel?: string
 }
 
 /**
@@ -52,6 +58,9 @@ export default function BrowseSearch({
   resultsEdit = false,
   initialOpen = null,
   onSubmitSearch,
+  maxWidth,
+  emptyLocationLabel = 'Sök destinationer',
+  emptyServiceLabel = 'Lägg till tjänst',
 }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState<SearchSegment | null>(initialOpen)
@@ -93,8 +102,9 @@ export default function BrowseSearch({
       : getLocationLabel(locationId)
     : resultsEdit
       ? 'Services nearby'
-      : 'Sök destinationer'
-  const serviceLabel = category?.chipLabel ?? category?.label ?? (resultsEdit ? 'All services' : 'Lägg till tjänst')
+      : emptyLocationLabel
+  const serviceLabel =
+    category?.chipLabel ?? category?.label ?? (resultsEdit ? 'All services' : emptyServiceLabel)
 
   const locationSuggestions = useMemo(() => {
     const q = draft.trim().toLowerCase()
@@ -196,7 +206,7 @@ export default function BrowseSearch({
         onSearch={applySearch}
         onClearLocation={() => onLocationChange('')}
         onClearService={() => onCategoryChange(null)}
-        maxWidth={resultsEdit ? 380 : undefined}
+        maxWidth={resultsEdit ? 380 : maxWidth}
       />
 
       {/* ── Where panel ── */}

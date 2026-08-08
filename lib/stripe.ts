@@ -1,4 +1,7 @@
 import Stripe from 'stripe'
+import { PLATFORM_FEE_PERCENT } from '@/lib/platform-fee'
+
+export { PLATFORM_FEE_PERCENT }
 
 /** Strip quotes/newlines from pasted Vercel/.env values (avoids ERR_INVALID_CHAR on Authorization). */
 function stripeSecretKey(): string {
@@ -21,8 +24,6 @@ export const stripe = new Stripe(stripeSecretKey(), {
 })
 
 /** Platform take rate — covers Stripe fees + FESTEN costs (not pure profit). */
-export const PLATFORM_FEE_PERCENT = 20
-
 export function applicationFee(priceOre: number): number {
   return Math.round(priceOre * (PLATFORM_FEE_PERCENT / 100))
 }

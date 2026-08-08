@@ -48,6 +48,12 @@
   :root {
     --motion-fast: 0ms;
   }
+
+  .animate-\[supplyHeroWord_600ms_cubic-bezier\(0\.22\,1\,0\.36\,1\)_both\] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @layer base {
@@ -150,5 +156,17 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Supply landing hero word cascade */
+@keyframes supplyHeroWord {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

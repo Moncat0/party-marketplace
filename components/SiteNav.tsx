@@ -26,6 +26,7 @@ function isExcluded(pathname: string): boolean {
   if (pathname.startsWith('/planner')) return true
   if (pathname.startsWith('/dev/')) return true
   if (pathname.startsWith('/tjanster/')) return true
+  if (pathname.startsWith('/for-talanger')) return true
   return false
 }
 

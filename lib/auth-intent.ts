@@ -62,11 +62,13 @@ export function resolvePostAuthDestination(opts: {
   intent: AuthIntent | null
   next: string | null
   hasProviderProfile?: boolean
+  /** @deprecated Prefer hasProviderProfile — kept for call-site compatibility. */
   isPublished?: boolean
   needsDisplayName?: boolean
   needsTermsAndAge?: boolean
 }): string {
   const next = safePath(opts.next)
+  void opts.isPublished
 
   const isGenericNext =
     !next ||
@@ -84,10 +86,9 @@ export function resolvePostAuthDestination(opts: {
 
   let destination: string
 
-  if (opts.isPublished && isGenericNext) {
+  // Returning providers with any profile → dashboard (published or draft).
+  if (opts.hasProviderProfile && isGenericNext) {
     destination = '/dashboard'
-  } else if (opts.hasProviderProfile && !opts.isPublished && isGenericNext) {
-    destination = '/onboarding'
   } else if (opts.intent === 'provider') {
     destination =
       next === '/onboarding' ||
