@@ -24,6 +24,8 @@ type Props = {
   stripeOnboarded?: boolean
   /** From ?stripe= after Connect redirect */
   stripeFlash?: string | null
+  /** Dual-role planner who already has a provider profile. */
+  hasProviderProfile?: boolean
 }
 
 function HelpLink({ href, label }: { href: string; label: string }) {
@@ -47,6 +49,7 @@ export default function PaymentsSettings({
   lastName = '',
   stripeOnboarded = false,
   stripeFlash = null,
+  hasProviderProfile = false,
 }: Props) {
   const [tab, setTab] = useState<Tab>(role === 'provider' ? 'payouts' : 'payments')
   const [cardOpen, setCardOpen] = useState(false)
@@ -279,7 +282,9 @@ export default function PaymentsSettings({
             <p className="mt-2 max-w-xl text-[14px] leading-[1.43] text-[#6a6a6a]">
               {role === 'provider'
                 ? 'Lägg till minst en utbetalningsmetod så vi vet vart vi ska skicka dina pengar.'
-                : 'Utbetalningar gäller dig som talang. Bli talang och koppla Stripe för att ta emot betalningar.'}
+                : hasProviderProfile
+                  ? 'Du har redan ett talangkonto. Hantera Stripe-utbetalningar i talangläget.'
+                  : 'Utbetalningar gäller dig som talang. Bli talang och koppla Stripe för att ta emot betalningar.'}
             </p>
             {role === 'provider' && (
               <div className="mt-5">
@@ -305,10 +310,14 @@ export default function PaymentsSettings({
             {role === 'planner' && (
               <div className="mt-5">
                 <Link
-                  href="/signup?intent=provider&next=/onboarding"
+                  href={
+                    hasProviderProfile
+                      ? '/dashboard/payments'
+                      : '/signup?intent=provider&next=/onboarding'
+                  }
                   className="inline-flex h-12 items-center justify-center rounded-lg bg-[#222222] px-6 text-[16px] font-medium text-white hover:bg-[#000]"
                 >
-                  Bli talang
+                  {hasProviderProfile ? 'Öppna talangutbetalningar' : 'Bli talang'}
                 </Link>
               </div>
             )}

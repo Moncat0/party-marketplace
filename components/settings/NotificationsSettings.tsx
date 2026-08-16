@@ -21,6 +21,8 @@ type Props = {
   email: string
   initial: NotificationPrefs
   role: 'planner' | 'provider'
+  /** Show talent/provider marketing prefs for dual-role planners. */
+  hasProviderProfile?: boolean
 }
 
 type Tab = 'offers' | 'account'
@@ -139,7 +141,12 @@ function SectionBlock({
   )
 }
 
-export default function NotificationsSettings({ email, initial, role }: Props) {
+export default function NotificationsSettings({
+  email,
+  initial,
+  role,
+  hasProviderProfile = false,
+}: Props) {
   const supabase = createClient()
   const [tab, setTab] = useState<Tab>('offers')
   const [prefs, setPrefs] = useState<NotificationPrefs>(initial)
@@ -269,29 +276,31 @@ export default function NotificationsSettings({ email, initial, role }: Props) {
 
       {tab === 'offers' && (
         <div>
-          <SectionBlock
-            title="Provideruppdateringar"
-            description="Få uppdateringar om program, funktioner och regler."
-          >
-            <NotifRow
-              label="Nyheter och uppdateringar"
-              enabled={prefs.providerNews}
-              editing={editing === 'providerNews'}
-              onEdit={() => setEditing('providerNews')}
-              onCancel={() => setEditing(null)}
-              onToggleEmail={v => setPref('providerNews', v)}
-              saving={saving}
-            />
-            <NotifRow
-              label="Lokala regler och föreskrifter"
-              enabled={prefs.providerRegs}
-              editing={editing === 'providerRegs'}
-              onEdit={() => setEditing('providerRegs')}
-              onCancel={() => setEditing(null)}
-              onToggleEmail={v => setPref('providerRegs', v)}
-              saving={saving}
-            />
-          </SectionBlock>
+          {hasProviderProfile && (
+            <SectionBlock
+              title="Provideruppdateringar"
+              description="Få uppdateringar om program, funktioner och regler."
+            >
+              <NotifRow
+                label="Nyheter och uppdateringar"
+                enabled={prefs.providerNews}
+                editing={editing === 'providerNews'}
+                onEdit={() => setEditing('providerNews')}
+                onCancel={() => setEditing(null)}
+                onToggleEmail={v => setPref('providerNews', v)}
+                saving={saving}
+              />
+              <NotifRow
+                label="Lokala regler och föreskrifter"
+                enabled={prefs.providerRegs}
+                editing={editing === 'providerRegs'}
+                onEdit={() => setEditing('providerRegs')}
+                onCancel={() => setEditing(null)}
+                onToggleEmail={v => setPref('providerRegs', v)}
+                saving={saving}
+              />
+            </SectionBlock>
+          )}
 
           <SectionBlock
             title="Festly-uppdateringar"

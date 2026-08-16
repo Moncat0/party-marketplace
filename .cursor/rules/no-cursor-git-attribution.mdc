@@ -1,0 +1,15 @@
+---
+description: Never add Cursor/AI git attribution trailers
+alwaysApply: true
+---
+
+# No Cursor git attribution
+
+Never add any of the following to commit messages, PR bodies, or code comments:
+
+- `Co-authored-by: Cursor`
+- `Co-authored-by: Cursor <cursoragent@cursor.com>`
+- `Made-with: Cursor`
+- Any other Cursor / cursoragent attribution trailer
+
+Write commit messages and PR descriptions with human authorship only.

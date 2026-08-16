@@ -47,6 +47,8 @@ export type AccountSettingsProps = {
   privacyReviewShowCity: boolean
   privacyReviewShowBookedServices: boolean
   role: 'planner' | 'provider'
+  /** True when this user also has a `provider_profiles` row (dual-role). */
+  hasProviderProfile?: boolean
   stripeOnboarded?: boolean
   stripeFlash?: string | null
   initialSection?: SettingsSection
@@ -126,11 +128,13 @@ export default function AccountSettingsForm({
   privacyReviewShowCity,
   privacyReviewShowBookedServices,
   role,
+  hasProviderProfile = false,
   stripeOnboarded = false,
   stripeFlash = null,
   initialSection = 'personal',
 }: AccountSettingsProps) {
   const supabase = createClient()
+  const isTalent = role === 'provider' || hasProviderProfile
   const isSocial =
     authProvider === 'google' || authProvider === 'facebook' || authProvider === 'apple'
   const socialName =
@@ -515,32 +519,55 @@ export default function AccountSettingsForm({
                 </SettingsRow>
 
                 {role === 'planner' ? (
-                  <SettingsRow
-                    label="Föredraget förnamn"
-                    value={savedPreferred || null}
-                    actionLabel={savedPreferred ? 'Redigera' : 'Lägg till'}
-                    expanded={editing === 'preferred'}
-                    onAction={() => {
-                      setNewPreferred(
-                        savedPreferred || defaultPreferred(savedFirst, '')
-                      )
-                      openEdit('preferred')
-                    }}
-                  >
-                    <SettingsInput
-                      id="preferred-first-name"
+                  <>
+                    <SettingsRow
                       label="Föredraget förnamn"
-                      value={newPreferred}
-                      onChange={setNewPreferred}
-                      autoComplete="nickname"
-                    />
-                    <p className="text-[13px] leading-[1.4] text-[#6a6a6a]">
-                      Visas för andra på Festly Om du lämnar det tomt används ditt förnamn.
-                    </p>
-                    <SettingsButton onClick={handleSavePreferred} disabled={saving}>
-                      {saving ? 'Sparar...' : 'Spara'}
-                    </SettingsButton>
-                  </SettingsRow>
+                      value={savedPreferred || null}
+                      actionLabel={savedPreferred ? 'Redigera' : 'Lägg till'}
+                      expanded={editing === 'preferred'}
+                      onAction={() => {
+                        setNewPreferred(
+                          savedPreferred || defaultPreferred(savedFirst, '')
+                        )
+                        openEdit('preferred')
+                      }}
+                    >
+                      <SettingsInput
+                        id="preferred-first-name"
+                        label="Föredraget förnamn"
+                        value={newPreferred}
+                        onChange={setNewPreferred}
+                        autoComplete="nickname"
+                      />
+                      <p className="text-[13px] leading-[1.4] text-[#6a6a6a]">
+                        Visas för andra på Festly Om du lämnar det tomt används ditt förnamn.
+                      </p>
+                      <SettingsButton onClick={handleSavePreferred} disabled={saving}>
+                        {saving ? 'Sparar...' : 'Spara'}
+                      </SettingsButton>
+                    </SettingsRow>
+                    {hasProviderProfile && (
+                      <div
+                        className="py-6"
+                        style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
+                      >
+                        <p className="text-[16px] font-semibold leading-[1.25] text-[#222222]">
+                          Talangkonto
+                        </p>
+                        <p className="mt-1 text-[14px] leading-[1.43] text-[#6a6a6a]">
+                          Du erbjuder också tjänster på Festly. Hantera din publika profil och
+                          annonser i{' '}
+                          <Link
+                            href="/dashboard"
+                            className="font-medium text-[#222222] underline"
+                          >
+                            talangläget
+                          </Link>
+                          .
+                        </p>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div
                     className="py-6"
@@ -1034,12 +1061,14 @@ export default function AccountSettingsForm({
             email={email}
             initial={notificationPrefs}
             role={role}
+            hasProviderProfile={isTalent}
           />
         )}
 
         {section === 'payments' && (
           <PaymentsSettings
             role={role}
+            hasProviderProfile={isTalent}
             paymentsHref={role === 'provider' ? '/dashboard/payments' : '/planner/payments'}
             firstName={savedFirst}
             lastName={savedLast}
