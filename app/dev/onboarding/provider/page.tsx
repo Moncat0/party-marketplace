@@ -50,7 +50,6 @@ export default function DevProviderOnboardingPreviewPage({ searchParams }: Props
             title: step && step !== 'intro1' && step !== 'title' ? 'DJ för fest & bröllop' : null,
             description:
               step === 'photos' ||
-              step === 'intro3' ||
               step === 'price' ||
               step === 'publish' ||
               step === 'description'

@@ -50,7 +50,7 @@ export default function WizardNavHeader({
           size="sm"
           className="h-10 rounded-full border-[#222222] px-4 text-[14px] font-medium text-[#222222] shadow-none hover:bg-[#f7f7f7]"
         >
-          <Link href="/hjalp">Frågor?</Link>
+          <Link href="/hjalp" target="_blank" rel="noopener noreferrer">Frågor?</Link>
         </Button>
         {onExit ? (
           <Button

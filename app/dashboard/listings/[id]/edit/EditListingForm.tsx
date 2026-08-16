@@ -312,7 +312,7 @@ export default function EditListingForm({ service, userId }: { service: Service;
                   Jag kan resa till andra städer
                 </span>
                 <span className="mt-0.5 block text-[13px] text-[#6a6a6a]">
-                  På tjänsten visas “Kan resa”. Annars “Endast lokalt”.
+                  Vi visar “Kan resa” på din tjänst. Annars “Endast lokalt”.
                 </span>
               </span>
             </label>

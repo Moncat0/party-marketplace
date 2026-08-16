@@ -123,6 +123,7 @@ export default function ServiceProfile({
   const [phoneValue, setPhoneValue] = useState('')
   const [phoneSaving, setPhoneSaving] = useState(false)
   const [phoneError, setPhoneError] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
   const autoSubmitRef = useRef(false)
   const pendingBookingRef = useRef<{ plannerId: string; data: BookingFormData } | null>(null)
 
@@ -143,6 +144,21 @@ export default function ServiceProfile({
     if (draft) setBookingData(draft.data)
     setDraftReady(true)
   }, [profile.id])
+
+  async function handlePublish() {
+    setPublishing(true)
+    const res = await fetch(`/api/services/${profile.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_published: true }),
+    })
+    if (res.ok) {
+      track('profile_published', { service_id: profile.id, source: 'preview' })
+      router.push('/dashboard/listings?published=1')
+    } else {
+      setPublishing(false)
+    }
+  }
 
   // Keep draft in sync while typing so OAuth round-trips don't lose fields.
   useEffect(() => {
@@ -367,7 +383,7 @@ export default function ServiceProfile({
   return (
     <main className="min-h-screen bg-white pb-24 md:pb-0">
       {fromWizard ? (
-        <WizardNavHeader exitHref={wizardExitHref} exitLabel="Avsluta" />
+        <WizardNavHeader exitHref={wizardExitHref} exitLabel="Spara och fortsätt senare" />
       ) : (
         <MarketplaceHeader currentMode="planner" />
       )}
@@ -380,12 +396,25 @@ export default function ServiceProfile({
                 ? 'Förhandsgranskning — pausad. Syns inte i sök eller på startsidan.'
                 : 'Förhandsgranskning — utkast. Syns inte för planerare ännu.'}
             </p>
-            <Link
-              href={backHref}
-              className="text-[14px] font-semibold text-[#222222] underline underline-offset-2"
-            >
-              {backLabel}
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href={backHref}
+                className="text-[14px] font-medium text-[#6a6a6a] underline underline-offset-2"
+              >
+                {backLabel}
+              </Link>
+              {previewMode === 'draft' && (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={publishing}
+                  onClick={handlePublish}
+                  className="h-9 rounded-full bg-[#FF2E8A] px-5 text-[14px] font-semibold text-white shadow-none hover:bg-[#e01f74] disabled:opacity-60"
+                >
+                  {publishing ? 'Publicerar…' : 'Publicera'}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       ) : null}
@@ -421,20 +450,7 @@ export default function ServiceProfile({
 
               <div id="forfragan" className="order-first mb-10 md:order-last md:col-span-3 scroll-mt-28">
                 <div className="sticky top-24 md:top-28">
-                  {isPreview ? (
-                    <div className="rounded-2xl border border-[#dddddd] bg-[#f7f7f7] p-6">
-                      <p className="text-[16px] font-semibold text-[#222222]">
-                        Bokning är avstängd i förhandsgranskning
-                      </p>
-                      <p className="mt-2 text-[14px] leading-relaxed text-[#6a6a6a]">
-                        Så här ser sidan ut för planerare. Publicera (och aktivera) tjänsten för att
-                        ta emot förfrågningar.
-                      </p>
-                      <Button asChild variant="dark" className="mt-4 rounded-xl">
-                        <Link href={backHref}>{backLabel}</Link>
-                      </Button>
-                    </div>
-                  ) : (
+                  {isPreview ? null : (
                     <ListingReservation
                       priceLabel={priceLabel}
                       reviewCount={reviewCount}

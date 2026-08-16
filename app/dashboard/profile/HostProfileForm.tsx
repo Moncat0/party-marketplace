@@ -59,13 +59,15 @@ export default function HostProfileForm({
     setUploading(true)
     setMsg(null)
     try {
-      const ext = file.name.split('.').pop() ?? 'jpg'
-      const path = `${userId}/avatar-${Date.now()}.${ext}`
-      const { error: uploadError } = await supabase.storage
-        .from('provider-photos')
-        .upload(path, file, { upsert: true })
-      if (uploadError) throw uploadError
-      const url = supabase.storage.from('provider-photos').getPublicUrl(path).data.publicUrl
+      const body = new FormData()
+      body.append('file', file)
+      body.append('folder', 'avatar')
+      const res = await fetch('/api/upload/photo', { method: 'POST', body })
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: 'Okänt fel' }))
+        throw new Error(error ?? 'Upload failed')
+      }
+      const { url } = await res.json()
       setAvatar(url)
     } catch {
       setMsg({ type: 'error', text: 'Det gick inte att ladda upp bilden.' })
@@ -236,7 +238,7 @@ export default function HostProfileForm({
 
       <SettingsSection
         title="Baserad i"
-        description="Var du är baserad — planerare använder det för att hitta lokal talent."
+        description="Var du är baserad — planerare använder det för att hitta lokal talang."
       >
         <LocationSelect value={locationId} onChange={setLocationId} showComingSoon />
       </SettingsSection>

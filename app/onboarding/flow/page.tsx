@@ -62,7 +62,6 @@ export default async function OnboardingFlowPage({ searchParams }: Props) {
       afterPublishPath={paths.afterPublish}
       firstBackPath={paths.afterSave}
       includeAccountSteps
-      accountNeedsName={!preferred}
       accountNeedsBio={!providerProfile?.bio?.trim()}
       accountNeedsBasedIn={!providerProfile?.location_id?.trim()}
       initialAccount={{

@@ -12,26 +12,74 @@ export type Category = {
   tags: string[]
 }
 
+export type CategoryGroup = {
+  id: string
+  label: string
+  emoji: string
+  slugs: string[]
+}
+
 /** Talent / service type only — occasions (bröllop, barnkalas, …) live in lib/occasions. */
 export const CATEGORY_SLUGS = [
+  // Musik & Ljud
   'dj',
+  'sangare',
+  'band',
+  'musiker',
+  // Foto & Film
   'fotograf',
-  'musik',
+  'videograf',
+  'fotobox',
+  // Skönhet & Stil
   'makeup',
-  'underhallning',
+  'harstylist',
+  // Mat & Dryck
+  'privatkock',
   'catering',
+  'bartender',
+  // Underhållning & Show
+  'magiker',
+  'komiker',
+  'barnunderhallning',
+  'dansare',
+  'mc',
+  'cirkus',
 ] as const
 
 export type CategorySlug = (typeof CATEGORY_SLUGS)[number]
 
 export const CATEGORIES: Category[] = [
+  // Musik & Ljud
   {
     slug: 'dj',
     label: 'DJ',
     emoji: '🎧',
-    description: 'Boka en DJ till ditt kalas i Stockholm. Från bröllop till barnkalas.',
+    description: 'Boka en DJ till ditt kalas. Från bröllop till barnkalas.',
     tags: ['dj', 'DJ'],
   },
+  {
+    slug: 'sangare',
+    label: 'Sångare / Sångerska',
+    chipLabel: 'Sångare',
+    emoji: '🎤',
+    description: 'Solist, jazzsångare, operasångare eller pop.',
+    tags: ['sångare', 'sångerska', 'solist', 'Sångare', 'Sångerska'],
+  },
+  {
+    slug: 'band',
+    label: 'Liveband',
+    emoji: '🎸',
+    description: 'Liveband för bröllop, fest och event.',
+    tags: ['band', 'liveband', 'orkester', 'Band'],
+  },
+  {
+    slug: 'musiker',
+    label: 'Musiker',
+    emoji: '🎹',
+    description: 'Pianist, violinist, gitarrist eller annan instrumentalist.',
+    tags: ['musiker', 'pianist', 'violinist', 'gitarrist', 'instrumentalist', 'Musiker'],
+  },
+  // Foto & Film
   {
     slug: 'fotograf',
     label: 'Fotograf',
@@ -40,13 +88,22 @@ export const CATEGORIES: Category[] = [
     tags: ['fotografi', 'fotograf', 'Fotografi', 'Fotograf'],
   },
   {
-    slug: 'musik',
-    label: 'Musik & Artister',
-    chipLabel: 'Musik',
-    emoji: '🎵',
-    description: 'Live-musik, sångare och musiker för alla typer av events.',
-    tags: ['musik', 'artist', 'sångare', 'band', 'Musik', 'Artist', 'Musik & Artister'],
+    slug: 'videograf',
+    label: 'Videograf / Film',
+    chipLabel: 'Videograf',
+    emoji: '🎬',
+    description: 'Film och video till bröllop, fest och event.',
+    tags: ['videograf', 'film', 'videofilm', 'Videograf'],
   },
+  {
+    slug: 'fotobox',
+    label: 'Fotobox / Fotobås',
+    chipLabel: 'Fotobox',
+    emoji: '📷',
+    description: 'Rolig fotobox eller fotobås till fester och evenemang.',
+    tags: ['fotobox', 'fotobås', 'photobooth', 'Fotobox'],
+  },
+  // Skönhet & Stil
   {
     slug: 'makeup',
     label: 'Makeup & Styling',
@@ -56,26 +113,125 @@ export const CATEGORIES: Category[] = [
     tags: ['makeup', 'makeupartist', 'styling', 'Makeup', 'Makeupartist', 'Makeup & Styling'],
   },
   {
-    slug: 'underhallning',
-    label: 'Underhållning',
-    emoji: '🎭',
-    description: 'Trollkarlar, komiker, akrobater och mer till ditt kalas.',
-    tags: ['underhållning', 'trollkonstnär', 'komiker', 'Underhållning', 'Underhållare'],
+    slug: 'harstylist',
+    label: 'Hårstylist',
+    emoji: '✂️',
+    description: 'Professionell hårstyling och frisyr till ditt event.',
+    tags: ['hårstylist', 'frisör', 'frisyr', 'Hårstylist'],
+  },
+  // Mat & Dryck
+  {
+    slug: 'privatkock',
+    label: 'Privatkock',
+    emoji: '🍽️',
+    description: 'En privatkock som lagar mat hemma hos dig.',
+    tags: ['privatkock', 'kock', 'kockar', 'Privatkock', 'Kock'],
   },
   {
     slug: 'catering',
-    label: 'Catering & Kock',
-    chipLabel: 'Catering',
+    label: 'Catering',
     emoji: '👨‍🍳',
-    description: 'Privatkockar och cateringtjänster för ditt event i Stockholm.',
-    tags: ['catering', 'kock', 'mat', 'Catering', 'Kock', 'Catering & Kock'],
+    description: 'Cateringtjänster för ditt event.',
+    tags: ['catering', 'mat', 'Catering', 'Catering & Kock'],
+  },
+  {
+    slug: 'bartender',
+    label: 'Bartender',
+    emoji: '🍹',
+    description: 'Professionell bartender för cocktails och drinkar.',
+    tags: ['bartender', 'bartendern', 'cocktail', 'Bartender'],
+  },
+  // Underhållning & Show
+  {
+    slug: 'magiker',
+    label: 'Magiker / Trollkonstnär',
+    chipLabel: 'Magiker',
+    emoji: '🪄',
+    description: 'Magiker och trollkonstnärer för alla typer av event.',
+    tags: ['magiker', 'trollkonstnär', 'trollkonstnaren', 'Magiker', 'Trollkonstnär'],
+  },
+  {
+    slug: 'komiker',
+    label: 'Komiker / Ståupp',
+    chipLabel: 'Komiker',
+    emoji: '🎤',
+    description: 'Ståuppkomiker och humorister till ditt event.',
+    tags: ['komiker', 'ståupp', 'stand-up', 'humorist', 'Komiker'],
+  },
+  {
+    slug: 'barnunderhallning',
+    label: 'Barnunderhållning',
+    emoji: '🎪',
+    description: 'Underhållning anpassad för barn och familjer.',
+    tags: ['barnunderhållning', 'barnkalas', 'barnens', 'Barnunderhållning'],
+  },
+  {
+    slug: 'dansare',
+    label: 'Dansare / Koreograf',
+    chipLabel: 'Dansare',
+    emoji: '💃',
+    description: 'Dansare och koreografer för show och event.',
+    tags: ['dansare', 'dansös', 'koreograf', 'Dansare'],
+  },
+  {
+    slug: 'mc',
+    label: 'MC / Konferencier',
+    chipLabel: 'MC',
+    emoji: '🎙️',
+    description: 'Värd och konferencier som håller ihop ditt event.',
+    tags: ['mc', 'konferencier', 'värd', 'toastmaster', 'MC', 'Konferencier'],
+  },
+  {
+    slug: 'cirkus',
+    label: 'Cirkus & Akrobat',
+    chipLabel: 'Cirkus',
+    emoji: '🎡',
+    description: 'Cirkusartister, akrobater och ildansare.',
+    tags: ['cirkus', 'akrobat', 'ildansare', 'Cirkus', 'Akrobat'],
+  },
+]
+
+/** Grouped structure for the category picker UI */
+export const CATEGORY_GROUPS: CategoryGroup[] = [
+  {
+    id: 'musik',
+    label: 'Musik & Ljud',
+    emoji: '🎵',
+    slugs: ['dj', 'sangare', 'band', 'musiker'],
+  },
+  {
+    id: 'foto',
+    label: 'Foto & Film',
+    emoji: '📸',
+    slugs: ['fotograf', 'videograf', 'fotobox'],
+  },
+  {
+    id: 'skonhet',
+    label: 'Skönhet & Stil',
+    emoji: '💅',
+    slugs: ['makeup', 'harstylist'],
+  },
+  {
+    id: 'mat',
+    label: 'Mat & Dryck',
+    emoji: '🍽️',
+    slugs: ['privatkock', 'catering', 'bartender'],
+  },
+  {
+    id: 'underhallning',
+    label: 'Underhållning & Show',
+    emoji: '🎭',
+    slugs: ['magiker', 'komiker', 'barnunderhallning', 'dansare', 'mc', 'cirkus'],
   },
 ]
 
 /** Map retired occasion-as-category slugs → closest talent category. */
 const LEGACY_CATEGORY_SLUG_MAP: Record<string, CategorySlug> = {
-  barnkalas: 'underhallning',
+  barnkalas: 'barnunderhallning',
   brollop: 'fotograf',
+  // kept for data written before category expansion
+  underhallning: 'magiker',
+  musik: 'sangare',
 }
 
 export function isCategorySlug(value: string | null | undefined): value is CategorySlug {

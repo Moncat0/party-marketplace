@@ -31,17 +31,25 @@ export default async function PlannerAccountPage({
   } = await supabase.auth.getUser()
   if (!user) redirect('/signup')
 
-  const { data: userData } = await supabase
-    .from('users')
-    .select(
-      'name, first_name, last_name, preferred_first_name, phone, auth_provider, privacy_read_receipts, privacy_review_show_city, privacy_review_show_booked_services, notif_marketing, notif_booking_accepted, notif_booking_declined, notif_new_message, notif_review_reminder, notif_provider_news, notif_provider_regs, notif_festen_news, notif_festen_feedback'
-    )
-    .eq('id', user.id)
-    .single()
+  const [{ data: userData }, { data: providerProfile }] = await Promise.all([
+    supabase
+      .from('users')
+      .select(
+        'name, first_name, last_name, preferred_first_name, phone, auth_provider, privacy_read_receipts, privacy_review_show_city, privacy_review_show_booked_services, notif_marketing, notif_booking_accepted, notif_booking_declined, notif_new_message, notif_review_reminder, notif_provider_news, notif_provider_regs, notif_festen_news, notif_festen_feedback'
+      )
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('provider_profiles')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+  ])
 
   return (
     <AccountLayout doneHref="/planner/dashboard">
       <PlannerAccountSettings
+        hasProviderProfile={!!providerProfile}
         email={user.email ?? ''}
         firstName={userData?.first_name ?? ''}
         lastName={userData?.last_name ?? ''}

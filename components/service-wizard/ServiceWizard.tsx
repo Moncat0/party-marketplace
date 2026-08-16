@@ -1,11 +1,11 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
 import { track } from '@/lib/posthog'
-import { CATEGORIES, categoryTagsFromSlug, type CategorySlug } from '@/lib/categories'
+import { CATEGORIES, CATEGORY_GROUPS, categoryTagsFromSlug, type CategorySlug } from '@/lib/categories'
 import { DEFAULT_LOCATION_ID, LOCATIONS, getLocationLabel } from '@/lib/locations'
 import LocationSelect from '@/components/ui/LocationSelect'
 import { cn } from '@/lib/utils'
@@ -20,7 +20,7 @@ import { formatOccasions } from '@/lib/occasions'
 import { buildDisplayName } from '@/lib/profile-completeness'
 import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, ChevronDown, Search } from 'lucide-react'
 import {
   type AccountWizardDraft,
   type FirstPublishStep,
@@ -74,8 +74,6 @@ type Props = {
    */
   includeAccountSteps?: boolean
   initialAccount?: Partial<AccountWizardDraft>
-  /** Prefer DB truth over prefilled OAuth name for skipping steps */
-  accountNeedsName?: boolean
   accountNeedsBio?: boolean
   accountNeedsBasedIn?: boolean
   /** Required to publish — mirrors users.email_verified_at */
@@ -98,7 +96,6 @@ export default function ServiceWizard({
   firstBackPath,
   includeAccountSteps = false,
   initialAccount,
-  accountNeedsName,
   accountNeedsBio,
   accountNeedsBasedIn,
   emailVerified = false,
@@ -115,11 +112,8 @@ export default function ServiceWizard({
     ...EMPTY_ACCOUNT_DRAFT,
     ...initialAccount,
   }))
-  const needsName =
-    accountNeedsName ?? !(initialAccount?.firstName ?? '').trim()
-  const needsBio = accountNeedsBio ?? !(initialAccount?.bio ?? '').trim()
-  const needsBasedIn =
-    accountNeedsBasedIn ?? !(initialAccount?.basedInLocationId ?? '').trim()
+  const needsBio = includeAccountSteps ? true : (accountNeedsBio ?? !(initialAccount?.bio ?? '').trim())
+  const needsBasedIn = includeAccountSteps ? true : (accountNeedsBasedIn ?? !(initialAccount?.basedInLocationId ?? '').trim())
   const [step, setStep] = useState<FirstPublishStep>(() => {
     if (previewMode && previewStep) {
       if (includeAccountSteps || isServiceWizardStep(previewStep)) {
@@ -129,7 +123,6 @@ export default function ServiceWizard({
     }
     if (includeAccountSteps) {
       return resumeFirstPublishStep({
-        needsName,
         needsBio,
         needsBasedIn,
         draft: initialDraft,
@@ -165,13 +158,11 @@ export default function ServiceWizard({
   })()
 
   const firstStep: FirstPublishStep = includeAccountSteps
-    ? needsName
-      ? 'name'
-      : needsBio
-        ? 'bio'
-        : needsBasedIn
-          ? 'basedIn'
-          : 'intro1'
+    ? needsBio
+      ? 'bio'
+      : needsBasedIn
+        ? 'basedIn'
+        : 'intro1'
     : 'intro1'
 
   const persist = useCallback(
@@ -185,7 +176,11 @@ export default function ServiceWizard({
           title: draft.title.trim() || null,
           description: draft.description.trim() || null,
           category_slug: draft.categorySlug,
-          category_tags: categoryTagsFromSlug(draft.categorySlug),
+          category_tags: draft.categorySlug
+            ? categoryTagsFromSlug(draft.categorySlug)
+            : draft.customCategoryLabel.trim()
+              ? [draft.customCategoryLabel.trim()]
+              : [],
           occasions: draft.occasions,
           city: getLocationLabel(draft.locationId),
           location_id: draft.locationId,
@@ -326,20 +321,6 @@ export default function ServiceWizard({
       return
     }
 
-    if (step === 'name') {
-      setSaving(true)
-      try {
-        await persistAccountName()
-        const n = includeAccountSteps ? nextFirstPublishStep(step) : null
-        if (n) setStep(n)
-      } catch {
-        setError('Kunde inte spara. Försök igen.')
-      } finally {
-        setSaving(false)
-      }
-      return
-    }
-
     if (step === 'bio') {
       setSaving(true)
       try {
@@ -421,23 +402,26 @@ export default function ServiceWizard({
     router.push(firstBackPath ?? hubPath)
   }
 
-  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
+  async function uploadFiles(files: File[]) {
     if (!files.length) return
     const remaining = 6 - draft.photos.length
     const toUpload = files.slice(0, remaining)
+    if (!toUpload.length) return
     setUploading(true)
     setError(null)
     try {
       const urls = await Promise.all(
         toUpload.map(async file => {
-          const ext = file.name.split('.').pop() ?? 'jpg'
-          const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-          const { error: uploadError } = await supabase.storage
-            .from('provider-photos')
-            .upload(path, file, { upsert: false })
-          if (uploadError) throw uploadError
-          return supabase.storage.from('provider-photos').getPublicUrl(path).data.publicUrl
+          const body = new FormData()
+          body.append('file', file)
+          body.append('folder', 'photos')
+          const res = await fetch('/api/upload/photo', { method: 'POST', body })
+          if (!res.ok) {
+            const { error } = await res.json().catch(() => ({ error: 'Okänt fel' }))
+            throw new Error(error ?? 'Upload failed')
+          }
+          const { url } = await res.json()
+          return url as string
         })
       )
       setDraft(prev => ({ ...prev, photos: [...prev.photos, ...urls].slice(0, 6) }))
@@ -447,6 +431,10 @@ export default function ServiceWizard({
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
+  }
+
+  async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    await uploadFiles(Array.from(e.target.files ?? []))
   }
 
   function removePhoto(index: number) {
@@ -587,14 +575,6 @@ export default function ServiceWizard({
               {info}
             </p>
           )}
-          {step === 'name' && (
-            <ProviderNameStep
-              firstName={account.firstName}
-              lastName={account.lastName}
-              onFirstName={firstName => setAccount(a => ({ ...a, firstName }))}
-              onLastName={lastName => setAccount(a => ({ ...a, lastName }))}
-            />
-          )}
           {step === 'bio' && (
             <ProviderBioStep
               firstName={account.firstName.trim() || 'dig'}
@@ -616,10 +596,24 @@ export default function ServiceWizard({
               onChange={title => setDraft(prev => ({ ...prev, title: title.slice(0, 50) }))}
             />
           )}
+          {step === 'description' && (
+            <DescriptionStep
+              value={draft.description}
+              onChange={description =>
+                setDraft(prev => ({ ...prev, description: description.slice(0, 500) }))
+              }
+            />
+          )}
           {step === 'category' && (
             <CategoryStep
               value={draft.categorySlug}
-              onChange={categorySlug => setDraft(prev => ({ ...prev, categorySlug }))}
+              customValue={draft.customCategoryLabel}
+              onChange={categorySlug =>
+                setDraft(prev => ({ ...prev, categorySlug, customCategoryLabel: '' }))
+              }
+              onCustomChange={customCategoryLabel =>
+                setDraft(prev => ({ ...prev, customCategoryLabel, categorySlug: null }))
+              }
             />
           )}
           {step === 'occasions' && (
@@ -634,15 +628,6 @@ export default function ServiceWizard({
               onChange={locationId => setDraft(prev => ({ ...prev, locationId }))}
             />
           )}
-          {step === 'intro2' && <Intro2 phaseNumber={2 + listingPhaseOffset} />}
-          {step === 'description' && (
-            <DescriptionStep
-              value={draft.description}
-              onChange={description =>
-                setDraft(prev => ({ ...prev, description: description.slice(0, 500) }))
-              }
-            />
-          )}
           {step === 'photos' && (
             <PhotosStep
               photos={draft.photos}
@@ -653,7 +638,6 @@ export default function ServiceWizard({
               onAddClick={() => fileInputRef.current?.click()}
             />
           )}
-          {step === 'intro3' && <Intro3 phaseNumber={3 + listingPhaseOffset} />}
           {step === 'price' && (
             <PriceStep
               priceMin={draft.priceMin}
@@ -691,11 +675,28 @@ export default function ServiceWizard({
           uploading={uploading}
           onClose={() => setPhotoModalOpen(false)}
           onBrowse={() => fileInputRef.current?.click()}
+          onDropFiles={files => void uploadFiles(files)}
           onRemove={removePhoto}
           onDone={() => setPhotoModalOpen(false)}
         />
       )}
     </>
+  )
+}
+
+function ProfileBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d0d0d0] bg-[#f7f7f7] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#6a6a6a]">
+      Din profil
+    </span>
+  )
+}
+
+function ServiceBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF0EA] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[#FF6B35]">
+      Din tjänst
+    </span>
   )
 }
 
@@ -712,12 +713,13 @@ function ProviderNameStep({
 }) {
   return (
     <div>
-      <p className="text-[16px] font-medium text-[#222222]">Steg 1</p>
-      <h1 className="mt-3 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ProfileBadge />
+      <p className="mt-3 text-[16px] font-medium text-[#222222]">Steg 1</p>
+      <h1 className="mt-1 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Vad ska gäster kalla dig?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Förnamnet blir ditt föredragna namn på Festly — det syns under “Träffa din leverantör” på
+        Förnamnet blir ditt föredragna namn på Gigtorget — det syns under "Träffa din leverantör" på
         dina tjänster och i chatten med planerare.
       </p>
       <div className="mt-8 space-y-5">
@@ -762,13 +764,14 @@ function ProviderBasedInStep({
 }) {
   return (
     <div>
-      <p className="text-[16px] font-medium text-[#222222]">Steg 1</p>
-      <h1 className="mt-3 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ProfileBadge />
+      <p className="mt-3 text-[16px] font-medium text-[#222222]">Steg 1</p>
+      <h1 className="mt-1 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Var är du baserad?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Din basstad ligger på din profil. Planerare använder den för att hitta lokal talent —
-        tillsammans med om dina tjänster kan resa.
+        Din basstad syns på profilen. Planerare filtrerar på plats för att hitta lokal talang —
+        och ser om du också tar dig till andra städer.
       </p>
       <div className="mt-8">
         <LocationSelect value={locationId} onChange={onChange} showComingSoon />
@@ -790,13 +793,14 @@ function ProviderBioStep({
 }) {
   return (
     <div>
-      <p className="text-[16px] font-medium text-[#222222]">Steg 1</p>
-      <h1 className="mt-3 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ProfileBadge />
+      <p className="mt-3 text-[16px] font-medium text-[#222222]">Steg 1</p>
+      <h1 className="mt-1 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Berätta kort om dig
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Din bio hör till din värdprofil (inte en enskild tjänst). Planerare läser den under
-        “Träffa din leverantör” för att känna dig trygg. Du kan ändra den senare under Min profil.
+        Det här är <strong className="text-[#222222]">din leverantörsprofil</strong> — inte en enskild tjänst.
+        Den syns under "Träffa din leverantör" på alla dina tjänster. Du kan ändra den när du vill, under Min profil.
       </p>
       <div className="mt-8 space-y-3">
         <Label htmlFor="wizard-bio" className="text-[14px] font-medium text-[#222222]">
@@ -806,7 +810,7 @@ function ProviderBioStep({
           id="wizard-bio"
           value={bio}
           onChange={e => onBio(e.target.value.slice(0, 600))}
-          placeholder="T.ex. DJ med 10 års erfarenhet av bröllop och företagsfester i Stockholm…"
+          placeholder="Lärare i tolv år, DJ vid sidan av i lika länge — tills sidoprojektet blev huvudjobbet för tre år sen. Om jag kunde hålla en fullsatt sal med sjuor engagerad en fredag kl 14, klarar jag ett bröllopssällskap efter tre glas champagne. Kört allt från 50-årskalas till studentflak, och jag läser ett rum snabbare än jag någonsin läste en klass."
           rows={5}
           maxLength={600}
           className="min-h-[140px] rounded-xl border-[#b0b0b0] text-[16px] text-[#222222] shadow-none focus-visible:ring-[#222222]"
@@ -820,6 +824,9 @@ function ProviderBioStep({
           Hoppa över just nu
         </button>
       </div>
+      <p className="mt-6 text-[13px] text-[#6a6a6a]">
+        Sparas automatiskt varje gång du klickar Nästa — gå fram och tillbaka utan att tappa något.
+      </p>
     </div>
   )
 }
@@ -827,13 +834,14 @@ function ProviderBioStep({
 function Intro1({ phaseNumber }: { phaseNumber: number }) {
   return (
     <div className="max-w-xl">
-      <p className="text-[16px] font-medium text-[#222222]">Steg {phaseNumber}</p>
-      <h1 className="mt-3 text-[32px] font-semibold leading-tight tracking-[-0.6px] text-[#222222] sm:text-[48px]">
-        Berätta om din tjänst
+      <ServiceBadge />
+      <p className="mt-4 text-[16px] font-medium text-[#222222]">Steg {phaseNumber}</p>
+      <h1 className="mt-1 text-[32px] font-semibold leading-tight tracking-[-0.6px] text-[#222222] sm:text-[48px]">
+        Nu skapar vi din tjänst
       </h1>
       <p className="mt-4 text-[16px] leading-relaxed text-[#6a6a6a] sm:text-[18px]">
-        I det här steget beskriver du vad du erbjuder — titel, kategori och var du arbetar.
-        Planerare använder det för att hitta rätt talang till sitt kalas.
+        Profilen är klar. Nu är det dags för själva tjänsten — den som planerare faktiskt hittar
+        och bokar. Du kan lägga till fler på Gigtorget senare, en i taget.
       </p>
     </div>
   )
@@ -872,7 +880,8 @@ function Intro3({ phaseNumber }: { phaseNumber: number }) {
 function TitleStep({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <div>
-      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ServiceBadge />
+      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Ge din tjänst en titel
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
@@ -893,45 +902,204 @@ function TitleStep({ value, onChange }: { value: string; onChange: (v: string) =
 
 function CategoryStep({
   value,
+  customValue,
   onChange,
+  onCustomChange,
 }: {
   value: CategorySlug | null
+  customValue: string
   onChange: (slug: CategorySlug) => void
+  onCustomChange: (text: string) => void
 }) {
+  const [query, setQuery] = useState('')
+  const [showAnnat, setShowAnnat] = useState(!value && customValue.length > 0)
+
+  // Which group is expanded — auto-expand the group containing the selected slug
+  const initialGroup = useMemo(() => {
+    if (!value) return null
+    return CATEGORY_GROUPS.find(g => g.slugs.includes(value))?.id ?? null
+  }, [value])
+  const [expandedGroup, setExpandedGroup] = useState<string | null>(initialGroup)
+
+  const lowerQuery = query.toLowerCase().trim()
+  const filteredCategories = lowerQuery
+    ? CATEGORIES.filter(
+        cat =>
+          cat.label.toLowerCase().includes(lowerQuery) ||
+          (cat.chipLabel ?? '').toLowerCase().includes(lowerQuery) ||
+          cat.tags.some(t => t.toLowerCase().includes(lowerQuery))
+      )
+    : []
+
+  function handleSelect(slug: CategorySlug) {
+    onChange(slug)
+    setQuery('')
+    setShowAnnat(false)
+  }
+
+  function handleAnnat() {
+    setShowAnnat(true)
+    setExpandedGroup(null)
+    onChange(null as unknown as CategorySlug)
+  }
+
   return (
     <div>
-      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ServiceBadge />
+      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Vad erbjuder du?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Välj typ av tjänst — t.ex. DJ eller fotograf. Tillfällen (bröllop, barnkalas …) väljer du i
-        nästa steg.
+        Sök eller bläddra bland kategorier. Tillfällen (bröllop, barnkalas …) väljer du i nästa steg.
       </p>
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {CATEGORIES.map(cat => {
-          const selected = value === cat.slug
-          return (
-            <button
-              key={cat.slug}
-              type="button"
-              onClick={() => onChange(cat.slug as CategorySlug)}
-              className={cn(
-                'flex flex-col items-start gap-3 rounded-2xl border px-4 py-5 text-left transition',
-                selected
-                  ? 'border-2 border-[#222222] bg-[#f7f7f7]'
-                  : 'border border-[#dddddd] hover:border-[#222222]'
-              )}
-            >
-              <span className="text-[28px]" aria-hidden>
-                {cat.emoji}
-              </span>
-              <span className="text-[14px] font-semibold text-[#222222]">
-                {cat.chipLabel ?? cat.label}
-              </span>
-            </button>
-          )
-        })}
+
+      {/* Search */}
+      <div className="relative mt-6">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#aaaaaa]" />
+        <input
+          type="text"
+          placeholder="Sök kategori..."
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          className="w-full rounded-xl border border-[#dddddd] py-3 pl-10 pr-4 text-[15px] text-[#222222] placeholder:text-[#aaaaaa] focus:border-[#222222] focus:outline-none"
+        />
       </div>
+
+      {/* Search results */}
+      {lowerQuery ? (
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {filteredCategories.length > 0 ? (
+            filteredCategories.map(cat => {
+              const selected = value === cat.slug
+              return (
+                <button
+                  key={cat.slug}
+                  type="button"
+                  onClick={() => handleSelect(cat.slug as CategorySlug)}
+                  className={cn(
+                    'flex items-center rounded-xl border px-3.5 py-3 text-left text-[14px] font-medium transition',
+                    selected
+                      ? 'border-2 border-[#222222] bg-[#f7f7f7]'
+                      : 'border-[#dddddd] hover:border-[#222222]'
+                  )}
+                >
+                  <span className="text-[#222222]">{cat.chipLabel ?? cat.label}</span>
+                </button>
+              )
+            })
+          ) : (
+            <p className="col-span-full text-[14px] text-[#6a6a6a]">
+              Hittade inget — använd{' '}
+              <button
+                type="button"
+                onClick={handleAnnat}
+                className="font-medium text-[#222222] underline"
+              >
+                "Annat"
+              </button>{' '}
+              och skriv in din tjänst.
+            </p>
+          )}
+        </div>
+      ) : (
+        /* Grouped accordion */
+        <div className="mt-4 divide-y divide-[#eeeeee] rounded-2xl border border-[#dddddd]">
+          {CATEGORY_GROUPS.map(group => {
+            const isOpen = expandedGroup === group.id
+            const groupSelected = group.slugs.includes(value ?? '')
+            return (
+              <div key={group.id}>
+                <button
+                  type="button"
+                  onClick={() => setExpandedGroup(isOpen ? null : group.id)}
+                  className="flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-[#fafafa]"
+                >
+                  <span className="flex-1 text-[15px] font-semibold text-[#222222]">
+                    {group.label}
+                  </span>
+                  {groupSelected && !isOpen && (
+                    <span className="mr-2 rounded-full bg-[#222222] px-2.5 py-0.5 text-[11px] font-semibold text-white">
+                      Vald
+                    </span>
+                  )}
+                  <ChevronDown
+                    className={cn(
+                      'size-4 text-[#aaaaaa] transition-transform duration-200',
+                      isOpen && 'rotate-180'
+                    )}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="grid grid-cols-2 gap-2 px-4 pb-4 sm:grid-cols-3">
+                    {group.slugs.map(slug => {
+                      const cat = CATEGORIES.find(c => c.slug === slug)
+                      if (!cat) return null
+                      const selected = value === slug
+                      return (
+                        <button
+                          key={slug}
+                          type="button"
+                          onClick={() => handleSelect(slug as CategorySlug)}
+                          className={cn(
+                            'flex items-center rounded-xl border px-3.5 py-3 text-left transition',
+                            selected
+                              ? 'border-2 border-[#222222] bg-[#f7f7f7]'
+                              : 'border-[#dddddd] hover:border-[#222222]'
+                          )}
+                        >
+                          <span className="text-[13px] font-semibold leading-tight text-[#222222]">
+                            {cat.chipLabel ?? cat.label}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Annat / custom category */}
+      {!lowerQuery && (
+        <div className="mt-3">
+          {showAnnat ? (
+            <div className="rounded-2xl border border-[#222222] bg-[#fafafa] px-4 py-4">
+              <p className="mb-2 text-[14px] font-semibold text-[#222222]">Beskriv din tjänst</p>
+              <input
+                type="text"
+                autoFocus
+                value={customValue}
+                onChange={e => onCustomChange(e.target.value.slice(0, 60))}
+                placeholder="T.ex. Trollkonstnär, Florist, Cirkusartist..."
+                className="w-full rounded-xl border border-[#dddddd] px-3.5 py-2.5 text-[15px] text-[#222222] placeholder:text-[#aaaaaa] focus:border-[#222222] focus:outline-none"
+              />
+              <p className="mt-1.5 text-right text-[12px] text-[#aaaaaa]">
+                {customValue.length}/60
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAnnat(false)
+                  onCustomChange('')
+                }}
+                className="mt-1 text-[13px] text-[#6a6a6a] underline"
+              >
+                Avbryt
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAnnat}
+              className="text-[14px] text-[#6a6a6a] underline hover:text-[#222222]"
+            >
+              Hittar du inte din tjänst? Skriv in den själv
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -945,7 +1113,8 @@ function OccasionsStep({
 }) {
   return (
     <div>
-      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ServiceBadge />
+      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Vilka tillfällen passar dig?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
@@ -965,7 +1134,8 @@ function LocationStep({
 }) {
   return (
     <div>
-      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ServiceBadge />
+      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Var erbjuder du din tjänst?
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
@@ -1012,7 +1182,8 @@ function DescriptionStep({
 }) {
   return (
     <div>
-      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ServiceBadge />
+      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Skapa din beskrivning
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
@@ -1094,7 +1265,8 @@ function PhotosStep({
   if (photos.length === 0) {
     return (
       <div>
-        <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+        <ServiceBadge />
+        <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
           Lägg till foton av din tjänst
         </h1>
         <p className="mt-2 text-[15px] text-[#6a6a6a]">
@@ -1105,9 +1277,6 @@ function PhotosStep({
           onClick={onOpenModal}
           className="mt-10 flex w-full flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-[#b0b0b0] bg-[#f7f7f7] px-6 py-20 transition hover:bg-[#f2f2f2]"
         >
-          <span className="text-[48px]" aria-hidden>
-            📷
-          </span>
           <span className="rounded-full bg-white px-5 py-2.5 text-[14px] font-semibold text-[#222222] shadow-sm">
             {uploading ? 'Laddar upp...' : 'Lägg till foton'}
           </span>
@@ -1176,6 +1345,7 @@ function PhotoUploadModal({
   uploading,
   onClose,
   onBrowse,
+  onDropFiles,
   onRemove,
   onDone,
 }: {
@@ -1183,9 +1353,31 @@ function PhotoUploadModal({
   uploading: boolean
   onClose: () => void
   onBrowse: () => void
+  onDropFiles: (files: File[]) => void
   onRemove: (i: number) => void
   onDone: () => void
 }) {
+  const [dragging, setDragging] = useState(false)
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+    setDragging(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragging(false)
+    }
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault()
+    setDragging(false)
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+    if (files.length) onDropFiles(files)
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-6">
       <div className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl bg-white sm:rounded-3xl">
@@ -1214,8 +1406,20 @@ function PhotoUploadModal({
 
         <div className="flex-1 overflow-y-auto px-5 py-6">
           {photos.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#b0b0b0] px-6 py-16 text-center">
-              <p className="text-[22px] font-semibold text-[#222222]">Dra och släpp</p>
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={cn(
+                'flex flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-16 text-center transition-colors',
+                dragging
+                  ? 'border-[#222222] bg-[#f7f7f7]'
+                  : 'border-[#b0b0b0]'
+              )}
+            >
+              <p className="text-[22px] font-semibold text-[#222222]">
+                {dragging ? 'Släpp bilderna här' : 'Dra och släpp'}
+              </p>
               <p className="mt-1 text-[14px] text-[#6a6a6a]">eller bläddra bland foton</p>
               <button
                 type="button"
@@ -1226,13 +1430,25 @@ function PhotoUploadModal({
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {photos.map((url, i) => (
-                <div key={url} className="relative aspect-square overflow-hidden rounded-xl bg-[#ebebeb]">
-                  <Image src={url} alt="" fill className="object-cover" sizes="200px" />
-                  <PhotoRemoveButton onClick={() => onRemove(i)} variant="dark" />
-                </div>
-              ))}
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className={cn(
+                'grid grid-cols-2 gap-3 rounded-2xl transition-colors',
+                dragging && 'opacity-60 ring-2 ring-[#222222] ring-offset-2'
+              )}>
+                {photos.map((url, i) => (
+                  <div key={url} className="relative aspect-square overflow-hidden rounded-xl bg-[#ebebeb]">
+                    <Image src={url} alt="" fill className="object-cover" sizes="200px" />
+                    <PhotoRemoveButton onClick={() => onRemove(i)} variant="dark" />
+                  </div>
+                ))}
+              </div>
+              {dragging && (
+                <p className="mt-3 text-center text-[13px] text-[#6a6a6a]">Släpp för att lägga till</p>
+              )}
             </div>
           )}
         </div>
@@ -1270,11 +1486,12 @@ function PriceStep({
 }) {
   return (
     <div>
-      <h1 className="text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
+      <ServiceBadge />
+      <h1 className="mt-4 text-[26px] font-semibold tracking-[-0.4px] text-[#222222] sm:text-[32px]">
         Sätt ditt pris
       </h1>
       <p className="mt-2 text-[15px] text-[#6a6a6a]">
-        Ange ett intervall — från lägsta till högsta pris för din tjänst.
+        Ange ett spann — från lägsta till högsta pris för din tjänst.
       </p>
       <div className="mt-8 overflow-hidden rounded-2xl border border-[#dddddd]">
         <label className="flex items-center justify-between gap-4 border-b border-[#ebebeb] px-5 py-5">
@@ -1331,7 +1548,7 @@ function PriceStep({
             Jag kan resa till andra städer
           </span>
           <span className="mt-1 block text-[14px] leading-[1.4] text-[#6a6a6a]">
-            På tjänsten visas “Kan resa”. Annars “Endast lokalt”.
+            Vi visar "Kan resa" på din tjänst. Annars "Endast lokalt".
           </span>
         </span>
       </label>

@@ -10,13 +10,11 @@ import { normalizeOccasions, type OccasionSlug } from '@/lib/occasions'
 export const SERVICE_WIZARD_STEPS = [
   'intro1',
   'title',
+  'description',
   'category',
   'occasions',
   'location',
-  'intro2',
-  'description',
   'photos',
-  'intro3',
   'price',
   'publish',
 ] as const
@@ -24,7 +22,7 @@ export const SERVICE_WIZARD_STEPS = [
 export type ServiceWizardStep = (typeof SERVICE_WIZARD_STEPS)[number]
 
 /** Account steps prepended for first-time provider publish. */
-export const ACCOUNT_WIZARD_STEPS = ['name', 'bio', 'basedIn'] as const
+export const ACCOUNT_WIZARD_STEPS = ['bio', 'basedIn'] as const
 export type AccountWizardStep = (typeof ACCOUNT_WIZARD_STEPS)[number]
 
 export type FirstPublishStep = AccountWizardStep | ServiceWizardStep
@@ -37,6 +35,8 @@ export const FIRST_PUBLISH_STEPS: FirstPublishStep[] = [
 export type ServiceWizardDraft = {
   title: string
   categorySlug: CategorySlug | null
+  /** Free-text category label when categorySlug is null (stored in category_tags). */
+  customCategoryLabel: string
   occasions: OccasionSlug[]
   locationId: string
   description: string
@@ -56,6 +56,7 @@ export type AccountWizardDraft = {
 export const EMPTY_WIZARD_DRAFT: ServiceWizardDraft = {
   title: '',
   categorySlug: null,
+  customCategoryLabel: '',
   occasions: [],
   locationId: DEFAULT_LOCATION_ID,
   description: '',
@@ -72,19 +73,17 @@ export const EMPTY_ACCOUNT_DRAFT: AccountWizardDraft = {
   basedInLocationId: DEFAULT_LOCATION_ID,
 }
 
-/** Three Airbnb-style phases for returning providers (new listing). */
+/** Two phases for returning providers (new listing). */
 export const WIZARD_PHASES: ServiceWizardStep[][] = [
-  ['intro1', 'title', 'category', 'occasions', 'location'],
-  ['intro2', 'description', 'photos'],
-  ['intro3', 'price', 'publish'],
+  ['intro1', 'title', 'description', 'category', 'occasions', 'location', 'photos'],
+  ['price', 'publish'],
 ]
 
-/** Four phases for first publish: Konto → Tjänst → Synlighet → Publicera. */
+/** Three phases for first publish: Din profil → Din tjänst → Publicera. */
 export const FIRST_PUBLISH_PHASES: FirstPublishStep[][] = [
-  ['name', 'bio', 'basedIn'],
-  ['intro1', 'title', 'category', 'occasions', 'location'],
-  ['intro2', 'description', 'photos'],
-  ['intro3', 'price', 'publish'],
+  ['bio', 'basedIn'],
+  ['intro1', 'title', 'description', 'category', 'occasions', 'location', 'photos'],
+  ['price', 'publish'],
 ]
 
 export function stepIndex(step: ServiceWizardStep): number {
@@ -154,20 +153,21 @@ export function prevFirstPublishStep(step: FirstPublishStep): FirstPublishStep |
 export function isStepValid(step: ServiceWizardStep, draft: ServiceWizardDraft): boolean {
   switch (step) {
     case 'intro1':
-    case 'intro2':
-    case 'intro3':
     case 'publish':
       return true
     case 'title':
       return draft.title.trim().length > 0 && draft.title.trim().length <= 50
+    case 'description':
+      return draft.description.trim().length > 0 && draft.description.trim().length <= 500
     case 'category':
-      return !!draft.categorySlug && CATEGORIES.some(c => c.slug === draft.categorySlug)
+      return (
+        (!!draft.categorySlug && CATEGORIES.some(c => c.slug === draft.categorySlug)) ||
+        draft.customCategoryLabel.trim().length >= 2
+      )
     case 'occasions':
       return draft.occasions.length >= 1
     case 'location':
-      return draft.locationId === DEFAULT_LOCATION_ID
-    case 'description':
-      return draft.description.trim().length > 0 && draft.description.trim().length <= 500
+      return !!draft.locationId
     case 'photos':
       return draft.photos.length >= 1 && draft.photos.length <= 6
     case 'price': {
@@ -185,8 +185,6 @@ export function isAccountStepValid(
   draft: AccountWizardDraft
 ): boolean {
   switch (step) {
-    case 'name':
-      return draft.firstName.trim().length > 0
     case 'bio':
       return true // optional
     case 'basedIn':
@@ -196,27 +194,25 @@ export function isAccountStepValid(
   }
 }
 
-/** Resume at first incomplete content step (skip completed intros when possible). */
+/** Resume at first incomplete content step. */
 export function resumeStep(draft: ServiceWizardDraft): ServiceWizardStep {
   if (!draft.title.trim()) return 'intro1'
+  if (!draft.description.trim()) return 'description'
   if (!draft.categorySlug) return 'category'
   if (draft.occasions.length < 1) return 'occasions'
   if (!draft.locationId) return 'location'
-  if (!draft.description.trim()) return 'intro2'
   if (draft.photos.length < 1) return 'photos'
-  if (!draft.priceMin || !draft.priceMax) return 'intro3'
+  if (!draft.priceMin || !draft.priceMax) return 'price'
   return 'publish'
 }
 
-/** First-time publish: start at name/bio if needed, else resume listing draft. */
+/** First-time publish: always start at bio (Part A), then resume listing draft. */
 export function resumeFirstPublishStep(opts: {
-  needsName: boolean
   needsBio: boolean
   needsBasedIn?: boolean
   draft: ServiceWizardDraft
   resumeListing: boolean
 }): FirstPublishStep {
-  if (opts.needsName) return 'name'
   if (opts.needsBio) return 'bio'
   if (opts.needsBasedIn) return 'basedIn'
   if (opts.resumeListing) return resumeStep(opts.draft)
@@ -244,12 +240,17 @@ export function draftFromService(service: {
   can_travel?: boolean | null
 } | null): ServiceWizardDraft {
   if (!service) return { ...EMPTY_WIZARD_DRAFT }
+  const categorySlug = resolveCategorySlug({
+    category_slug: service.category_slug,
+    category_tags: service.category_tags,
+  })
+  // If no known slug, the first category_tag is a custom label written by the provider.
+  const customCategoryLabel =
+    !categorySlug && service.category_tags?.length ? service.category_tags[0] : ''
   return {
     title: service.title ?? '',
-    categorySlug: resolveCategorySlug({
-      category_slug: service.category_slug,
-      category_tags: service.category_tags,
-    }),
+    categorySlug,
+    customCategoryLabel,
     occasions: normalizeOccasions(service.occasions),
     locationId: service.location_id ?? DEFAULT_LOCATION_ID,
     description: service.description ?? '',

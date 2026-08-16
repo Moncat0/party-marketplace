@@ -136,8 +136,17 @@ create table services (
                           check (
                           category_slug is null
                           or category_slug in (
-                            'dj', 'fotograf', 'musik', 'makeup',
-                            'underhallning', 'catering'
+                            -- Musik & Ljud
+                            'dj', 'sangare', 'band', 'musiker',
+                            -- Foto & Film
+                            'fotograf', 'videograf', 'fotobox',
+                            -- Skönhet & Stil
+                            'makeup', 'harstylist',
+                            -- Mat & Dryck
+                            'privatkock', 'catering', 'bartender',
+                            -- Underhållning & Show
+                            'magiker', 'komiker', 'barnunderhallning',
+                            'dansare', 'mc', 'cirkus'
                           )
                           ),
   -- Legacy / specialty tags — kept in sync with category_slug[0] on write.
