@@ -25,7 +25,7 @@ export const SUPPLY_BENEFITS = [
   {
     title: 'En länk att dela överallt',
     description:
-      'Lägg din Festly-sida i Instagram-bion, i offerter eller i nästa DM till en kund.',
+      'Lägg din Gigtorget-sida i Instagram-bion, i offerter eller i nästa DM till en kund.',
     icon: 'link' as const,
   },
   {
@@ -57,7 +57,7 @@ export const SUPPLY_STEPS = [
   {
     badge: 'STEG 4',
     title: 'Bli bokad, få betalt',
-    description: 'Kunden betalar via Festly. Pengarna är dina så snart jobbet är klart.',
+    description: 'Kunden betalar via Gigtorget. Pengarna är dina så snart jobbet är klart.',
     mock: 'paid' as const,
   },
 ] as const
@@ -94,7 +94,7 @@ export const SUPPLY_CATEGORY_LABELS = CATEGORIES.map(c => c.label)
 export const SUPPLY_FAQS = [
   {
     q: 'Kostar det något att skapa min sida?',
-    a: `Nej, det är gratis att skapa din sida och bygga din profil på Festly. Vi tar ${PLATFORM_FEE_PERCENT}% i serviceavgift per genomförd betalning — det är så vi kan hålla Festly igång.`,
+    a: `Nej, det är gratis att skapa din sida och bygga din profil på Gigtorget. Vi tar ${PLATFORM_FEE_PERCENT}% i serviceavgift per genomförd betalning — det är så vi kan hålla Gigtorget igång.`,
   },
   {
     q: 'Vem kan skapa en sida?',
@@ -102,11 +102,11 @@ export const SUPPLY_FAQS = [
   },
   {
     q: 'Jag har ingen erfarenhet, kan jag ändå skapa en sida?',
-    a: 'Absolut. Festly handlar inte om hur många år du jobbat — det handlar om vad du kan visa upp. Lägg upp dina bästa bilder, sätt dina priser och låt kunderna hitta dig.',
+    a: 'Absolut. Gigtorget handlar inte om hur många år du jobbat — det handlar om vad du kan visa upp. Lägg upp dina bästa bilder, sätt dina priser och låt kunderna hitta dig.',
   },
   {
     q: 'Måste jag ha eget företag?',
-    a: 'Vi rekommenderar det starkt — det gör bokföring och skatt betydligt enklare för dig. Men det är inget krav för att skapa en sida på Festly, och vi tar inget ansvar för hur du hanterar din egen beskattning.',
+    a: 'Vi rekommenderar det starkt — det gör bokföring och skatt betydligt enklare för dig. Men det är inget krav för att skapa en sida på Gigtorget, och vi tar inget ansvar för hur du hanterar din egen beskattning.',
   },
   {
     q: 'Hur får jag betalt?',
@@ -122,10 +122,10 @@ export const SUPPLY_FAQS = [
   },
   {
     q: 'Kan jag erbjuda tjänster riktade mot barn, som kalas eller barnprogramledare?',
-    a: 'Inte just nu. Vi kan i dagsläget inte säkerställa utdrag ur belastningsregistret för dem som är aktiva på Festly, och det är en förutsättning vi inte vill kompromissa med när det gäller barn. Vi jobbar på en lösning för det här, men tills den finns på plats kan vi inte stödja tjänster riktade specifikt mot barn.',
+    a: 'Inte just nu. Vi kan i dagsläget inte säkerställa utdrag ur belastningsregistret för dem som är aktiva på Gigtorget, och det är en förutsättning vi inte vill kompromissa med när det gäller barn. Vi jobbar på en lösning för det här, men tills den finns på plats kan vi inte stödja tjänster riktade specifikt mot barn.',
   },
   {
-    q: 'Är Festly bara för Stockholm?',
+    q: 'Är Gigtorget bara för Stockholm?',
     a: 'Nej. Du kan skapa din sida oavsett var du är. Just nu är det Stockholm där flest arrangörer söker, men vi växer vidare — och du vill helst redan vara på plats när vi gör det.',
   },
 ] as const

@@ -268,7 +268,7 @@ export async function PATCH(
         price_ore: quote.price_ore,
         payment_status: 'unpaid',
         planner_id: booking.planner_id,
-        serviceTitle: service?.title ?? 'Bokning via Festly',
+        serviceTitle: service?.title ?? 'Bokning via Gigtorget',
       },
       { id: user.id, email: user.email, name: plannerRow?.name }
     )

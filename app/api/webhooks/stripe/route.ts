@@ -167,7 +167,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       await sendPaymentHeldReceipt({
         to: planner.email,
         plannerName: planner.first_name || planner.name || 'du',
-        serviceTitle: service?.title || 'Bokning via Festly',
+        serviceTitle: service?.title || 'Bokning via Gigtorget',
         providerName,
         bookingId,
         priceOre: expectedOre,

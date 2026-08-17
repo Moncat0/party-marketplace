@@ -14,7 +14,7 @@ import BrandLogo from '@/components/shared/BrandLogo'
 import { cn } from '@/lib/utils'
 
 /**
- * Airbnb Help Center layout for Festly.
+ * Airbnb Help Center layout for Gigtorget.
  * Structure audited from airbnb.com/help (Jul 2026):
  * hero + search → role tabs → login card → guides → top articles → explore → contact
  */

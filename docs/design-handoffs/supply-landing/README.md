@@ -1,8 +1,8 @@
 # Supply landing handoff (reference)
 
-Original design brief: see `HANDOFF.md`. Prototype HTML: `Festly Join (Supply).dc.html`.
+Original design brief: see `HANDOFF.md`. Prototype HTML: `Gigtorget Join (Supply).dc.html`.
 
-**Source of truth for layout / type / color on `/for-talanger`:** the HTML prototype + `tokens/*.css` (Festly). The HANDOFF brand note saying “don’t port Festly” was overridden — this marketing page uses Festly visuals scoped under `.supply-landing`.
+**Source of truth for layout / type / color on `/for-talanger`:** the HTML prototype + `tokens/*.css` (Gigtorget). The HANDOFF brand note saying “don’t port Gigtorget” was overridden — this marketing page uses Gigtorget visuals scoped under `.supply-landing`.
 
 ## Implemented as
 

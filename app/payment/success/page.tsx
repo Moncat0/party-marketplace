@@ -29,8 +29,8 @@ export default function PaymentSuccessPage() {
             </svg>
           </div>
           <p className="text-[14px] leading-[1.43] text-[#6a6a6a] text-center">
-            Tack! Beloppet hålls säkert av Festly tills evenemanget är genomfört och du godkänner
-            utbetalning till talangen. Du får ett kvitto från Festly på e-post när betalningen är
+            Tack! Beloppet hålls säkert av Gigtorget tills evenemanget är genomfört och du godkänner
+            utbetalning till talangen. Du får ett kvitto från Gigtorget på e-post när betalningen är
             bekräftad.
           </p>
         </SettingsSection>

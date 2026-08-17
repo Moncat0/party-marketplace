@@ -303,8 +303,8 @@ export default function NotificationsSettings({
           )}
 
           <SectionBlock
-            title="Festly-uppdateringar"
-            description="Håll dig uppdaterad om nyheter från Festly och hjälp oss bli bättre."
+            title="Gigtorget-uppdateringar"
+            description="Håll dig uppdaterad om nyheter från Gigtorget och hjälp oss bli bättre."
             isLast
           >
             <NotifRow
@@ -354,7 +354,7 @@ export default function NotificationsSettings({
         <div>
           <SectionBlock
             title="Kontoaktivitet och policyer"
-            description="Bekräfta bokningar och kontoaktivitet, och lär dig om viktiga Festly-policyer."
+            description="Bekräfta bokningar och kontoaktivitet, och lär dig om viktiga Gigtorget-policyer."
           >
             <NotifRow
               label={role === 'provider' ? 'Bokningsförfrågningar' : 'Bokningsbekräftelser'}

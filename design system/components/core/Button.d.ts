@@ -1,6 +1,6 @@
 import * as React from 'react';
 /**
- * Primary call-to-action button in the Festly bold-outline style.
+ * Primary call-to-action button in the Gigtorget bold-outline style.
  */
 export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost';

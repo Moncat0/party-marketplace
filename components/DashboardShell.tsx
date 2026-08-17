@@ -25,7 +25,7 @@ type Props = {
   flush?: boolean
 }
 
-/** Host / provider shell — Festly tokens + Airbnb hosting left rail. */
+/** Host / provider shell — Gigtorget tokens + Airbnb hosting left rail. */
 export default function DashboardShell({
   name,
   role,

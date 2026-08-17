@@ -37,7 +37,7 @@ const steps = [
 const faqs = [
   {
     q: 'Kostar det något att boka?',
-    a: 'Nej, det är helt gratis att skapa konto och skicka förfrågningar på Festly',
+    a: 'Nej, det är helt gratis att skapa konto och skicka förfrågningar på Gigtorget',
   },
   {
     q: 'Hur snabbt svarar talangerna?',
@@ -48,8 +48,8 @@ const faqs = [
     a: 'Inga problem — du kan enkelt skicka en ny förfrågan till en annan talang på din lista.',
   },
   {
-    q: 'Sker betalningen via Festly?',
-    a: 'Ja, du betalar säkert via Festly och vi ser till att talangen får sin ersättning.',
+    q: 'Sker betalningen via Gigtorget?',
+    a: 'Ja, du betalar säkert via Gigtorget och vi ser till att talangen får sin ersättning.',
   },
 ]
 
@@ -64,7 +64,7 @@ export default function HowItWorksPage() {
           Ditt drömkalas på 4 enkla steg
         </h1>
         <p className="text-lg text-[#6A6A6A] leading-relaxed max-w-xl mx-auto mb-10">
-          Festly kopplar ihop dig med de bästa lokala talangerna i Stockholm. Snabbt, enkelt och gratis.
+          Gigtorget kopplar ihop dig med de bästa lokala talangerna i Stockholm. Snabbt, enkelt och gratis.
         </p>
         <div className="flex items-center justify-center gap-4">
           <Link

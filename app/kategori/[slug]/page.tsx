@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${category.label} i Stockholm`,
     description: category.description,
     openGraph: {
-      title: `${category.label} i Stockholm — Festly`,
+      title: `${category.label} i Stockholm — Gigtorget`,
       description: category.description,
     },
   }

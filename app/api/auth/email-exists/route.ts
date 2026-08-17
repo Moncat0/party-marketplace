@@ -6,7 +6,7 @@ function isValidEmail(value: string): boolean {
 }
 
 /**
- * Check whether an email already has a Festly account (public.users).
+ * Check whether an email already has a Gigtorget account (public.users).
  * Used before email signup to steer existing users to login.
  */
 export async function POST(request: NextRequest) {

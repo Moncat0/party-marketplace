@@ -1,10 +1,10 @@
-/** Airbnb-inspired settings tokens + Festly brand primary (pink). */
+/** Airbnb-inspired settings tokens + Gigtorget brand primary (pink). */
 
 export { settingsLayout } from './layout'
 
 export const settingsTokens = {
   colors: {
-    primary: '#FF2E8A', // Festly pink
+    primary: '#FF2E8A', // Gigtorget pink
     primaryActive: '#E01F74',
     primaryDisabled: '#FFD0E6',
     error: '#D62B2B',

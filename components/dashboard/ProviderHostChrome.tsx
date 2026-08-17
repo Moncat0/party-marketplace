@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils'
 import BrandLogo from '@/components/shared/BrandLogo'
 import { siteChromePad, siteHeaderHeight } from '@/components/siteChrome'
 import {
-  ArrowLeftRight,
   Calendar,
   CircleHelp,
   LogOut,
@@ -200,15 +199,6 @@ export default function ProviderHostChrome({
 
             <div className="flex items-center justify-end gap-1 sm:gap-2">
               <Button
-                asChild
-                variant="ghost"
-                size="pill"
-                className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
-              >
-                <Link href="/planner/dashboard">Byt till planerarläge</Link>
-              </Button>
-
-              <Button
                 ref={buttonRef}
                 type="button"
                 variant="outline"
@@ -304,14 +294,6 @@ export default function ProviderHostChrome({
             Inställningar
           </Link>
           <Separator className="my-2" />
-          <Link
-            href="/planner/dashboard"
-            className={menuItemClass}
-            onClick={() => setMenuOpen(false)}
-          >
-            <MenuIcon icon={ArrowLeftRight} />
-            Byt till planerarläge
-          </Link>
           <Link href="/hjalp" className={menuItemClass} onClick={() => setMenuOpen(false)}>
             <MenuIcon icon={CircleHelp} />
             Hjälpcenter

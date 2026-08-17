@@ -31,7 +31,7 @@ export default function AdminUserActions({
   const [error, setError] = useState<string | null>(null)
   const [messageOpen, setMessageOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const [subject, setSubject] = useState('Meddelande från Festly')
+  const [subject, setSubject] = useState('Meddelande från Gigtorget')
   const [body, setBody] = useState('')
   const [sent, setSent] = useState(false)
 
@@ -151,7 +151,7 @@ export default function AdminUserActions({
           <DialogHeader>
             <DialogTitle>Meddela {name}</DialogTitle>
             <DialogDescription>
-              Skickas som e-post från Festly support. Svar går till din admin-adress.
+              Skickas som e-post från Gigtorget support. Svar går till din admin-adress.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -172,7 +172,7 @@ export default function AdminUserActions({
                 onChange={e => setBody(e.target.value)}
                 rows={5}
                 className="mt-1.5 w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-[14px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                placeholder="Hej! Vi hör av oss från Festly…"
+                placeholder="Hej! Vi hör av oss från Gigtorget…"
               />
             </div>
             {sent ? (

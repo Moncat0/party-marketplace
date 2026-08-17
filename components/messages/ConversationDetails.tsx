@@ -303,7 +303,7 @@ export default function ConversationDetails({
           {booking.guest_count != null && (
             <DetailRow label="Gäster" value={`${booking.guest_count}`} />
           )}
-          {fundsHeld && <DetailRow label="Betalning" value="Betald (hålls av Festly)" />}
+          {fundsHeld && <DetailRow label="Betalning" value="Betald (hålls av Gigtorget)" />}
           {booking.payment_status === 'released' && (
             <DetailRow label="Betalning" value="Utbetald" />
           )}

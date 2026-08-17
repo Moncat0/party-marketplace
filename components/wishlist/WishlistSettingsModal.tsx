@@ -64,7 +64,7 @@ export default function WishlistSettingsModal({
     track('shortlist_shared', { shortlist_id: shortlistId, item_count: itemCount })
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: `${name} på Festly`, url: shareUrl })
+        await navigator.share({ title: `${name} på Gigtorget`, url: shareUrl })
         onClose()
         return
       } catch {

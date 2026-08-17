@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 /**
- * App button system (Airbnb geometry + Festly pink primary).
+ * App button system (Airbnb geometry + Gigtorget pink primary).
  * - default: pink CTA (#FF2E8A)
  * - dark: ink #111 (Airbnb primary on services modals)
  * - outline / secondary / ghost / destructive / link / pill

@@ -32,16 +32,16 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Festly — Hitta underhållning till ditt kalas',
-    template: '%s | Festly',
+    default: 'Gigtorget — Hitta underhållning till ditt kalas',
+    template: '%s | Gigtorget',
   },
   description: 'Hitta och boka lokala talanger till ditt nästa kalas i Stockholm.',
   metadataBase: new URL(siteUrl),
   openGraph: {
-    siteName: 'Festly',
+    siteName: 'Gigtorget',
     locale: 'sv_SE',
     type: 'website',
-    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Festly' }],
+    images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Gigtorget' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Festly',
+    title: 'Gigtorget',
     startupImage: '/icons/icon-512.png',
   },
   icons: {

@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Festly',
-    short_name: 'Festly',
+    name: 'Gigtorget',
+    short_name: 'Gigtorget',
     description: 'Hitta och boka lokala talanger till ditt kalas i Stockholm.',
     start_url: '/',
     display: 'standalone',

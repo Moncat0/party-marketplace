@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Integritetspolicy',
-  description: 'Hur Festly samlar in, använder och skyddar dina personuppgifter.',
+  description: 'Hur Gigtorget samlar in, använder och skyddar dina personuppgifter.',
 }
 
 export default function PrivacyPage() {
@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="font-semibold mb-2">Vem vi är</h2>
-            <p className="text-[#6A6A6A]">Festly är en tjänst för att hitta och boka underhållning till evenemang i Stockholm. Vi värnar om din integritet och behandlar dina personuppgifter i enlighet med GDPR (EU:s dataskyddsförordning).</p>
+            <p className="text-[#6A6A6A]">Gigtorget är en tjänst för att hitta och boka underhållning till evenemang i Stockholm. Vi värnar om din integritet och behandlar dina personuppgifter i enlighet med GDPR (EU:s dataskyddsförordning).</p>
           </section>
 
           <section>

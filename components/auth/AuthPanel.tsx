@@ -489,7 +489,7 @@ export default function AuthPanel({
       return
     }
     if (!isAtLeast18(birthDate)) {
-      setError('Du måste vara minst 18 år för att använda Festly')
+      setError('Du måste vara minst 18 år för att använda Gigtorget')
       setLoading(false)
       return
     }

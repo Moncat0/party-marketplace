@@ -1,4 +1,4 @@
-# CLAUDE.md — Festly (party services marketplace)
+# CLAUDE.md — Gigtorget (party services marketplace)
 
 Read this file at the start of every session before writing any code.
 Also read SPEC.md / `party-marketplace-spec.md` for the full product specification.
@@ -69,7 +69,7 @@ party-marketplace/
 │   ├── planner/               ← planner guest chrome
 │   └── …
 ├── components/
-│   ├── ui/                    ← shadcn + Festly primitives
+│   ├── ui/                    ← shadcn + Gigtorget primitives
 │   ├── marketing/supply/      ← /for-talanger sections
 │   ├── listings/
 │   ├── messages/
@@ -89,28 +89,28 @@ party-marketplace/
 
 ## Brand — shared colors, two surfaces for type/density
 
-**Policy:** Festly **colors** app-wide (pink primary, orange secondary, ink). Website vs app still differ in **type, density, and cream atmosphere**. Full rules: `docs/design-system/README.md`.
+**Policy:** Gigtorget **colors** app-wide (pink primary, orange secondary, ink). Website vs app still differ in **type, density, and cream atmosphere**. Full rules: `docs/design-system/README.md`.
 
 | | Website (marketing) | App (product) |
 |---|---|---|
 | Job | Acquire, explain | Daily tasks |
 | Colors | Pink `#FF2E8A`, orange `#FF6A00`, cream, ink `#111` | **Same** pink / orange / ink; **white** canvas |
 | Type | Anton · Quicksand · Caveat | Plus Jakarta Sans |
-| CSS | `.supply-landing` + supply-landing.css | `:root` in `app/globals.css` (Festly palette) |
+| CSS | `.supply-landing` + supply-landing.css | `:root` in `app/globals.css` (Gigtorget palette) |
 | Code | `components/marketing/*` | `components/ui/*` + feature folders |
-| Docs | `docs/design-system/`, `design system/`, `festly-design` | App tokens + listing-card skill |
+| Docs | `docs/design-system/`, `design system/`, `gigtorget-design` | App tokens + listing-card skill |
 | Examples | `/for-talanger`, `/dev/design-lab` | `/sok`, `/dashboard`, `/planner`, onboarding, settings |
 
 **Quick test:** Anton/Caveat/cream bands → website. Jakarta/white tool chrome → app. CTAs are pink on both.
 
-### Website (Festly marketing)
+### Website (Gigtorget marketing)
 
 - Live: `/for-talanger` → `components/marketing/supply/*`; SiteNav excluded; owns `MarketplaceHeader` + `BrowseSearch`
 - Kit: `design system/` · Claude summary: `docs/design-system/marketing/DESIGN.md` · Lab: `/dev/design-lab`
-- Wordmark: `public/images/supply/festly-wordmark.svg`
+- Wordmark: `public/images/supply/gigtorget-wordmark.svg`
 - “Erbjud din tjänst” links here
 
-### App (Festly colors × product density)
+### App (Gigtorget colors × product density)
 
 - Tokens in `app/globals.css` + `tailwind.config.js` — primary/ring = pink; `ember` Tailwind aliases map to pink for compat
 - Do **not** use Anton/Caveat or cream page backgrounds in app chrome
@@ -118,7 +118,7 @@ party-marketplace/
 
 ### Shared (both surfaces)
 
-- Festly color tokens + Swedish tone (`design system/uploads/festly-tone-of-voice-guide-sv.md`)
+- Gigtorget color tokens + Swedish tone (`design system/uploads/gigtorget-tone-of-voice-guide-sv.md`)
 - Star-rating rules, soft signup gate, mobile-first 390px
 
 ### Design principles
@@ -285,4 +285,4 @@ Work through phases in order. Complete and test each step before moving to the n
 - Test in the browser after every change
 - Commit to GitHub after every working feature
 - If something is unclear, ask — do not guess
-- Design handoffs: layout/copy/interaction only; always restyle with Festly tokens
+- Design handoffs: layout/copy/interaction only; always restyle with Gigtorget tokens

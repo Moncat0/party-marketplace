@@ -25,7 +25,7 @@ export function paymentStatusLabelSv(status: string | null | undefined): string 
     case 'unpaid':
       return 'Väntar på betalning'
     case 'held':
-      return 'Betald (hålls av Festly)'
+      return 'Betald (hålls av Gigtorget)'
     case 'pending_release':
       return 'Väntar på utbetalning'
     case 'released':

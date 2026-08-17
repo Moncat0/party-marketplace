@@ -179,8 +179,8 @@ export default function AccountSettingsForm({
   const phoneDisplay = savedPhone ? formatPhoneDisplay(savedPhone) : null
   const phoneDescription =
     role === 'planner'
-      ? 'Lägg till ett nummer så att talanger och Festly kan nå dig.'
-      : 'Lägg till ett nummer så att planerare och Festly kan nå dig.'
+      ? 'Lägg till ett nummer så att talanger och Gigtorget kan nå dig.'
+      : 'Lägg till ett nummer så att planerare och Gigtorget kan nå dig.'
 
   function openEdit(key: string) {
     setMsg(null)
@@ -475,6 +475,29 @@ export default function AccountSettingsForm({
             )
           })}
         </nav>
+
+        {role === 'provider' && (
+          <div className="mt-6 border-t border-border pt-5">
+            <p className="mb-2.5 text-xs text-muted-foreground">Har du ett annat konto?</p>
+            <Link
+              href="/planner/dashboard"
+              className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              Byt till planerarläge
+            </Link>
+          </div>
+        )}
+        {role === 'planner' && hasProviderProfile && (
+          <div className="mt-6 border-t border-border pt-5">
+            <p className="mb-2.5 text-xs text-muted-foreground">Har du ett annat konto?</p>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+            >
+              Byt till talangläge
+            </Link>
+          </div>
+        )}
       </aside>
 
       <section data-settings-detail className="min-w-0 pt-8">
@@ -540,7 +563,7 @@ export default function AccountSettingsForm({
                         autoComplete="nickname"
                       />
                       <p className="text-[13px] leading-[1.4] text-[#6a6a6a]">
-                        Visas för andra på Festly Om du lämnar det tomt används ditt förnamn.
+                        Visas för andra på Gigtorget. Om du lämnar det tomt används ditt förnamn.
                       </p>
                       <SettingsButton onClick={handleSavePreferred} disabled={saving}>
                         {saving ? 'Sparar...' : 'Spara'}
@@ -555,7 +578,7 @@ export default function AccountSettingsForm({
                           Talangkonto
                         </p>
                         <p className="mt-1 text-[14px] leading-[1.43] text-[#6a6a6a]">
-                          Du erbjuder också tjänster på Festly. Hantera din publika profil och
+                          Du erbjuder också tjänster på Gigtorget. Hantera din publika profil och
                           annonser i{' '}
                           <Link
                             href="/dashboard"
@@ -953,7 +976,7 @@ export default function AccountSettingsForm({
                 <SettingsNavRow
                   asCard
                   label="Cookie-preferenser"
-                  description="Välj vilka cookies du vill tillåta på Festly"
+                  description="Välj vilka cookies du vill tillåta på Gigtorget"
                   onClick={() => setCookieModalOpen(true)}
                 />
 
@@ -1078,6 +1101,7 @@ export default function AccountSettingsForm({
         )}
         </div>
       </section>
+
     </div>
   )
 }

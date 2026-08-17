@@ -1,6 +1,6 @@
 ---
-name: festly-design
-description: Use this skill to generate well-branded interfaces and assets for Festly, either for production or throwaway prototypes/mocks/etc. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping. Also see docs/design-system/marketing/DESIGN.md and /dev/design-lab in the party-marketplace repo.
+name: gigtorget-design
+description: Use this skill to generate well-branded interfaces and assets for Gigtorget, either for production or throwaway prototypes/mocks/etc. Contains essential design guidelines, colors, type, fonts, assets, and UI kit components for prototyping. Also see docs/design-system/marketing/DESIGN.md and /dev/design-lab in the party-marketplace repo.
 user-invocable: true
 ---
 

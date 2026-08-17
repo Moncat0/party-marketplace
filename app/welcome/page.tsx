@@ -1,7 +1,7 @@
 import AccountOnboarding from '@/components/auth/AccountOnboarding'
 import { parseWelcomeNext } from '@/lib/profile-completeness'
 
-export const metadata = { title: 'Välkommen till Festly' }
+export const metadata = { title: 'Välkommen till Gigtorget' }
 
 export default function WelcomePage({
   searchParams,

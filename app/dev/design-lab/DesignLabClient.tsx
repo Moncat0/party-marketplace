@@ -21,8 +21,8 @@ type Palette = {
 
 const PALETTES: Palette[] = [
   {
-    id: 'festly',
-    label: 'Festly (for-talanger)',
+    id: 'gigtorget',
+    label: 'Gigtorget (for-talanger)',
     primary: '#FF2E8A',
     primaryHover: '#E01F74',
     primarySoft: '#FFE6F2',
@@ -141,7 +141,7 @@ function ColorInput({
 }
 
 export default function DesignLabClient() {
-  const [paletteId, setPaletteId] = useState('festly')
+  const [paletteId, setPaletteId] = useState('gigtorget')
   const [colors, setColors] = useState<Palette>(PALETTES[0])
   const [displayId, setDisplayId] = useState<(typeof DISPLAY_FONTS)[number]['id']>('anton')
   const [bodyId, setBodyId] = useState<(typeof BODY_FONTS)[number]['id']>('quicksand')
@@ -216,7 +216,7 @@ export default function DesignLabClient() {
           <div>
             <FieldLabel>Palette preset</FieldLabel>
             <Select
-              value={paletteId === 'custom' ? 'festly' : paletteId}
+              value={paletteId === 'custom' ? 'gigtorget' : paletteId}
               onChange={applyPreset}
               options={PALETTES.map(p => ({ id: p.id, label: p.label }))}
             />
@@ -277,7 +277,7 @@ export default function DesignLabClient() {
             <br />
             Full kit: <code className="text-[var(--ink)]">design system/</code>
             <br />
-            Voice: <code className="text-[var(--ink)]">uploads/festly-tone-of-voice-guide-sv.md</code>
+            Voice: <code className="text-[var(--ink)]">uploads/gigtorget-tone-of-voice-guide-sv.md</code>
           </div>
         </div>
       </aside>

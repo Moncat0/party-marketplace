@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-/** Interactive playground: Airbnb marketplace bones × Festly color/type. */
+/** Interactive playground: Airbnb marketplace bones × Gigtorget color/type. */
 export default function DesignLabPage() {
   const fontVars = [
     anton.variable,

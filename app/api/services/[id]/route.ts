@@ -32,6 +32,19 @@ export async function PATCH(
   }
 
   const body = await request.json().catch(() => ({}))
+
+  // Publish a draft service
+  if (body.is_published === true) {
+    const { data, error } = await owned.supabase
+      .from('services')
+      .update({ is_published: true, is_disabled: false })
+      .eq('id', params.id)
+      .select('id, is_disabled, is_published')
+      .single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ service: data })
+  }
+
   if (typeof body.is_disabled !== 'boolean') {
     return NextResponse.json({ error: 'is_disabled required' }, { status: 400 })
   }

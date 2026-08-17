@@ -39,7 +39,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     summary:
       'Det är gratis att skapa konto, spara talanger och skicka förfrågningar. Du betalar först när ni går vidare med en bokning.',
     body: [
-      'Det är gratis att skapa konto, spara talanger på din önskelista och skicka förfrågningar på Festly',
+      'Det är gratis att skapa konto, spara talanger på din önskelista och skicka förfrågningar på Gigtorget',
       'När du och talangen kommit överens betalar du säkert via plattformen. Du betalar inget förrän bokningen är bekräftad.',
     ],
   },
@@ -81,9 +81,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     role: 'planner',
     title: 'När och hur betalar jag?',
     summary:
-      'Du betalar säkert via Festly när ni kommit överens. Vi ser till att talangen får sin ersättning.',
+      'Du betalar säkert via Gigtorget när ni kommit överens. Vi ser till att talangen får sin ersättning.',
     body: [
-      'Betalning sker via Festly när bokningen är bekräftad och ni är överens om villkoren.',
+      'Betalning sker via Gigtorget när bokningen är bekräftad och ni är överens om villkoren.',
       'Du behöver inte betala utanför plattformen. Det skyddar både dig och talangen.',
     ],
   },
@@ -105,7 +105,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
       'Det är gratis att skapa profil. Vi tar en serviceavgift på genomförda betalningar — du betalar inget om du inte tjänar.',
     body: [
       'Att skapa och publicera din profil är gratis.',
-      'Festly tar en serviceavgift först när en betalning genomförs. Inga bokningar — ingen avgift.',
+      'Gigtorget tar en serviceavgift först när en betalning genomförs. Inga bokningar — ingen avgift.',
     ],
   },
   {
@@ -132,10 +132,10 @@ export const HELP_ARTICLES: HelpArticle[] = [
     slug: 'utbetalning',
     role: 'provider',
     title: 'Hur fungerar utbetalning?',
-    summary: 'Via Stripe Connect. Du ansluter ditt konto en gång, sedan sköter Festly betalningsflödet.',
+    summary: 'Via Stripe Connect. Du ansluter ditt konto en gång, sedan sköter Gigtorget betalningsflödet.',
     body: [
       'Anslut Stripe Connect från din instrumentpanel så utbetalningar kan nå dig.',
-      'När en planerare betalar via Festly hanteras flödet automatiskt enligt våra villkor.',
+      'När en planerare betalar via Gigtorget hanteras flödet automatiskt enligt våra villkor.',
     ],
   },
   {
@@ -156,7 +156,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     summary:
       'Ja. Börja som planerare och klicka Erbjud din tjänst när du vill skapa en talangprofil — eller byt läge i menyn.',
     body: [
-      'Många använder Festly både för att boka till egna fester och för att erbjuda sin egen tjänst.',
+      'Många använder Gigtorget både för att boka till egna fester och för att erbjuda sin egen tjänst.',
       'Byt till talangläge eller planerarläge från kontomenyn när du behöver byta perspektiv.',
     ],
   },

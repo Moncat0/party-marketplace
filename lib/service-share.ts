@@ -29,10 +29,10 @@ export function buildServiceSharePayload(input: ServiceShareInput): ServiceShare
     ) ?? 'Tjänst'
   const city = input.city?.trim() || 'Stockholm'
 
-  const text = `Kolla in ${title} på Festly\n${category} i ${city}.\n\n${url}`
+  const text = `Kolla in ${title} på Gigtorget\n${category} i ${city}.\n\n${url}`
 
   return {
-    title: `${title} | Festly`,
+    title: `${title} | Gigtorget`,
     text,
     url,
   }

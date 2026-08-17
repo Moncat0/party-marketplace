@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
         payment_status: booking.payment_status,
         planner_id: booking.planner_id,
         stripe_checkout_session_id: booking.stripe_checkout_session_id,
-        serviceTitle: service?.title ?? 'Bokning via Festly',
+        serviceTitle: service?.title ?? 'Bokning via Gigtorget',
       },
       { id: user.id, email: user.email, name: plannerRow?.name }
     )

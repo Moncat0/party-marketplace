@@ -426,7 +426,7 @@ export default function MessageThread({
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-white/50">Offert</p>
                       <p className="text-2xl font-bold text-white">{priceSek} kr</p>
                       {!isPlanner && (
-                        <p className="mt-0.5 text-xs text-white/50">Du får: {providerNet} kr (efter Festlys avgift)</p>
+                        <p className="mt-0.5 text-xs text-white/50">Du får: {providerNet} kr (efter Gigtorgets avgift)</p>
                       )}
                     </div>
 
@@ -497,7 +497,7 @@ export default function MessageThread({
                         <div className="flex items-center gap-2">
                           <span className="h-2 w-2 rounded-full bg-[#1D9E75]" />
                           <p className="text-xs font-semibold text-[#1D9E75]">
-                            Offert accepterad — beloppet hålls av Festly tills evenemanget är klart
+                            Offert accepterad — beloppet hålls av Gigtorget tills evenemanget är klart
                           </p>
                         </div>
                       )}
@@ -819,7 +819,7 @@ export default function MessageThread({
               Bra att tänka på
             </p>
             <p className="text-[13px] leading-relaxed text-[#6a6a6a]">
-              För att skydda din betalning och kommunikation, använd alltid Festly när du bokar
+              För att skydda din betalning och kommunikation, använd alltid Gigtorget när du bokar
               och pratar med {isPlanner ? 'talanger' : 'arrangörer'}.
             </p>
           </div>

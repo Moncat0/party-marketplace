@@ -1,14 +1,14 @@
-# Festly — Tonalitet (Tone of Voice)
+# Gigtorget — Tonalitet (Tone of Voice)
 
 *Originalspråk: svenska. Engelsk version är en översättning av detta dokument.*
 
 ## 1\. Grundidén
 
-**Festly är den mest självsäkra rösten på festen — och den pratar med alla på samma sätt.**
+**Gigtorget är den mest självsäkra rösten på festen — och den pratar med alla på samma sätt.**
 
-Ingen "planner-röst" och "leverantör-röst." En personlighet, riktad åt alla håll. Festly är helt enkelt ett fan av bra fester — det är det som håller ihop rösten oavsett vem som läser.
+Ingen "planner-röst" och "leverantör-röst." En personlighet, riktad åt alla håll. Gigtorget är helt enkelt ett fan av bra fester — det är det som håller ihop rösten oavsett vem som läser.
 
-Självsäkerheten är inte amerikansk hype. Den är svensk: torr, rak, och lugnt trygg i sig själv. Festly skryter inte — Festly bara *vet*, och säger det kort.
+Självsäkerheten är inte amerikansk hype. Den är svensk: torr, rak, och lugnt trygg i sig själv. Gigtorget skryter inte — Gigtorget bara *vet*, och säger det kort.
 
 ---
 
@@ -16,7 +16,7 @@ Självsäkerheten är inte amerikansk hype. Den är svensk: torr, rak, och lugnt
 
 **1\. Framgången först, alltid.** Börja med resultatet, inte processen. Ingen "din bokning har registrerats" — det är "Bokat. Den är din."
 
-**2\. Ett fan av festen, inte av ena sidan.** Festly hejar på att bra fester blir av. Det gäller lika mycket den som anlitar som den som anlitas.
+**2\. Ett fan av festen, inte av ena sidan.** Gigtorget hejar på att bra fester blir av. Det gäller lika mycket den som anlitar som den som anlitas.
 
 **3\. Korta meningar. Vanliga ord.** Självsäkerhet kräver inte krångliga formuleringar. Ingen "vi vill gärna informera om att." Säg saken.
 
@@ -28,7 +28,7 @@ Självsäkerheten är inte amerikansk hype. Den är svensk: torr, rak, och lugnt
 
 ## 3\. Skalan
 
-|  | Festly lutar mot | Inte detta |
+|  | Gigtorget lutar mot | Inte detta |
 | :---- | :---- | :---- |
 | Självsäker vs. Ödmjuk | Självsäker — konstaterar, förklarar sig inte i onödan | Ursäktande, för många brasklappar |
 | Torr vs. Uppspelt | Torr och lugn — självsäkerheten är underspelad | Amerikansk hype, för många utropstecken |
@@ -40,9 +40,9 @@ Självsäkerheten är inte amerikansk hype. Den är svensk: torr, rak, och lugnt
 
 ## 4\. Ordval
 
-**Ord Festly gärna använder:** Bokat, din, klar, hittad, redo, kör, på riktigt, precis här, officiellt, in.
+**Ord Gigtorget gärna använder:** Bokat, din, klar, hittad, redo, kör, på riktigt, precis här, officiellt, in.
 
-**Ord Festly undviker:** Vänligen, vi vill informera om att, i syfte att, i enlighet med, ärade kund, för närvarande, tyvärr (spara det ordet till det som faktiskt är tråkigt — förbruka det inte i onödan).
+**Ord Gigtorget undviker:** Vänligen, vi vill informera om att, i syfte att, i enlighet med, ärade kund, för närvarande, tyvärr (spara det ordet till det som faktiskt är tråkigt — förbruka det inte i onödan).
 
 **Skrivvanor:**
 
@@ -99,7 +99,7 @@ Självsäkerheten är inte amerikansk hype. Den är svensk: torr, rak, och lugnt
 
 ## 6\. När volymen sänks
 
-Självsäker betyder inte hög volym överallt. Festly tonar ner — aldrig av, men ner — vid:
+Självsäker betyder inte hög volym överallt. Gigtorget tonar ner — aldrig av, men ner — vid:
 
 - Betalningar och utbetalningar  
 - Avbokningar och tvister  
@@ -115,4 +115,4 @@ Här: **fortfarande rak, fortfarande varm, noll skämt, noll utropstecken.** Sj�
 
 Innan text publiceras, fråga: **"Skulle festens mittpunkt säga det så här?"**
 
-Låter det som en blankett, en policy eller en ursäkt — det är inte Festly än. Låter det som någon som faktiskt är taggad på att den här festen blir av — kör.  
+Låter det som en blankett, en policy eller en ursäkt — det är inte Gigtorget än. Låter det som någon som faktiskt är taggad på att den här festen blir av — kör.  

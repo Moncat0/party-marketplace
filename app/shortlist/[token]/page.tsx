@@ -110,7 +110,7 @@ export default async function SharedShortlistPage({ params }: { params: { token:
         <div className="mb-4 sm:mb-0">
           <p className="text-[16px] font-semibold text-[#222222]">Planerar du också ett kalas?</p>
           <p className="text-[14px] text-[#6a6a6a] mt-1">
-            Hitta och spara dina egna favoriter på Festly
+            Hitta och spara dina egna favoriter på Gigtorget
           </p>
         </div>
         <Link href="/signup?intent=planner">

@@ -102,7 +102,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
                   Känner du någon som borde vara här?
                 </p>
                 <p className="text-xs text-white/50 mb-3">
-                  Bjud in en artist, fotograf eller kock till Festly
+                  Bjud in en artist, fotograf eller kock till Gigtorget
                 </p>
                 <InviteFooterForm />
               </div>
@@ -204,7 +204,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
         </div>
 
         <div className="border-t border-white/10 pt-6 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-white/30">© 2026 Festly Stockholm</p>
+          <p className="text-xs text-white/30">© 2026 Gigtorget Stockholm</p>
           <p className="text-xs text-white/30">Gjord med kärlek för kalas 🎉</p>
         </div>
       </div>

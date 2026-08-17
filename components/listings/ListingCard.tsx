@@ -159,7 +159,7 @@ export default function ListingCard({
             {isNew && (
               <div className="absolute left-3 top-3 z-[1]">
                 <span className="inline-flex h-6 items-center rounded-full bg-white px-2.5 text-[11px] font-semibold text-[#222222] shadow-[rgba(0,0,0,0.02)_0_0_0_1px,rgba(0,0,0,0.04)_0_2px_6px,rgba(0,0,0,0.1)_0_4px_8px]">
-                  Ny på Festly
+                  Ny på Gigtorget
                 </span>
               </div>
             )}

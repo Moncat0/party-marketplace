@@ -254,10 +254,10 @@ export default function PaymentsSettings({
             </div>
             <div>
               <p className="text-[16px] font-semibold text-[#222222]">
-                Betala alltid via Festly
+                Betala alltid via Gigtorget
               </p>
               <p className="mt-1 text-[14px] leading-[1.43] text-[#6a6a6a]">
-                Betala och kommunicera alltid via Festly så att du skyddas av våra{' '}
+                Betala och kommunicera alltid via Gigtorget så att du skyddas av våra{' '}
                 <Link href="/terms" className="underline text-[#222222]">
                   användarvillkor
                 </Link>
@@ -296,7 +296,7 @@ export default function PaymentsSettings({
                 ) : (
                   <p className="text-[14px] leading-[1.43] text-[#6a6a6a]">
                     Du måste koppla Stripe innan du kan skicka prissatta offerter. Kortuppgifter och
-                    kontonummer hanteras endast av Stripe — Festly sparar dem inte.
+                    kontonummer hanteras endast av Stripe — Gigtorget sparar dem inte.
                   </p>
                 )}
                 <a

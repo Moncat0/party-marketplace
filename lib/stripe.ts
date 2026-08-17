@@ -23,7 +23,7 @@ export const stripe = new Stripe(stripeSecretKey(), {
   apiVersion: '2026-06-24.dahlia',
 })
 
-/** Platform take rate — covers Stripe fees + Festly costs (not pure profit). */
+/** Platform take rate — covers Stripe fees + Gigtorget costs (not pure profit). */
 export function applicationFee(priceOre: number): number {
   return Math.round(priceOre * (PLATFORM_FEE_PERCENT / 100))
 }

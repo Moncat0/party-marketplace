@@ -1,17 +1,17 @@
-# Festly Design System
+# Gigtorget Design System
 
-Festly is a marketplace that connects people planning events with vendors and venues — caterers, photographers, musicians, party spaces. Product copy from the brand kit: "Festly connects you with the best vendors and venues. So you can focus on what matters." The tone is upbeat, casual and trustworthy — like a friend who already knows the best people to call.
+Gigtorget is a marketplace that connects people planning events with vendors and venues — caterers, photographers, musicians, party spaces. Product copy from the brand kit: "Gigtorget connects you with the best vendors and venues. So you can focus on what matters." The tone is upbeat, casual and trustworthy — like a friend who already knows the best people to call.
 
 ## Sources
-- `uploads/Festly monogram logo .svg`, `uploads/Festly wordmark logo .svg` — brand logos
-- `uploads/Festly colorpalette.svg` — core 4-color palette (exported from Coolors.co)
-- `uploads/Typography system festly.png` — headline/body/handwritten type system reference
-- `uploads/festly-tone-of-voice-guide-sv.md` — tone of voice guide (Swedish original)
+- `uploads/Gigtorget monogram logo .svg`, `uploads/Gigtorget wordmark logo .svg` — brand logos
+- `uploads/Gigtorget colorpalette.svg` — core 4-color palette (exported from Coolors.co)
+- `uploads/Typography system gigtorget.png` — headline/body/handwritten type system reference
+- `uploads/gigtorget-tone-of-voice-guide-sv.md` — tone of voice guide (Swedish original)
 - GitHub: [Moncat0/party-marketplace](https://github.com/Moncat0/party-marketplace) — now connected in-repo:
   - Live marketing page: `/for-talanger` (`components/marketing/supply/`)
   - Curated Claude summary: `docs/design-system/marketing/DESIGN.md`
   - Interactive playground: `/dev/design-lab`
-  - Marketplace UI patterns also borrow Airbnb structure (search pill, 3/2 listing cards) with Festly tokens
+  - Marketplace UI patterns also borrow Airbnb structure (search pill, 3/2 listing cards) with Gigtorget tokens
 
 ## Index
 - `styles.css` — root stylesheet, imports everything in `tokens/`
@@ -22,27 +22,27 @@ Festly is a marketplace that connects people planning events with vendors and ve
 - `components/forms/` — Input, Select, Checkbox, Radio, Switch
 - `components/feedback/` — Dialog, Tooltip, Toast
 - `components/navigation/` — Tabs
-- `ui_kits/marketplace/` — click-through recreation of the Festly vendor marketplace (home/browse, vendor profile, booking request, host dashboard)
+- `ui_kits/marketplace/` — click-through recreation of the Gigtorget vendor marketplace (home/browse, vendor profile, booking request, host dashboard)
 - `SKILL.md` — portable skill file for using this system in Claude Code
 
 ### Intentional additions
 No component source was accessible (repo not connected), so this system authors a standard primitive set sized to a two-sided marketplace: Button, IconButton, Badge, Tag, Card, Input, Select, Checkbox, Radio, Switch, Dialog, Tooltip, Toast, Tabs. Treat these as a reasonable starting kit, not a copy of the real product's inventory — replace/extend once the codebase is connected.
 
 ## Content fundamentals
-Source: `uploads/festly-tone-of-voice-guide-sv.md` (Swedish, original language — summarized here in English).
+Source: `uploads/gigtorget-tone-of-voice-guide-sv.md` (Swedish, original language — summarized here in English).
 
-- **Core idea**: Festly is the most self-assured voice at the party — and it talks to everyone the same way. No separate "planner voice" and "vendor voice"; one personality, aimed in every direction. Festly is simply a fan of good parties, which is what holds the voice together no matter who's reading. The confidence isn't American-style hype — it's Swedish: dry, direct, calmly sure of itself. Festly doesn't brag, it just *knows*, and says so briefly.
+- **Core idea**: Gigtorget is the most self-assured voice at the party — and it talks to everyone the same way. No separate "planner voice" and "vendor voice"; one personality, aimed in every direction. Gigtorget is simply a fan of good parties, which is what holds the voice together no matter who's reading. The confidence isn't American-style hype — it's Swedish: dry, direct, calmly sure of itself. Gigtorget doesn't brag, it just *knows*, and says so briefly.
 - **Five principles**:
   1. Outcome first, always — lead with the result, not the process. Not "your booking has been registered" but "Booked. It's yours."
-  2. A fan of the party, not of one side — Festly roots for good parties happening, equally for the person hiring and the person hired.
+  2. A fan of the party, not of one side — Gigtorget roots for good parties happening, equally for the person hiring and the person hired.
   3. Short sentences, ordinary words — confidence doesn't need complicated phrasing. No "we would like to inform you that." Just say the thing.
   4. Reassuring, not overhyped — the confidence is in *how* something is said, not in promising more than is true. No "guaranteed," no invented promises.
   5. Serious things get a still face — money, cancellations, disputes, safety, data: the tone settles down here. Still warm, still direct, but no jokes. This is where trust is won or lost.
-- **Scale** (what Festly leans toward vs. avoids): confident, not humble/apologetic; dry and calm, not hyped-up with exclamation points; personal ("you"), not institutional/"dear customer"; playful as a baseline, serious when it counts (never jokey around money/safety); direct and punchy, not long-winded or over-explained.
+- **Scale** (what Gigtorget leans toward vs. avoids): confident, not humble/apologetic; dry and calm, not hyped-up with exclamation points; personal ("you"), not institutional/"dear customer"; playful as a baseline, serious when it counts (never jokey around money/safety); direct and punchy, not long-winded or over-explained.
 - **Word choices**: favors words like *booked, yours, done, found, ready, let's go, for real, right here, official, in*. Avoids *please, we would like to inform you that, in order to, in accordance with, dear customer, at this time*, and saves *unfortunately* for things that are actually unfortunate — don't spend it needlessly.
 - **Writing habits**: short sentences over compound ones; one exclamation point does more than three — use sparingly so it means something; always address the reader as "you," never an impersonal or formal register; no bureaucratic hedge phrases ("we believe," "we are pleased to," "we regret to inform").
 - **Volume comes down for**: payments and payouts, cancellations and disputes, safety/trust/data, suspended accounts or policy violations, real customer-support problems. Here: still direct, still warm, zero jokes, zero exclamation points — confidence here means clarity, not personality.
-- **The simple test**: before publishing, ask "Would the life of the party say it like this?" If it sounds like a form, a policy, or an apology, it's not Festly yet. If it sounds like someone genuinely excited this party is happening — ship it.
+- **The simple test**: before publishing, ask "Would the life of the party say it like this?" If it sounds like a form, a policy, or an apology, it's not Gigtorget yet. If it sounds like someone genuinely excited this party is happening — ship it.
 - **Examples** (translated from the guide's touchpoint bank):
   - New booking request: not "You have a new booking request" — instead "Someone wants to book YOU for their party."
   - Booking confirmed (planner): not "Your booking has been confirmed" — instead "Booked. It's yours for the night."
@@ -69,7 +69,7 @@ Source: `uploads/festly-tone-of-voice-guide-sv.md` (Swedish, original language �
 - **Imagery**: no photography or illustration assets were provided. Vendor/venue photos in the UI kit are placeholders — swap in real photography (warm, natural light tone would suit the brand voice) once available.
 
 ## Iconography
-No icon set, icon font, or SVG icon library was included in the uploaded brand kit, and the codebase wasn't accessible to check its own icon usage. The UI kit below substitutes **Lucide** icons (CDN, matching a clean, medium-stroke line style that pairs well with Quicksand) for functional icons (search, heart, calendar, arrow). This is a flagged substitution — replace with Festly's real icon set once available. No emoji or unicode-glyph icons are used anywhere in the brand material or this system.
+No icon set, icon font, or SVG icon library was included in the uploaded brand kit, and the codebase wasn't accessible to check its own icon usage. The UI kit below substitutes **Lucide** icons (CDN, matching a clean, medium-stroke line style that pairs well with Quicksand) for functional icons (search, heart, calendar, arrow). This is a flagged substitution — replace with Gigtorget's real icon set once available. No emoji or unicode-glyph icons are used anywhere in the brand material or this system.
 
 ## Components
 Core: **Button**, **IconButton**, **Badge**, **Tag**, **Card**

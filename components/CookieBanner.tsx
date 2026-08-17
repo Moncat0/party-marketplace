@@ -54,7 +54,7 @@ export default function CookieBanner() {
         </Button>
         <p className="text-sm text-background mb-1 font-medium pr-6">Vi använder cookies 🍪</p>
         <p className="text-xs text-background/60 mb-4 leading-relaxed">
-          Vi använder analyscookies för att förstå hur du använder Festly och förbättra tjänsten.{' '}
+          Vi använder analyscookies för att förstå hur du använder Gigtorget och förbättra tjänsten.{' '}
           <Link href="/privacy" className="text-background/80 underline hover:text-background">
             Läs mer
           </Link>

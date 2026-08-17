@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase-admin'
 import { isValidE164, isValidEmail } from '@/lib/auth-identifier'
 
 /**
- * Check whether email or phone already has a Festly account (public.users).
+ * Check whether email or phone already has a Gigtorget account (public.users).
  * Steers Continue toward login vs signup after the identify step.
  */
 export async function POST(request: NextRequest) {

@@ -153,7 +153,7 @@ export default function GoogleOneTap() {
         data: { session },
       } = await supabase.auth.getSession()
       if (session) {
-        console.info('[GoogleOneTap] skipped: already signed in to Festly')
+        console.info('[GoogleOneTap] skipped: already signed in to Gigtorget')
         return
       }
 

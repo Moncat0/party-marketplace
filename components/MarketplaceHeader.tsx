@@ -50,7 +50,7 @@ type Props = {
   currentMode?: NavMode
   /** Extra actions before the menu (e.g. Share / Save on profiles) */
   actions?: ReactNode
-  /** Override default Festly wordmark */
+  /** Override default Gigtorget wordmark */
   logo?: ReactNode
   className?: string
   scrolled?: boolean
@@ -222,14 +222,16 @@ export default function MarketplaceHeader({
   const rightChrome = (
     <div className="flex items-center justify-end gap-1 sm:gap-2">
       {actions}
-      <Button
-        asChild
-        variant="ghost"
-        size="pill"
-        className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
-      >
-        <Link href={switchCta.href}>{switchCta.label}</Link>
-      </Button>
+      {switchCta.label === 'Erbjud din tjänst' && (
+        <Button
+          asChild
+          variant="ghost"
+          size="pill"
+          className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
+        >
+          <Link href={switchCta.href}>{switchCta.label}</Link>
+        </Button>
+      )}
       {menuButton}
     </div>
   )

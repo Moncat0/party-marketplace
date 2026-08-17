@@ -253,7 +253,7 @@ export default function SupplyLanding() {
         {/* Benefits — padding 64px 0; title mb 48; gap 24; card pad 28×22 */}
         <ScrollReveal className="py-16">
           <h2 className="supply-display fs-display-md mb-12 text-center text-[var(--ink-900)]">
-            Varför Festly?
+            Varför Gigtorget?
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {SUPPLY_BENEFITS.map((b, i) => (
@@ -360,7 +360,7 @@ export default function SupplyLanding() {
         <ScrollReveal className="my-14 rounded-[var(--radius-xl)] bg-[var(--cream-50)] px-6 py-14 text-center sm:px-10">
           <h2 className="supply-display fs-h1 mb-2 text-[var(--ink-900)]">Oavsett vad du erbjuder</h2>
           <p className="supply-body fs-body mb-8 text-[var(--ink-500)]">
-            Festly är öppet för alla typer av fest- och eventtjänster.
+            Gigtorget är öppet för alla typer av fest- och eventtjänster.
           </p>
           <div className="flex flex-wrap justify-center gap-3.5">
             {CATEGORIES.map(cat => (
@@ -417,14 +417,14 @@ export default function SupplyLanding() {
           <div className="mb-10 grid grid-cols-1 gap-10 md:grid-cols-[2fr_1fr_1fr]">
             <div>
               <Image
-                src="/images/supply/festly-wordmark.svg"
-                alt="Festly"
+                src="/images/supply/gigtorget-wordmark.svg"
+                alt="Gigtorget"
                 width={140}
                 height={28}
                 className="mb-3.5 h-7 w-auto brightness-0 invert"
               />
               <p className="supply-body fs-body-sm m-0 max-w-[320px] text-white/60">
-                Festly kopplar ihop dig med de bästa leverantörerna och lokalerna. Så att du kan
+                Gigtorget kopplar ihop dig med de bästa leverantörerna och lokalerna. Så att du kan
                 fokusera på det som betyder något.
               </p>
             </div>
@@ -458,7 +458,7 @@ export default function SupplyLanding() {
           </div>
           <div className="flex flex-wrap justify-between gap-2.5 border-t border-white/10 pt-5">
             <p className="supply-body fs-caption m-0 text-white/30">
-              © {new Date().getFullYear()} Festly Stockholm
+              © {new Date().getFullYear()} Gigtorget Stockholm
             </p>
             <p className="supply-body fs-caption m-0 text-white/30">Gjord för fest och kalas</p>
           </div>

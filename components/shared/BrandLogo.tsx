@@ -9,24 +9,28 @@ type Props = {
   /** Image height in px. Default 32. */
   height?: number
   priority?: boolean
+  /** 'dark' = black text for light backgrounds (default). 'light' = white text for dark backgrounds. */
+  variant?: 'dark' | 'light'
 }
 
-/** Festly wordmark — use for all product chrome (header, auth, footer). */
+/** Gigtorget wordmark — use for all product chrome (header, auth, footer). */
 export default function BrandLogo({
   href = '/',
   className,
-  height = 32,
+  height = 40,
   priority = false,
+  variant = 'dark',
 }: Props) {
-  const width = Math.round((height * 120) / 32)
+  const width = Math.round((height * 600) / 150)
+  const src = variant === 'light' ? '/logo-light.svg' : '/logo-dark.svg'
   const image = (
     <Image
-      src="/images/supply/festly-wordmark.svg"
-      alt="Festly"
+      src={src}
+      alt="Gigtorget"
       width={width}
       height={height}
-      className={cn('block h-8 w-auto', height !== 32 && 'h-auto')}
-      style={height !== 32 ? { height, width: 'auto' } : undefined}
+      className={cn('block w-auto', height === 32 ? 'h-8' : 'h-auto')}
+      style={{ height, width: 'auto' }}
       priority={priority}
     />
   )

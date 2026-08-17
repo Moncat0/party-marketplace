@@ -91,7 +91,7 @@ export default function CookiePreferencesModal({ open, onClose }: Props) {
           </Button>
         </div>
         <p className="mb-4 text-[14px] leading-[1.5] text-[#6a6a6a]">
-          Välj vilka cookies du tillåter på Festly Nödvändiga cookies behövs för inloggning och
+          Välj vilka cookies du tillåter på Gigtorget Nödvändiga cookies behövs för inloggning och
           säkerhet. Analyscookies hjälper oss förstå hur tjänsten används.{' '}
           <Link href="/privacy" className="underline text-[#222222]" onClick={onClose}>
             Integritetspolicy

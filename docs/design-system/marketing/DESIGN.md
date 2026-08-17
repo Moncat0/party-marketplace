@@ -1,21 +1,21 @@
 ---
 version: beta
-name: Festly-marketing-website
+name: Gigtorget-marketing-website
 description: >-
-  Marketing website design system for Festly / Festly public pages. Airbnb
-  marketplace structure (search pill, listing cards, soft chrome) with Festly
+  Marketing website design system for Gigtorget / Gigtorget public pages. Airbnb
+  marketplace structure (search pill, listing cards, soft chrome) with Gigtorget
   brand kit color, type, motion, components, and Swedish tone of voice. Source
   kit: repo `design system/`. Playground: /dev/design-lab. Not for logged-in
   app chrome (ember).
 ---
 
-# Design System: Festly Marketing Website
+# Design System: Gigtorget Marketing Website
 
 **Subject:** Stockholm party-talent marketplace — planners book DJs, chefs, makeup, photo; talent gets discovered.
 
 **Audience:** Arrangörer + talanger evaluating the public site.
 
-**Job:** Warm marketplace (Airbnb bones) with party-poster soul (Festly kit). Marketing website only.
+**Job:** Warm marketplace (Airbnb bones) with party-poster soul (Gigtorget kit). Marketing website only.
 
 **Signature:** Anton poster headlines + pink pill CTAs / search orb + Caveat vibe notes. Soft marketplace chrome by default; flat offset poster shadow only for expressive marketing moments.
 
@@ -31,7 +31,7 @@ description: >-
 | `design system/guidelines/*` | Specimen cards (brand, color, type, spacing, borders, motion) |
 | `design system/components/*` | Button, IconButton, Badge, Tag, Card, forms, feedback, Tabs |
 | `design system/ui_kits/marketplace/` | Browse, vendor profile, booking request, host dashboard |
-| `design system/uploads/festly-tone-of-voice-guide-sv.md` | Swedish tone of voice (source language) |
+| `design system/uploads/gigtorget-tone-of-voice-guide-sv.md` | Swedish tone of voice (source language) |
 | `design system/assets/logos/` | Wordmark + monogram |
 | `design system/readme.md` + `SKILL.md` | Kit index + Claude skill entry |
 | `/for-talanger` | Live marketing page already on these tokens |
@@ -40,7 +40,7 @@ description: >-
 
 ## Visual theme & atmosphere
 
-From Festly brand kit + Airbnb marketplace restraint:
+From Gigtorget brand kit + Airbnb marketplace restraint:
 
 - **Cream** (`#FFF3E6`) is a first-class page atmosphere (bands, soft canvas). **White** sits on cream for cards, inputs, search pill.
 - Color is bold and mostly **flat** — solid fills over gradients (hero photo panels may use brand color blocks).
@@ -151,7 +151,7 @@ Three layers — never Inter/Roboto as brand.
 
 ## Tone of voice (from Swedish guide)
 
-**Core:** Festly is the most self-assured voice at the party — Swedish dry confidence, not US hype. One personality for planners and talent.
+**Core:** Gigtorget is the most self-assured voice at the party — Swedish dry confidence, not US hype. One personality for planners and talent.
 
 **Five principles**
 1. Outcome first — “Bokat. Den är din.” not “Din bokning har registrerats.”
@@ -165,7 +165,7 @@ Three layers — never Inter/Roboto as brand.
 **Emoji:** none  
 **Test:** “Would the life of the party say it like this?”
 
-Full Swedish source: `design system/uploads/festly-tone-of-voice-guide-sv.md`
+Full Swedish source: `design system/uploads/gigtorget-tone-of-voice-guide-sv.md`
 
 ---
 
@@ -212,10 +212,10 @@ Dialogs with 45% black scrim; Toast/Tooltip use soft shadow, not flat poster sha
 
 ---
 
-## Marketplace patterns (Airbnb bones × Festly skin)
+## Marketplace patterns (Airbnb bones × Gigtorget skin)
 
 ### Top nav
-- 80px, cream or white bar, Festly wordmark ~32px, Quicksand 600
+- 80px, cream or white bar, Gigtorget wordmark ~32px, Quicksand 600
 - Center: search pill · Right: “Erbjud din tjänst” pink pill
 
 ### Search pill
@@ -256,9 +256,9 @@ Browse · Vendor profile · Booking request · Host dashboard → `design system
 
 ## Logos & assets
 
-- Wordmark / monogram: `design system/assets/logos/` and `public/images/supply/festly-wordmark.svg`
+- Wordmark / monogram: `design system/assets/logos/` and `public/images/supply/gigtorget-wordmark.svg`
 - On cream: black wordmark · On pink/orange/ink: reversed lockups per `guidelines/brand-on-dark.html`
-- Icons: Lucide substituted in kit — replace when Festly icon set exists. No emoji icons.
+- Icons: Lucide substituted in kit — replace when Gigtorget icon set exists. No emoji icons.
 
 ---
 
@@ -281,7 +281,7 @@ Browse · Vendor profile · Booking request · Host dashboard → `design system
 
 ## Agent prompt guide
 
-> Build this marketing surface with Festly DESIGN.md: Airbnb marketplace structure (pill search, 3/2 photo cards, 80px nav, soft elevation) + Festly tokens (primary `#FF2E8A`, secondary `#FF6A00`, cream `#FFF3E6`, Anton / Quicksand / Caveat). Primary CTAs are pink pills. Voice: Swedish dry confidence — outcome first. Flat ink shadows only on expressive marketing moments. No ember. No app dashboard chrome.
+> Build this marketing surface with Gigtorget DESIGN.md: Airbnb marketplace structure (pill search, 3/2 photo cards, 80px nav, soft elevation) + Gigtorget tokens (primary `#FF2E8A`, secondary `#FF6A00`, cream `#FFF3E6`, Anton / Quicksand / Caveat). Primary CTAs are pink pills. Voice: Swedish dry confidence — outcome first. Flat ink shadows only on expressive marketing moments. No ember. No app dashboard chrome.
 
 **Playground:** `/dev/design-lab`  
 **Full kit:** `design system/`  

@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Användarvillkor',
-  description: 'Villkor för användning av Festly — marknadsplatsen för festunderhållning i Stockholm.',
+  description: 'Villkor för användning av Gigtorget — marknadsplatsen för festunderhållning i Stockholm.',
 }
 
 export default function TermsPage() {
@@ -20,7 +20,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="font-semibold mb-2">Om tjänsten</h2>
-            <p className="text-[#6A6A6A]">Festly är en marknadsplats som kopplar samman arrangörer med talanger i Stockholm. Vi tillhandahåller plattformen — alla avtal om tjänster och betalning sker direkt mellan arrangör och talang.</p>
+            <p className="text-[#6A6A6A]">Gigtorget är en marknadsplats som kopplar samman arrangörer med talanger i Stockholm. Vi tillhandahåller plattformen — alla avtal om tjänster och betalning sker direkt mellan arrangör och talang.</p>
           </section>
 
           <section>
@@ -49,12 +49,12 @@ export default function TermsPage() {
 
           <section>
             <h2 className="font-semibold mb-2">Innehåll</h2>
-            <p className="text-[#6A6A6A]">Du behåller äganderätten till det innehåll du publicerar. Genom att ladda upp bilder eller text ger du Festly rätt att visa det på plattformen. Stötande, olagligt eller vilseledande innehåll är förbjudet.</p>
+            <p className="text-[#6A6A6A]">Du behåller äganderätten till det innehåll du publicerar. Genom att ladda upp bilder eller text ger du Gigtorget rätt att visa det på plattformen. Stötande, olagligt eller vilseledande innehåll är förbjudet.</p>
           </section>
 
           <section>
             <h2 className="font-semibold mb-2">Ansvarsbegränsning</h2>
-            <p className="text-[#6A6A6A]">Festly är en plattform och inte part i avtalen mellan arrangörer och talanger. Vi ansvarar inte för kvaliteten på utförda tjänster, uteblivna bokningar eller tvister mellan användare.</p>
+            <p className="text-[#6A6A6A]">Gigtorget är en plattform och inte part i avtalen mellan arrangörer och talanger. Vi ansvarar inte för kvaliteten på utförda tjänster, uteblivna bokningar eller tvister mellan användare.</p>
           </section>
 
           <section>

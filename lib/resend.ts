@@ -2,7 +2,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const FROM = 'Festly <auth@escuderostudio.se>'
+const FROM = 'Gigtorget <auth@escuderostudio.se>'
 
 function siteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
@@ -29,7 +29,7 @@ export async function sendBookingAccepted(
       ` : `
       <p><a href="${siteUrl()}/booking/${bookingId}/messages">Öppna konversationen →</a></p>
       `}
-      <p>/ Festly</p>
+      <p>/ Gigtorget</p>
     `,
   })
 }
@@ -46,8 +46,8 @@ export async function sendBookingDeclined(
     html: `
       <p>Hej ${plannerName}!</p>
       <p>${providerName} kunde tyvärr inte ta din förfrågan den här gången.</p>
-      <p><a href="${siteUrl()}">Hitta fler talanger på Festly →</a></p>
-      <p>/ Festly</p>
+      <p><a href="${siteUrl()}">Hitta fler talanger på Gigtorget →</a></p>
+      <p>/ Gigtorget</p>
     `,
   })
 }
@@ -60,14 +60,14 @@ export async function sendProviderInvite(
   await resend.emails.send({
     from: FROM,
     to,
-    subject: `${inviterName} vill se dig på Festly`,
+    subject: `${inviterName} vill se dig på Gigtorget`,
     html: `
       <p>Hej!</p>
-      <p><strong>${inviterName}</strong> tänkte på dig och vill att du skapar en profil på Festly — ett nytt sätt att bli hittad av arrangörer i Stockholm.</p>
+      <p><strong>${inviterName}</strong> tänkte på dig och vill att du skapar en profil på Gigtorget — ett nytt sätt att bli hittad av arrangörer i Stockholm.</p>
       ${message ? `<p>"${message}"</p>` : ''}
       <p>Det är helt gratis och tar bara några minuter.</p>
       <p><a href="${siteUrl()}/signup?intent=provider&next=/onboarding">Skapa din profil →</a></p>
-      <p>/ Festly</p>
+      <p>/ Gigtorget</p>
     `,
   })
 }
@@ -86,7 +86,7 @@ export async function sendReviewReminder(
       <p>Hej ${recipientName}!</p>
       <p>Vi hoppas att evenemanget gick bra! Ta ett ögonblick och lämna ett omdöme om <strong>${otherName}</strong> — det hjälper andra att hitta rätt talang.</p>
       <p><a href="${siteUrl()}/review/${bookingId}">Lämna omdöme →</a></p>
-      <p>/ Festly</p>
+      <p>/ Gigtorget</p>
     `,
   })
 }
@@ -103,7 +103,7 @@ export async function sendNewMessage(
     html: `
       <p>Du har ett nytt meddelande från <strong>${senderName}</strong>.</p>
       <p><a href="${siteUrl()}/booking/${bookingId}/messages">Läs och svara →</a></p>
-      <p>/ Festly</p>
+      <p>/ Gigtorget</p>
     `,
   })
 }
@@ -117,12 +117,12 @@ export async function sendDataExportReady(
   await resend.emails.send({
     from: FROM,
     to,
-    subject: 'Din personuppgiftsexport från Festly',
+    subject: 'Din personuppgiftsexport från Gigtorget',
     html: `
       <p>Hej ${name}!</p>
-      <p>Här är den personuppgiftsexport du begärde från Festly Filen bifogas som JSON.</p>
+      <p>Här är den personuppgiftsexport du begärde från Gigtorget Filen bifogas som JSON.</p>
       <p>Om du inte begärde detta, kontakta oss via <a href="${siteUrl()}/privacy">integritetssidan</a>.</p>
-      <p>/ Festly</p>
+      <p>/ Gigtorget</p>
     `,
     attachments: [
       {
@@ -165,12 +165,12 @@ export async function sendBookingCancelled(opts: {
           : '<p>Ingen återbetalning gäller enligt avbokningspolicyn.</p>'
       }
       <p><a href="${messagesPath}">Öppna konversationen →</a></p>
-      <p>/ Festly</p>
+      <p>/ Gigtorget</p>
     `,
   })
 }
 
-/** Receipt after escrow Checkout — Stripe holds funds on Festly */
+/** Receipt after escrow Checkout — Stripe holds funds on Gigtorget */
 export async function sendPaymentHeldReceipt(opts: {
   to: string
   plannerName: string
@@ -197,18 +197,18 @@ export async function sendPaymentHeldReceipt(opts: {
     subject: `Kvitto: ${priceSek} kr hålls för din bokning`,
     html: `
       <p>Hej ${escapeHtml(opts.plannerName)}!</p>
-      <p>Vi har mottagit din betalning via Festly</p>
+      <p>Vi har mottagit din betalning via Gigtorget</p>
       <table style="border-collapse:collapse;margin:16px 0;font-size:14px">
         <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Tjänst</td><td><strong>${escapeHtml(opts.serviceTitle)}</strong></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Talang</td><td>${escapeHtml(opts.providerName)}</td></tr>
         ${eventLabel ? `<tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Datum</td><td>${escapeHtml(eventLabel)}</td></tr>` : ''}
         <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Belopp</td><td><strong>${priceSek} kr</strong></td></tr>
-        <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Status</td><td>Hålls av Festly till efter evenemanget</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Status</td><td>Hålls av Gigtorget till efter evenemanget</td></tr>
         ${opts.stripePaymentIntentId ? `<tr><td style="padding:4px 12px 4px 0;color:#6a6a6a">Stripe-referens</td><td style="font-family:monospace;font-size:12px">${escapeHtml(opts.stripePaymentIntentId)}</td></tr>` : ''}
       </table>
       <p>Pengarna betalas ut till talangen när du godkänner efter evenemanget (eller automatiskt efter 1 dag om du inte svarar).</p>
       <p><a href="${siteUrl()}/planner/bookings" style="background:#FF2E8A;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">Se bokningen →</a></p>
-      <p>/ Festly</p>
+      <p>/ Gigtorget</p>
     `,
   })
 }
@@ -234,7 +234,7 @@ export async function sendAdminSupportMessage(
     html: `
       <p>Hej ${escapeHtml(recipientName)}!</p>
       ${safeBody}
-      <p style="margin-top:24px;color:#6a6a6a;font-size:13px">/ Festly support</p>
+      <p style="margin-top:24px;color:#6a6a6a;font-size:13px">/ Gigtorget support</p>
     `,
   })
 }
