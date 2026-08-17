@@ -2,6 +2,14 @@ import { createClient } from '@/lib/supabase-server'
 import HomeBrowse from './HomeBrowse'
 import type { Metadata } from 'next'
 import { HOST_USERS_SELECT, hostUserForDisplay } from '@/lib/host-display-name'
+import { Anton } from 'next/font/google'
+
+const anton = Anton({
+  weight: '400',
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-home-display',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Gigtorget — Hitta underhållning till ditt kalas',
@@ -54,5 +62,5 @@ export default async function HomePage() {
     }
   })
 
-  return <HomeBrowse providers={providers} isLoggedIn={!!user} plannerId={user?.id ?? null} />
+  return <HomeBrowse providers={providers} isLoggedIn={!!user} plannerId={user?.id ?? null} fontClass={anton.variable} />
 }
