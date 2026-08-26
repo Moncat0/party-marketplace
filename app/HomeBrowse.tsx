@@ -65,7 +65,7 @@ function HeroSearch() {
         className="flex-1 text-left px-5"
       >
         <p className="text-[13px] font-bold text-[#111] leading-none">Var</p>
-        <p className="text-[13px] text-[#5c5c5c] mt-0.5">Sök i Stockholm</p>
+        <p className="text-[13px] text-[#5c5c5c] mt-0.5">Sök destinationer</p>
       </button>
       <div className="w-px h-8 bg-[#e8ddce] flex-shrink-0" />
       <button
@@ -73,7 +73,7 @@ function HeroSearch() {
         className="flex-1 text-left px-5"
       >
         <p className="text-[13px] font-bold text-[#111] leading-none">Tjänst</p>
-        <p className="text-[13px] text-[#5c5c5c] mt-0.5">Alla kategorier</p>
+        <p className="text-[13px] text-[#5c5c5c] mt-0.5">Lägg till tjänst</p>
       </button>
       <button
         onClick={handleSearch}
@@ -156,10 +156,10 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
       {/* ── Hero ── */}
       <section className="max-w-[1200px] mx-auto px-5 md:px-10 pt-14 pb-10 text-center">
         <h1
-          className="text-[42px] md:text-[64px] font-black leading-[1.02] tracking-tight text-[#111] mb-6"
+          className="text-[56px] md:text-[88px] font-black leading-[0.96] tracking-tight text-[#111] mb-6"
           style={{ fontFamily: 'var(--font-home-display, inherit)' }}
         >
-          Stockholms bästa.<br />Precis här.
+          Stockholms bästa. Precis här.
         </h1>
         <p className="text-[17px] md:text-[19px] text-[#5c5c5c] leading-relaxed max-w-[560px] mx-auto mb-8">
           Allt som gör festen av — fotografer, DJs, catering och mer. Bläddra, spara, skicka förfrågan. Helt gratis.
@@ -202,7 +202,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
         {newest.length > 0 && (
           <section className="mb-14">
             <h2
-              className="text-[28px] md:text-[36px] font-black tracking-tight text-[#111] mb-7 uppercase"
+              className="text-[32px] md:text-[44px] font-black tracking-tight text-[#111] mb-7 uppercase"
               style={{ fontFamily: 'var(--font-home-display, inherit)' }}
             >
               Nya talanger i {locationLabel}
@@ -265,7 +265,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
         {/* ── Så funkar det ── */}
         <section className="py-16 border-t border-[#e8ddce]">
           <h2
-            className="text-[28px] md:text-[36px] font-black tracking-tight text-[#111] mb-10 uppercase"
+            className="text-[32px] md:text-[44px] font-black tracking-tight text-[#111] mb-10 uppercase"
             style={{ fontFamily: 'var(--font-home-display, inherit)' }}
           >
             Så funkar det
@@ -314,7 +314,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
         {/* ── Final CTA ── */}
         <section className="bg-[#111] rounded-2xl px-8 py-16 text-center mb-16">
           <h2
-            className="text-[28px] md:text-[44px] font-black text-white mb-4 uppercase"
+            className="text-[32px] md:text-[44px] font-black text-white mb-4 uppercase"
             style={{ fontFamily: 'var(--font-home-display, inherit)' }}
           >
             Nästa fest väntar.
