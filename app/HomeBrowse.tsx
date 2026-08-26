@@ -157,7 +157,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
       <section className="max-w-[1200px] mx-auto px-5 md:px-10 pt-14 pb-10 text-center">
         <h1
           className="text-[56px] md:text-[88px] font-black leading-[0.96] tracking-tight text-[#111] mb-6"
-          style={{ fontFamily: 'var(--font-home-display, inherit)' }}
+          style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
         >
           Stockholms bästa. Precis här.
         </h1>
@@ -203,7 +203,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
           <section className="mb-14">
             <h2
               className="text-[32px] md:text-[44px] font-black tracking-tight text-[#111] mb-7 uppercase"
-              style={{ fontFamily: 'var(--font-home-display, inherit)' }}
+              style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
             >
               Nya talanger i {locationLabel}
             </h2>
@@ -227,7 +227,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
             <div className="flex items-center justify-between mb-7">
               <h2
                 className="text-[28px] md:text-[36px] font-black tracking-tight text-[#111] uppercase"
-                style={{ fontFamily: 'var(--font-home-display, inherit)' }}
+                style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
               >
                 Favoriterna
               </h2>
@@ -266,7 +266,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
         <section className="py-16 border-t border-[#e8ddce]">
           <h2
             className="text-[32px] md:text-[44px] font-black tracking-tight text-[#111] mb-10 uppercase"
-            style={{ fontFamily: 'var(--font-home-display, inherit)' }}
+            style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
           >
             Så funkar det
           </h2>
@@ -291,7 +291,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
         <section className="pb-16 max-w-[720px] mx-auto">
           <h2
             className="text-[28px] md:text-[36px] font-black tracking-tight text-[#111] mb-10 text-center uppercase"
-            style={{ fontFamily: 'var(--font-home-display, inherit)' }}
+            style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
           >
             Vanliga frågor
           </h2>
@@ -315,7 +315,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
         <section className="bg-[#111] rounded-2xl px-8 py-16 text-center mb-16">
           <h2
             className="text-[32px] md:text-[44px] font-black text-white mb-4 uppercase"
-            style={{ fontFamily: 'var(--font-home-display, inherit)' }}
+            style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
           >
             Nästa fest väntar.
           </h2>
