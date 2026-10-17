@@ -48,30 +48,19 @@ function toCardData(p: Provider) {
 
 function HeroSearch() {
   const router = useRouter()
-  const [location, setLocation] = useState('')
-  const [service, setService] = useState('')
 
   function handleSearch() {
-    const params = new URLSearchParams()
-    if (location.trim()) params.set('q', location.trim())
-    if (service.trim()) params.set('q', service.trim())
-    router.push(`/sok${params.toString() ? `?${params.toString()}` : ''}`)
+    router.push('/sok')
   }
 
   return (
     <div className="flex items-center bg-white border border-[#e8ddce] rounded-full px-2 py-2 shadow-sm max-w-[480px] w-full">
-      <button
-        onClick={handleSearch}
-        className="flex-1 text-left px-5"
-      >
+      <button onClick={handleSearch} className="flex-1 text-left px-6">
         <p className="text-[13px] font-bold text-[#111] leading-none">Var</p>
         <p className="text-[13px] text-[#5c5c5c] mt-0.5">Sök destinationer</p>
       </button>
       <div className="w-px h-8 bg-[#e8ddce] flex-shrink-0" />
-      <button
-        onClick={handleSearch}
-        className="flex-1 text-left px-5"
-      >
+      <button onClick={handleSearch} className="flex-1 text-left px-6">
         <p className="text-[13px] font-bold text-[#111] leading-none">Tjänst</p>
         <p className="text-[13px] text-[#5c5c5c] mt-0.5">Lägg till tjänst</p>
       </button>
@@ -84,6 +73,11 @@ function HeroSearch() {
       </button>
     </div>
   )
+}
+
+const displayStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-home-display, inherit)',
+  letterSpacing: '0.03em',
 }
 
 const FAQ_ITEMS = [
@@ -134,16 +128,15 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
     () =>
       [...inLocation]
         .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
-        .slice(0, 8),
+        .slice(0, 4),
     [inLocation]
   )
 
   const topRated = useMemo(
     () =>
       [...inLocation]
-        .filter(p => (p.reviewCount ?? 0) >= 1 && p.avgRating != null)
-        .sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))
-        .slice(0, 8),
+        .sort((a, b) => (b.price_range_min ?? 0) - (a.price_range_min ?? 0))
+        .slice(0, 4),
     [inLocation]
   )
 
@@ -153,62 +146,58 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
     <div className={`min-h-screen bg-white ${fontClass ?? ''}`}>
       <MarketplaceHeader scrolled={scrolled} currentMode="planner" />
 
-      {/* ── Hero ── */}
+      {/* ── Hero: 56px top / 40px bottom ── */}
       <section className="max-w-[1200px] mx-auto px-5 md:px-10 pt-14 pb-10 text-center">
+        {/* h1 mb-6 = 24px = subhead top margin */}
         <h1
-          className="text-[56px] md:text-[88px] font-black leading-[0.96] tracking-tight text-[#111] mb-6"
-          style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
+          className="text-[56px] md:text-[88px] font-black leading-[0.96] text-[#111] mb-6"
+          style={displayStyle}
         >
           Stockholms bästa. Precis här.
         </h1>
+        {/* p mb-8 = 32px = subhead bottom margin */}
         <p className="text-[17px] md:text-[19px] text-[#5c5c5c] leading-relaxed max-w-[560px] mx-auto mb-8">
           Allt som gör festen av — fotografer, DJs, catering och mer. Bläddra, spara, skicka förfrågan. Helt gratis.
         </p>
-        <div className="flex justify-center mb-10">
+        <div className="flex justify-center">
           <HeroSearch />
-        </div>
-
-        {/* Category chips */}
-        <div className="flex flex-wrap justify-center gap-3">
-          {CATEGORY_GROUPS.map(group => (
-            <a
-              key={group.id}
-              href={`/kategori/${group.slugs[0]}`}
-              className="inline-flex items-center gap-2 bg-white border border-[#e8ddce] rounded-full px-5 py-3 text-[15px] font-semibold text-[#111] shadow-sm hover:border-[#FF2E8A] hover:shadow-md transition-all duration-150 no-underline"
-            >
-              {group.label}
-            </a>
-          ))}
-          <a
-            href="/sok"
-            className="inline-flex items-center gap-2 bg-[#111] border border-[#111] rounded-full px-5 py-3 text-[15px] font-semibold text-white transition-all duration-150 no-underline"
-          >
-            Fler →
-          </a>
         </div>
       </section>
 
-      {/* ── Trust bar ── */}
-      <div className="border-t border-b border-[#e8ddce] py-5 flex items-center justify-center gap-3 text-[15px] mx-5 md:mx-10 mb-16">
-        <span className="font-bold text-[#111]">Gratis. Alltid.</span>
-        <span className="text-[#e8ddce]">·</span>
-        <span className="text-[#5c5c5c]">Verifierade proffs i Stockholm.</span>
+      {/* ── Category chips: 12px gap, 64px bottom ── */}
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10 flex flex-wrap justify-center gap-3 pb-16">
+        {CATEGORY_GROUPS.map(group => (
+          <a
+            key={group.id}
+            href={`/kategori/${group.slugs[0]}`}
+            className="inline-flex items-center bg-white border border-[#e8ddce] rounded-full px-[22px] py-3 text-[15px] font-semibold text-[#111] shadow-sm hover:border-[#FF2E8A] hover:shadow-md transition-all duration-150 no-underline"
+          >
+            {group.label}
+          </a>
+        ))}
+        <a
+          href="/sok"
+          className="inline-flex items-center bg-[#111] border border-[#111] rounded-full px-[22px] py-3 text-[15px] font-semibold text-white transition-all duration-150 no-underline"
+        >
+          Fler →
+        </a>
       </div>
 
-      {/* ── Listings ── */}
-      <div className="max-w-[1200px] mx-auto px-5 md:px-10 pb-20">
 
-        {/* Nya talanger */}
+      {/* ── Listings ── */}
+      <div className="max-w-[1200px] mx-auto px-5 md:px-10">
+
+        {/* Nya talanger: 80px bottom, 28px heading→grid, 24px grid gap */}
         {newest.length > 0 && (
-          <section className="mb-14">
+          <section className="pb-20">
             <h2
-              className="text-[32px] md:text-[44px] font-black tracking-tight text-[#111] mb-7 uppercase"
-              style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
+              className="text-[32px] md:text-[44px] font-black text-[#111] mb-7 uppercase"
+              style={displayStyle}
             >
               Nya talanger i {locationLabel}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {newest.slice(0, 4).map(p => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {newest.map(p => (
                 <ListingCard
                   key={p.id}
                   variant="services"
@@ -221,19 +210,19 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
           </section>
         )}
 
-        {/* Favoriterna */}
-        {topRated.length > 0 && (
-          <section className="mb-14">
+        {/* Favoriterna: plain row matching NYA TALANGER */}
+        {inLocation.length > 0 && (
+          <section className="pb-20">
             <div className="flex items-center justify-between mb-7">
               <h2
-                className="text-[28px] md:text-[36px] font-black tracking-tight text-[#111] uppercase"
-                style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
+                className="text-[32px] md:text-[44px] font-black text-[#111] uppercase"
+                style={displayStyle}
               >
                 Favoriterna
               </h2>
               <a
                 href="/sok"
-                className="text-[15px] font-semibold text-[#111] flex items-center gap-1 no-underline hover:opacity-70 transition-opacity"
+                className="text-[15px] font-semibold text-[#111] flex items-center gap-1.5 no-underline hover:opacity-70 transition-opacity"
               >
                 Visa alla
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -241,8 +230,8 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
                 </svg>
               </a>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-              {topRated.slice(0, 4).map(p => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {topRated.map(p => (
                 <ListingCard
                   key={p.id}
                   variant="services"
@@ -262,15 +251,15 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
           </div>
         )}
 
-        {/* ── Så funkar det ── */}
-        <section className="py-16 border-t border-[#e8ddce]">
+        {/* ── Så funkar det: 80px bottom, 40px heading→steps, 24px grid gap ── */}
+        <section className="pb-20 border-t border-[#e8ddce] pt-0">
           <h2
-            className="text-[32px] md:text-[44px] font-black tracking-tight text-[#111] mb-10 uppercase"
-            style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
+            className="text-[32px] md:text-[44px] font-black text-[#111] mb-10 uppercase pt-20"
+            style={displayStyle}
           >
             Så funkar det
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { n: '1', title: 'Bläddra', body: 'Fotografer, DJs, catering och mer — allt på ett ställe.' },
               { n: '2', title: 'Spara', body: 'Gilla det du ser. Bygg din shortlist för kvällen.' },
@@ -280,18 +269,18 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
                 <div className="w-9 h-9 rounded-full bg-[#111] text-white flex items-center justify-center text-[15px] font-bold mb-4">
                   {step.n}
                 </div>
-                <h3 className="text-[20px] font-bold text-[#111] mb-2">{step.title}</h3>
+                <h3 className="text-[22px] font-bold text-[#111] mb-2">{step.title}</h3>
                 <p className="text-[14px] text-[#5c5c5c] leading-normal">{step.body}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── FAQ ── */}
-        <section className="pb-16 max-w-[720px] mx-auto">
+        {/* ── FAQ: 80px bottom, 12px gap between items, 18px/22px internal padding ── */}
+        <section className="pb-20 max-w-[720px] mx-auto">
           <h2
-            className="text-[28px] md:text-[36px] font-black tracking-tight text-[#111] mb-10 text-center uppercase"
-            style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
+            className="text-[32px] md:text-[44px] font-black text-[#111] mb-10 text-center uppercase"
+            style={displayStyle}
           >
             Vanliga frågor
           </h2>
@@ -299,7 +288,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
             {FAQ_ITEMS.map(item => (
               <details
                 key={item.q}
-                className="bg-white border border-[#e8ddce] rounded-xl px-5 py-[18px] group"
+                className="bg-white border border-[#e8ddce] rounded-xl px-[22px] py-[18px] group"
               >
                 <summary className="flex items-center justify-between font-bold text-[16px] text-[#111] cursor-pointer list-none">
                   {item.q}
@@ -311,11 +300,11 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
           </div>
         </section>
 
-        {/* ── Final CTA ── */}
-        <section className="bg-[#111] rounded-2xl px-8 py-16 text-center mb-16">
+        {/* ── Final CTA: 64px vertical / 48px horizontal padding, 64px bottom margin ── */}
+        <section className="bg-[#111] rounded-2xl px-12 py-16 text-center mb-16">
           <h2
             className="text-[32px] md:text-[44px] font-black text-white mb-4 uppercase"
-            style={{ fontFamily: 'var(--font-home-display, inherit)', letterSpacing: '0.03em' }}
+            style={displayStyle}
           >
             Nästa fest väntar.
           </h2>
