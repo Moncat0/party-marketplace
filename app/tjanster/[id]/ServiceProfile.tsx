@@ -450,7 +450,12 @@ export default function ServiceProfile({
 
               <div id="forfragan" className="order-first mb-10 md:order-last md:col-span-3 scroll-mt-28">
                 <div className="sticky top-24 md:top-28">
-                  {isPreview ? null : (
+                  {isPreview ? null : currentUserId === profile.user_id ? (
+                    <div className="rounded-2xl border border-[#ebebeb] bg-[#fafafa] px-5 py-6 text-center">
+                      <p className="text-[15px] font-semibold text-[#222222]">Det här är din tjänst</p>
+                      <p className="mt-1 text-[13px] text-[#6a6a6a]">Du kan inte skicka en förfrågan till dig själv.</p>
+                    </div>
+                  ) : (
                     <ListingReservation
                       priceLabel={priceLabel}
                       reviewCount={reviewCount}
@@ -507,7 +512,7 @@ export default function ServiceProfile({
       {!fromWizard ? <SiteFooter isLoggedIn={!!currentUserId} /> : null}
 
       {/* Mobile sticky CTA — booking form sits above Meet/Reviews on small screens */}
-      {!isPreview && !fromWizard ? (
+      {!isPreview && !fromWizard && currentUserId !== profile.user_id ? (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#ebebeb] bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:hidden">
           <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
             <div className="min-w-0">
