@@ -17,15 +17,21 @@ export default function DeleteServiceButton({
 
   async function handleDelete() {
     setLoading(true)
-    const res = await fetch(`/api/admin/services/${serviceId}`, { method: 'DELETE' })
-    const json = await res.json()
-    if (!res.ok) {
-      alert(json.error ?? 'Kunde inte radera tjänsten.')
+    try {
+      const res = await fetch(`/api/admin/services/${serviceId}`, { method: 'DELETE' })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(json.error ?? `Fel ${res.status}: kunde inte radera tjänsten.`)
+        setLoading(false)
+        setConfirming(false)
+        return
+      }
+      router.refresh()
+    } catch (err) {
+      alert('Nätverksfel – kunde inte nå servern.')
       setLoading(false)
       setConfirming(false)
-      return
     }
-    router.refresh()
   }
 
   if (confirming) {
