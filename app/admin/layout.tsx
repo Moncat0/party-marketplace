@@ -3,10 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
+  AlertTriangle,
   Calendar,
+  ClipboardList,
+  CreditCard,
   ExternalLink,
   LayoutDashboard,
   MessageSquare,
+  MessageCircle,
+  ScrollText,
   Store,
   Star,
   TrendingUp,
@@ -60,6 +65,30 @@ const navLinks = [
     label: 'Konversationer',
     icon: MessageSquare,
     match: (p: string) => p.startsWith('/admin/messages'),
+  },
+  {
+    href: '/admin/payments',
+    label: 'Betalningar',
+    icon: CreditCard,
+    match: (p: string) => p.startsWith('/admin/payments'),
+  },
+  {
+    href: '/admin/reports',
+    label: 'Anmälningar',
+    icon: AlertTriangle,
+    match: (p: string) => p.startsWith('/admin/reports'),
+  },
+  {
+    href: '/admin/feedback',
+    label: 'Feedback',
+    icon: MessageCircle,
+    match: (p: string) => p.startsWith('/admin/feedback'),
+  },
+  {
+    href: '/admin/log',
+    label: 'Händelselogg',
+    icon: ScrollText,
+    match: (p: string) => p.startsWith('/admin/log'),
   },
 ]
 

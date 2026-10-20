@@ -42,6 +42,8 @@ export default async function AdminProvidersPage() {
                 s.is_published && !s.is_disabled
             ).length
 
+            if (publishedCount === 0) return null
+
             return (
               <div
                 key={p.id}

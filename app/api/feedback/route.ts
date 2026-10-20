@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase-server'
+import { createAdminClient } from '@/lib/supabase-admin'
 
 export async function POST(req: Request) {
   const supabase = await createClient()
@@ -16,6 +17,14 @@ export async function POST(req: Request) {
   }
 
   const { data: row } = await supabase.from('users').select('name, email').eq('id', user.id).maybeSingle()
+
+  // Save to DB for admin inbox
+  const admin = createAdminClient()
+  await admin.from('feedback').insert({
+    user_id: user.id,
+    message,
+    page_url: typeof body.page_url === 'string' ? body.page_url : null,
+  })
 
   try {
     if (process.env.RESEND_API_KEY) {

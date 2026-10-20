@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Calendar, MapPin, Users } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase-admin'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
@@ -56,7 +57,15 @@ export default async function AdminBookingsPage() {
                       {aging ? ' · Väntar >48h' : ''}
                     </p>
                   </div>
-                  <AdminStatusBadge status={b.status} />
+                  <div className="flex items-center gap-3">
+                    <AdminStatusBadge status={b.status} />
+                    <Link
+                      href={`/admin/bookings/${b.id}`}
+                      className="text-[13px] font-medium text-primary hover:underline"
+                    >
+                      Visa
+                    </Link>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
                   {b.event_type ? <span>{b.event_type}</span> : null}

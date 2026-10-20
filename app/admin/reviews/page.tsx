@@ -1,6 +1,7 @@
 import { Star } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase-admin'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
+import AdminReviewActions from '@/components/admin/AdminReviewActions'
 
 export const metadata = { title: 'Admin — Recensioner' }
 export const dynamic = 'force-dynamic'
@@ -26,16 +27,18 @@ export default async function AdminReviewsPage() {
   const { data: reviews } = await supabase
     .from('reviews')
     .select(
-      'id, rating, comment, created_at, users!reviewer_id(name, email), services!service_id(title)'
+      'id, rating, comment, is_hidden, created_at, users!reviewer_id(name, email), services!service_id(title)'
     )
     .order('created_at', { ascending: false })
     .limit(200)
+
+  const hiddenCount = reviews?.filter(r => r.is_hidden).length ?? 0
 
   return (
     <div>
       <AdminPageHeader
         title="Recensioner"
-        description={`${reviews?.length ?? 0} senaste (max 200)`}
+        description={`${reviews?.length ?? 0} senaste${hiddenCount > 0 ? ` · ${hiddenCount} dolda` : ''} (max 200)`}
       />
 
       {!reviews || reviews.length === 0 ? (
@@ -48,7 +51,7 @@ export default async function AdminReviewsPage() {
             return (
               <div
                 key={r.id}
-                className="rounded-2xl border border-border bg-background px-4 py-3"
+                className={`rounded-2xl border bg-background px-4 py-3 ${r.is_hidden ? 'border-border/40 opacity-50' : 'border-border'}`}
               >
                 <div className="mb-1 flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -58,6 +61,7 @@ export default async function AdminReviewsPage() {
                     </p>
                     <p className="truncate text-[13px] text-muted-foreground">
                       {(users as { email?: string | null } | null)?.email ?? '—'}
+                      {r.is_hidden ? ' · Dold' : ''}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
@@ -72,6 +76,9 @@ export default async function AdminReviewsPage() {
                     {r.comment}
                   </p>
                 ) : null}
+                <div className="mt-3 flex justify-end">
+                  <AdminReviewActions reviewId={r.id} isHidden={r.is_hidden ?? false} />
+                </div>
               </div>
             )
           })}
