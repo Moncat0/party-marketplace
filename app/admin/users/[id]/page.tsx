@@ -29,7 +29,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
   const { data: user } = await supabase
     .from('users')
     .select(
-      'id, email, name, first_name, last_name, preferred_first_name, phone, avatar_url, user_type, auth_provider, signup_source, created_at, deactivated_at, email_verified_at, terms_accepted_at'
+      'id, email, name, first_name, last_name, preferred_first_name, phone, avatar_url, user_type, auth_provider, signup_source, created_at, deactivated_at, email_verified_at, terms_accepted_at, is_test_account, is_admin'
     )
     .eq('id', params.id)
     .maybeSingle()
@@ -216,6 +216,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
           email={user.email}
           name={displayName}
           deactivated={!!user.deactivated_at}
+          isTestAccount={!!(user as { is_test_account?: boolean }).is_test_account}
         />
       </section>
 

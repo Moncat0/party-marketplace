@@ -29,13 +29,17 @@ export default async function HomePage() {
   const { data: services } = await supabase
     .from('services')
     .select(
-      `id, title, city, location_id, photos, category_slug, category_tags, created_at, price_range_min, provider_profiles(user_id, users(${HOST_USERS_SELECT})), reviews(rating)`
+      `id, title, city, location_id, photos, category_slug, category_tags, created_at, price_range_min, provider_profiles(user_id, users(${HOST_USERS_SELECT}, is_test_account)), reviews(rating)`
     )
     .eq('is_published', true)
     .eq('is_disabled', false)
     .order('created_at', { ascending: false })
 
-  const providers = (services ?? []).map(s => {
+  const providers = (services ?? []).filter(s => {
+    const pp = Array.isArray(s.provider_profiles) ? s.provider_profiles[0] : s.provider_profiles
+    const u = pp ? (Array.isArray(pp.users) ? pp.users[0] : pp.users) : null
+    return !(u as { is_test_account?: boolean } | null)?.is_test_account
+  }).map(s => {
     const provider = Array.isArray(s.provider_profiles) ? s.provider_profiles[0] : s.provider_profiles
     const users = provider
       ? Array.isArray(provider.users)

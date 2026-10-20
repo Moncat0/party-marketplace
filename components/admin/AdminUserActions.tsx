@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, Ban, RotateCcw, Trash2 } from 'lucide-react'
+import { Mail, Ban, RotateCcw, Trash2, FlaskConical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -19,6 +19,7 @@ type Props = {
   email: string
   name: string
   deactivated: boolean
+  isTestAccount: boolean
 }
 
 export default function AdminUserActions({
@@ -26,6 +27,7 @@ export default function AdminUserActions({
   email,
   name,
   deactivated,
+  isTestAccount: initialIsTest,
 }: Props) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -34,6 +36,7 @@ export default function AdminUserActions({
   const [subject, setSubject] = useState('Meddelande från Gigtorget')
   const [body, setBody] = useState('')
   const [sent, setSent] = useState(false)
+  const [isTest, setIsTest] = useState(initialIsTest)
 
   async function deactivate(reactivate: boolean) {
     setBusy(reactivate ? 'reactivate' : 'deactivate')
@@ -46,10 +49,29 @@ export default function AdminUserActions({
       })
       const json = (await res.json()) as { error?: string }
       if (!res.ok) throw new Error(json.error || 'Något gick fel')
-      // Hard reload so the badge/status is never stale
       window.location.assign(`/admin/users/${userId}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Något gick fel')
+      setBusy(null)
+    }
+  }
+
+  async function toggleTestAccount() {
+    const next = !isTest
+    setBusy('test')
+    setError(null)
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/test-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_test_account: next }),
+      })
+      const json = (await res.json()) as { error?: string }
+      if (!res.ok) throw new Error(json.error || 'Något gick fel')
+      setIsTest(next)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Något gick fel')
+    } finally {
       setBusy(null)
     }
   }
@@ -83,7 +105,6 @@ export default function AdminUserActions({
       const json = (await res.json()) as { error?: string }
       if (!res.ok) throw new Error(json.error || 'Kunde inte radera')
       setDeleteOpen(false)
-      // Soft navigation left us on a stale detail page; force a full load.
       window.location.assign('/admin/users')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Kunde inte radera')
@@ -110,6 +131,17 @@ export default function AdminUserActions({
         </Button>
         <Button asChild variant="outline" className="rounded-xl">
           <a href={`mailto:${encodeURIComponent(email)}`}>Öppna e-post</a>
+        </Button>
+        <Button
+          type="button"
+          variant={isTest ? 'default' : 'outline'}
+          className={`rounded-xl ${isTest ? 'bg-amber-500 hover:bg-amber-600 text-white border-transparent' : ''}`}
+          disabled={busy === 'test'}
+          onClick={() => void toggleTestAccount()}
+          title={isTest ? 'Ta bort testmarkering — syns i public search igen' : 'Markera som testkonto — döljs från public search och statistik'}
+        >
+          <FlaskConical className="size-4" data-icon="inline-start" />
+          {busy === 'test' ? 'Sparar…' : isTest ? 'Testkonto ✓' : 'Markera som test'}
         </Button>
         {deactivated ? (
           <Button

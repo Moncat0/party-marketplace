@@ -28,7 +28,7 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   let query = supabase
     .from('users')
     .select(
-      'id, name, email, user_type, auth_provider, signup_source, created_at, deactivated_at, phone, preferred_first_name, first_name'
+      'id, name, email, user_type, auth_provider, signup_source, created_at, deactivated_at, phone, preferred_first_name, first_name, is_test_account'
     )
     .order('created_at', { ascending: false })
     .limit(200)
@@ -91,6 +91,14 @@ export default async function AdminUsersPage({ searchParams }: Props) {
                         className="rounded-full border-transparent bg-amber-100 font-medium text-amber-900"
                       >
                         Inaktiverad
+                      </Badge>
+                    ) : null}
+                    {(u as { is_test_account?: boolean }).is_test_account ? (
+                      <Badge
+                        variant="secondary"
+                        className="rounded-full border-transparent bg-violet-100 font-medium text-violet-900"
+                      >
+                        TEST
                       </Badge>
                     ) : null}
                   </div>
