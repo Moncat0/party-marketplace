@@ -44,9 +44,9 @@ export default async function AdminMarketplacePage({ searchParams }: Props) {
 
       <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <MetricTile
-          label="Talanger"
+          label="Registrerade talanger"
           value={metrics.supply.providers}
-          hint={`${metrics.supply.withPublished} med publicerad tjänst`}
+          hint={`${metrics.supply.withPublished} med publicerad tjänst · ${metrics.supply.unpublishedOnly} utan`}
         />
         <MetricTile
           label="Publicerade tjänster"

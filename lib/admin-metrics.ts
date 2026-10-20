@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import {
   type AdminRange,
   pctDelta,
+  rangeLabel,
   rangeWindows,
   rate,
 } from '@/lib/admin-range'
@@ -167,6 +168,7 @@ export async function getOverviewMetrics(
       previous: range === 'all' ? null : prevRequests,
       deltaPct: range === 'all' ? null : pctDelta(requests, prevRequests),
       href: '/admin/bookings',
+      hint: range === 'all' ? 'Alla tider' : `Senaste ${rangeLabel(range)}`,
     },
     {
       key: 'acceptance',
@@ -188,6 +190,7 @@ export async function getOverviewMetrics(
       previous: range === 'all' ? null : prevProviders,
       deltaPct: range === 'all' ? null : pctDelta(newProviders, prevProviders),
       href: '/admin/providers',
+      hint: range === 'all' ? 'Alla tider' : `Senaste ${rangeLabel(range)}`,
     },
     {
       key: 'users',
@@ -196,6 +199,7 @@ export async function getOverviewMetrics(
       previous: range === 'all' ? null : prevUsers,
       deltaPct: range === 'all' ? null : pctDelta(newUsers, prevUsers),
       href: '/admin/users',
+      hint: range === 'all' ? 'Alla tider' : `Senaste ${rangeLabel(range)}`,
     },
   ]
 
@@ -462,10 +466,9 @@ export async function getMarketplaceMetrics(
     }),
   ])
 
-  const { count: unpublishedCount } = await supabase
+  const { count: totalServicesCount } = await supabase
     .from('services')
     .select('id', { count: 'exact', head: true })
-    .or('is_published.eq.false,is_disabled.eq.true')
 
   const { data: providerRows } = await supabase
     .from('provider_profiles')
@@ -534,7 +537,7 @@ export async function getMarketplaceMetrics(
       withPublished,
       unpublishedOnly: Math.max(0, providers - withPublished),
       publishedServices,
-      draftOrPaused: unpublishedCount ?? 0,
+      draftOrPaused: Math.max(0, (totalServicesCount ?? 0) - publishedServices),
     },
     demand: {
       byStatus: [

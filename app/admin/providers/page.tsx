@@ -22,7 +22,14 @@ export default async function AdminProvidersPage() {
     <div>
       <AdminPageHeader
         title="Talanger"
-        description={`${providers?.length ?? 0} senaste (max 200)`}
+        description={(() => {
+          const total = providers?.length ?? 0
+          const withService = providers?.filter(p => {
+            const s = Array.isArray(p.services) ? p.services : []
+            return s.some((sv: { is_published?: boolean; is_disabled?: boolean }) => sv.is_published && !sv.is_disabled)
+          }).length ?? 0
+          return `${withService} med publicerade tjänster · ${total} totalt registrerade`
+        })()}
       />
 
       {!providers || providers.length === 0 ? (

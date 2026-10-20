@@ -29,7 +29,7 @@ export default async function AdminBookingsPage() {
         description={
           agingCount > 0
             ? `${bookings?.length ?? 0} senaste · ${agingCount} väntande >48h`
-            : `${bookings?.length ?? 0} senaste (max 200)`
+            : `${bookings?.length ?? 0} totalt (max 200)`
         }
       />
 
