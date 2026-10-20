@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase-admin'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import DeleteServiceButton from '@/components/admin/DeleteServiceButton'
+import PauseServiceButton from '@/components/admin/PauseServiceButton'
 import { Badge } from '@/components/ui/badge'
 
 export const metadata = { title: 'Admin — Talanger' }
@@ -76,6 +77,11 @@ export default async function AdminProvidersPage() {
                     <Badge variant="secondary" className="rounded-full font-normal">
                       {publishedCount} publicerad{publishedCount === 1 ? '' : 'e'}
                     </Badge>
+                    {service?.is_disabled ? (
+                      <Badge variant="secondary" className="rounded-full border-transparent bg-amber-100 font-medium text-amber-900">
+                        Pausad
+                      </Badge>
+                    ) : null}
                     {(service?.category_tags as string[] | undefined)?.slice(0, 2).map(tag => (
                       <Badge
                         key={tag}
@@ -97,6 +103,10 @@ export default async function AdminProvidersPage() {
                       >
                         Visa
                       </Link>
+                      <PauseServiceButton
+                        serviceId={service.id}
+                        isDisabled={service.is_disabled ?? false}
+                      />
                       <DeleteServiceButton
                         serviceId={service.id}
                         serviceTitle={service.title ?? 'Tjänst'}
