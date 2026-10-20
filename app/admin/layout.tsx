@@ -7,6 +7,7 @@ import {
   Calendar,
   ClipboardList,
   CreditCard,
+  Mail,
   ExternalLink,
   LayoutDashboard,
   MessageSquare,
@@ -47,6 +48,12 @@ const navLinks = [
     label: 'Talanger',
     icon: UserRound,
     match: (p: string) => p.startsWith('/admin/providers'),
+  },
+  {
+    href: '/admin/invites',
+    label: 'Inbjudningar',
+    icon: Mail,
+    match: (p: string) => p.startsWith('/admin/invites'),
   },
   {
     href: '/admin/bookings',
