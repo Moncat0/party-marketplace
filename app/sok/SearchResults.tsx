@@ -356,7 +356,7 @@ export default function SearchResults({
   const catMeta = category ? getCategoryBySlug(category) : null
   const locationLabel = getLocationLabel(locationId || DEFAULT_LOCATION_ID)
   const occasionLabel = occasion ? formatOccasion(occasion) : null
-  const serviceLabel = catMeta?.chipLabel ?? catMeta?.label ?? 'All services'
+  const serviceLabel = catMeta?.chipLabel ?? catMeta?.label ?? 'Alla tjänster'
   const headingNoun = catMeta
     ? `${catMeta.chipLabel ?? catMeta.label}`.toLowerCase()
     : 'tjänster'
@@ -368,8 +368,8 @@ export default function SearchResults({
     REVIEW_FILTER_OPTIONS.find(o => o.key === reviewFilter)?.label ?? 'Omdömen'
   const orderLabel =
     SORT_OPTIONS.find(o => o.key === sort)?.label === 'Relevans'
-      ? 'Order'
-      : SORT_OPTIONS.find(o => o.key === sort)?.label ?? 'Order'
+      ? 'Sortera'
+      : SORT_OPTIONS.find(o => o.key === sort)?.label ?? 'Sortera'
 
   return (
     <div className="min-h-screen bg-background">
@@ -451,7 +451,7 @@ export default function SearchResults({
                 <circle cx="11" cy="8" r="1.25" fill="currentColor" />
                 <circle cx="7.5" cy="11.5" r="1.25" fill="currentColor" />
               </svg>
-              Filters
+              Filter
               {dialogFilterCount > 0 && (
                 <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-foreground px-1 text-[10px] font-semibold text-background">
                   {dialogFilterCount}
@@ -538,13 +538,13 @@ export default function SearchResults({
                     : 'border-border hover:border-foreground'
                 )}
               >
-                {catMeta?.chipLabel ?? catMeta?.label ?? 'Category'}
+                {catMeta?.chipLabel ?? catMeta?.label ?? 'Kategori'}
                 <ChevronDown />
               </Button>
               {categoryMenuOpen && (
                 <ChipMenu onClose={() => setCategoryMenuOpen(false)}>
                   <ChipMenuItem
-                    label="All services"
+                    label="Alla tjänster"
                     active={!category}
                     onClick={() => {
                       setCategory(null)
@@ -612,17 +612,17 @@ export default function SearchResults({
       <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
         <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-3xl p-0 sm:rounded-3xl">
           <DialogHeader className="border-b border-border px-6 py-4">
-            <DialogTitle className="text-center text-[16px] font-semibold">Filters</DialogTitle>
+            <DialogTitle className="text-center text-[16px] font-semibold">Filter</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-8 px-6 py-6">
             <div className="flex flex-col gap-3">
-              <h3 className="text-[18px] font-semibold text-foreground">Price range</h3>
-              <p className="text-[14px] text-muted-foreground">From-price per booking (SEK)</p>
+              <h3 className="text-[18px] font-semibold text-foreground">Prisintervall</h3>
+              <p className="text-[14px] text-muted-foreground">Frånpris per bokning (SEK)</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="price-min" className="text-[12px] text-muted-foreground">
-                    Minimum
+                    Lägsta
                   </Label>
                   <input
                     id="price-min"
@@ -637,7 +637,7 @@ export default function SearchResults({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="price-max" className="text-[12px] text-muted-foreground">
-                    Maximum
+                    Högsta
                   </Label>
                   <input
                     id="price-max"
@@ -646,7 +646,7 @@ export default function SearchResults({
                     inputMode="numeric"
                     value={draftPriceMax}
                     onChange={e => setDraftPriceMax(e.target.value)}
-                    placeholder="Any"
+                    placeholder="Valfritt"
                     className="h-12 rounded-xl border border-input px-4 text-[15px] text-foreground focus:border-foreground focus:outline-none focus:ring-1 focus:ring-foreground"
                   />
                 </div>
@@ -720,10 +720,10 @@ export default function SearchResults({
               onClick={clearAllFilters}
               className="h-auto p-0 underline"
             >
-              Clear all
+              Rensa allt
             </Button>
             <Button type="button" variant="dark" onClick={applyFilters} className="rounded-lg px-6">
-              Show results
+              Visa resultat
             </Button>
           </DialogFooter>
         </DialogContent>

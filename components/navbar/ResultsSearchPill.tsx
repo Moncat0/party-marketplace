@@ -41,7 +41,7 @@ export default function ResultsSearchPill({
       >
         <BellIcon />
         <span className="truncate text-[14px] font-semibold leading-none text-foreground">
-          <span className="hidden min-[400px]:inline">Services in </span>
+          <span className="hidden min-[400px]:inline">Tjänster i </span>
           {locationLabel}
         </span>
       </button>
@@ -62,7 +62,7 @@ export default function ResultsSearchPill({
         type="button"
         variant="ghost"
         size="icon"
-        aria-label="Search"
+        aria-label="Sök"
         onClick={e => {
           e.stopPropagation()
           onSearch?.()

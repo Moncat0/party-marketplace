@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { MapPin } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase-admin'
 import AdminPageHeader from '@/components/admin/AdminPageHeader'
+import DeleteServiceButton from '@/components/admin/DeleteServiceButton'
 import { Badge } from '@/components/ui/badge'
 
 export const metadata = { title: 'Admin — Talanger' }
@@ -79,13 +80,19 @@ export default async function AdminProvidersPage() {
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   {service?.id ? (
-                    <Link
-                      href={`/tjanster/${service.id}`}
-                      target="_blank"
-                      className="text-[13px] font-medium text-primary hover:underline"
-                    >
-                      Visa
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/tjanster/${service.id}`}
+                        target="_blank"
+                        className="text-[13px] font-medium text-primary hover:underline"
+                      >
+                        Visa
+                      </Link>
+                      <DeleteServiceButton
+                        serviceId={service.id}
+                        serviceTitle={service.title ?? 'Tjänst'}
+                      />
+                    </div>
                   ) : null}
                   <span className="text-[12px] text-muted-foreground">
                     {new Date(p.created_at).toLocaleDateString('sv-SE')}
