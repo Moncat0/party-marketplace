@@ -16,6 +16,7 @@ import ListingReviews, { type ListingReview } from '@/components/listings/Listin
 import ListingCard, { type ListingCardData } from '@/components/listings/ListingCard'
 import ListingRow from '@/components/listings/ListingRow'
 import SiteFooter from '@/components/shared/SiteFooter'
+import ReportServiceButton from '@/components/shared/ReportServiceButton'
 import WizardNavHeader from '@/components/service-wizard/WizardNavHeader'
 import WishlistSaveModal from '@/components/wishlist/WishlistSaveModal'
 import { useProviderWishlistSaved } from '@/lib/wishlist-saved-state'
@@ -77,6 +78,7 @@ type Props = {
   currentUserId: string | null
   isSaved: boolean
   similarServices: ListingCardData[]
+  isTestAccount?: boolean
   /** Owner-only non-live views of the public page */
   previewMode?: PreviewMode
   /** Safe path back to wizard / listings when previewing */
@@ -99,6 +101,7 @@ export default function ServiceProfile({
   similarServices,
   previewMode = 'live',
   previewReturnPath = null,
+  isTestAccount = false,
 }: Props) {
   const isPreview = previewMode !== 'live'
   const fromWizard = !!previewReturnPath?.includes('/flow')
@@ -420,6 +423,12 @@ export default function ServiceProfile({
       ) : null}
 
       <Container>
+        {isTestAccount && !isPreview ? (
+          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-[13px] font-semibold text-amber-900">Exempelprofil</p>
+            <p className="text-[12px] text-amber-800">Den här profilen är skapad för att visa hur en talang kan presentera sig på Gigtorget. Det är inte ett riktigt erbjudande.</p>
+          </div>
+        ) : null}
         <div className="max-w-screen-lg mx-auto py-6">
           <div className="flex flex-col gap-6">
             <ListingHead
@@ -506,6 +515,12 @@ export default function ServiceProfile({
               />
             ))}
           </ListingRow>
+        </div>
+      ) : null}
+
+      {!isPreview && !fromWizard ? (
+        <div className="flex justify-center pb-6">
+          <ReportServiceButton serviceId={profile.id} isLoggedIn={!!currentUserId} />
         </div>
       ) : null}
 

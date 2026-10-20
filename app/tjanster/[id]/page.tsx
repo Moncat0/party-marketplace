@@ -81,7 +81,7 @@ export default async function ServicePage({
   const { data: service } = await supabase
     .from('services')
     .select(
-      `*, provider_profiles(id, user_id, bio, city, location_id, created_at, users(${HOST_USERS_SELECT}))`
+      `*, provider_profiles(id, user_id, bio, city, location_id, created_at, users(${HOST_USERS_SELECT}, is_test_account))`
     )
     .eq('id', params.id)
     .single()
@@ -118,6 +118,8 @@ export default async function ServicePage({
       ? (provider.users[0] ?? null)
       : provider.users
     : null
+
+  const isTestAccount = !!(hostUser as { is_test_account?: boolean } | null)?.is_test_account
 
   const categorySlug = resolveCategorySlug({
     category_slug: service.category_slug,
@@ -314,6 +316,7 @@ export default async function ServicePage({
       similarServices={previewMode === 'live' ? similarServices : []}
       previewMode={previewMode}
       previewReturnPath={returnPath}
+      isTestAccount={isTestAccount}
     />
   )
 }

@@ -10,16 +10,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (gate.error) return gate.error
 
   const body = await request.json().catch(() => ({}))
-  const { status } = body
+  const { status, note } = body as { status?: string; note?: string }
 
-  if (!VALID_STATUSES.includes(status)) {
+  if (!status || !VALID_STATUSES.includes(status)) {
     return NextResponse.json({ error: 'Ogiltig status.' }, { status: 400 })
   }
 
-  const { admin } = gate
+  const { admin, user } = gate
+
   const { data: existing } = await admin
     .from('booking_requests')
-    .select('id')
+    .select('id, status')
     .eq('id', params.id)
     .maybeSingle()
 
@@ -31,6 +32,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     .eq('id', params.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Record history entry
+  await admin.from('booking_status_history').insert({
+    booking_id: params.id,
+    from_status: existing.status ?? null,
+    to_status: status,
+    changed_by_id: user.id,
+    changed_by_role: 'admin',
+    note: note?.trim() || null,
+  })
 
   return NextResponse.json({ ok: true, status })
 }

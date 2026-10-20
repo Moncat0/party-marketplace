@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, Calendar, MapPin, Users, MessageSquare } from 'lucide-react'
+import { ArrowLeft, MessageSquare, History } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase-admin'
-import AdminPageHeader from '@/components/admin/AdminPageHeader'
 import AdminStatusBadge from '@/components/admin/AdminStatusBadge'
 import AdminBookingActions from '@/components/admin/AdminBookingActions'
 
@@ -13,6 +12,20 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   corporate: 'Företagsevent', graduation: 'Student', crayfish: 'Kräftskiva',
   midsommar: 'Midsommar', christmas: 'Julbord', hen_stag: 'Möhippa/Svensexa',
   anniversary: 'Jubileum', housewarming: 'Inflyttning', other: 'Övrigt',
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Väntande',
+  accepted: 'Accepterad',
+  declined: 'Nekad',
+  completed: 'Genomförd',
+  cancelled: 'Avbokad',
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: 'Admin',
+  provider: 'Leverantör',
+  planner: 'Planerare',
 }
 
 export default async function AdminBookingDetailPage({ params }: { params: { id: string } }) {
@@ -32,11 +45,18 @@ export default async function AdminBookingDetailPage({ params }: { params: { id:
 
   if (!booking) notFound()
 
-  const { data: messages } = await supabase
-    .from('messages')
-    .select('id, content, created_at, sender_id, users!sender_id(name)')
-    .eq('booking_request_id', params.id)
-    .order('created_at', { ascending: true })
+  const [{ data: messages }, { data: history }] = await Promise.all([
+    supabase
+      .from('messages')
+      .select('id, content, created_at, sender_id, users!sender_id(name)')
+      .eq('booking_request_id', params.id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('booking_status_history')
+      .select('id, from_status, to_status, changed_by_role, note, created_at, users!changed_by_id(name)')
+      .eq('booking_id', params.id)
+      .order('created_at', { ascending: true }),
+  ])
 
   const planner = Array.isArray(booking.users) ? booking.users[0] : booking.users
   const service = Array.isArray(booking.services) ? booking.services[0] : booking.services
@@ -82,21 +102,11 @@ export default async function AdminBookingDetailPage({ params }: { params: { id:
             {booking.event_type ? (
               <Row label="Typ">{EVENT_TYPE_LABELS[booking.event_type] ?? booking.event_type}</Row>
             ) : null}
-            {booking.event_location ? (
-              <Row label="Plats">{booking.event_location}</Row>
-            ) : null}
-            {booking.guest_count ? (
-              <Row label="Gäster">{booking.guest_count}</Row>
-            ) : null}
-            {booking.description ? (
-              <Row label="Meddelande">{booking.description}</Row>
-            ) : null}
-            <Row label="Skickad">
-              {new Date(booking.created_at).toLocaleString('sv-SE')}
-            </Row>
-            {booking.payment_status ? (
-              <Row label="Betalning">{booking.payment_status}</Row>
-            ) : null}
+            {booking.event_location ? <Row label="Plats">{booking.event_location}</Row> : null}
+            {booking.guest_count ? <Row label="Gäster">{booking.guest_count}</Row> : null}
+            {booking.description ? <Row label="Meddelande">{booking.description}</Row> : null}
+            <Row label="Skickad">{new Date(booking.created_at).toLocaleString('sv-SE')}</Row>
+            {booking.payment_status ? <Row label="Betalning">{booking.payment_status}</Row> : null}
             {booking.price_ore ? (
               <Row label="Pris">{(booking.price_ore / 100).toLocaleString('sv-SE')} kr</Row>
             ) : null}
@@ -109,6 +119,49 @@ export default async function AdminBookingDetailPage({ params }: { params: { id:
           <AdminBookingActions bookingId={booking.id} currentStatus={booking.status} />
         </section>
       </div>
+
+      {/* Status history */}
+      <section className="mt-4 rounded-2xl border border-border bg-background p-5">
+        <h2 className="mb-4 inline-flex items-center gap-2 text-[15px] font-semibold text-foreground">
+          <History className="size-4" strokeWidth={2} />
+          Statushistorik ({history?.length ?? 0})
+        </h2>
+        {!history || history.length === 0 ? (
+          <p className="text-[14px] text-muted-foreground">
+            Ingen historik ännu — registreras automatiskt vid nästa statusändring.
+          </p>
+        ) : (
+          <ol className="relative border-l border-border pl-5 space-y-4">
+            {history.map(h => {
+              const actor = Array.isArray(h.users) ? h.users[0] : h.users
+              const actorName = (actor as any)?.name ?? ROLE_LABELS[h.changed_by_role ?? ''] ?? 'Okänd'
+              return (
+                <li key={h.id} className="relative">
+                  <span className="absolute -left-[21px] top-1 size-2.5 rounded-full border-2 border-background bg-border" />
+                  <p className="text-[13px] font-medium text-foreground">
+                    {h.from_status ? (
+                      <>
+                        <span className="text-muted-foreground">{STATUS_LABELS[h.from_status] ?? h.from_status}</span>
+                        {' → '}
+                      </>
+                    ) : null}
+                    {STATUS_LABELS[h.to_status] ?? h.to_status}
+                  </p>
+                  <p className="text-[12px] text-muted-foreground">
+                    {actorName}
+                    {h.changed_by_role ? ` (${ROLE_LABELS[h.changed_by_role]})` : ''}
+                    {' · '}
+                    {new Date(h.created_at).toLocaleString('sv-SE')}
+                  </p>
+                  {h.note ? (
+                    <p className="mt-0.5 text-[12px] text-muted-foreground italic">{h.note}</p>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ol>
+        )}
+      </section>
 
       {/* Messages */}
       <section className="mt-4 rounded-2xl border border-border bg-background p-5">

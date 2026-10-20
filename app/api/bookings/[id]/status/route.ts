@@ -18,18 +18,42 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
   }
 
-  const updatePayload: Record<string, unknown> = { status }
+  // Fetch existing status before updating
+  const { data: existing } = await supabase
+    .from('booking_requests')
+    .select('status, planner_id')
+    .eq('id', params.id)
+    .single()
 
   const { data: booking, error } = await supabase
     .from('booking_requests')
-    .update(updatePayload)
+    .update({ status })
     .eq('id', params.id)
     .select(
-      '*, users!planner_id(name, email, notif_booking_accepted, notif_booking_declined), services!service_id(title, provider_profiles(user_id, users(name)))'
+      '*, users!planner_id(name, email, notif_booking_accepted, notif_booking_declined), services!service_id(title, provider_profiles(user_id, users(name, id)))'
     )
     .single()
 
   if (error || !booking) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // Record history entry — look up the DB user id from auth uid
+  try {
+    const { data: dbUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    await supabase.from('booking_status_history').insert({
+      booking_id: params.id,
+      from_status: existing?.status ?? null,
+      to_status: status,
+      changed_by_id: dbUser?.id ?? null,
+      changed_by_role: 'provider',
+    })
+  } catch (_) {
+    // history write failure should not block the response
+  }
 
   try {
     const planner = booking.users as {
