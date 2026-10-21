@@ -279,6 +279,124 @@ export default function SupplyLanding() {
           <SupplyCtaButton />
         </ScrollReveal>
 
+        {/* All you need */}
+        <ScrollReveal className="py-[72px]">
+          <div className="mb-12 text-center">
+            <h2 className="supply-display fs-display-md m-0 text-[var(--ink-900)]">Allt du behöver</h2>
+            <p className="supply-body fs-body-lg mt-3 text-[var(--ink-500)]">
+              Från första bilden till bekräftad bokning.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_1fr]">
+            {/* Large: profile page mock */}
+            <div>
+              <div className="flex h-[280px] items-stretch overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] p-5 lg:h-[420px]">
+                <div className="flex w-full flex-col overflow-hidden rounded-[var(--radius-md)] bg-white shadow-[var(--shadow-soft-sm)]">
+                  <div className="h-28 shrink-0 bg-[#ebebeb] lg:h-40" />
+                  <div className="flex-1 overflow-hidden p-4">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="-mt-8 h-14 w-14 shrink-0 rounded-full border-2 border-white bg-[#d4d4d4] lg:-mt-10 lg:h-16 lg:w-16" />
+                    </div>
+                    <p className="supply-body mt-1 text-[14px] font-bold text-[var(--ink-900)]">Elin Lund</p>
+                    <p className="supply-body text-[12px] text-[var(--ink-500)]">DJ · Stockholm</p>
+                    <div className="mt-3 flex gap-1.5">
+                      {['DJ', 'House', 'Pop'].map(t => (
+                        <span key={t} className="supply-body rounded-full border border-[var(--border-subtle)] px-2 py-0.5 text-[11px] text-[var(--ink-700)]">{t}</span>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex items-center gap-1">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="#111" aria-hidden><path d="M12 3l2.6 6.2L21 10l-5 4.4L17.4 21 12 17.3 6.6 21 8 14.4 3 10l6.4-.8z"/></svg>
+                      <span className="supply-body text-[12px] font-semibold text-[var(--ink-900)]">4.9</span>
+                      <span className="supply-body text-[11px] text-[var(--ink-500)]">· 18 recensioner</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6">
+                <span className="supply-badge">DIN SIDA</span>
+                <h3 className="supply-display supply-display-plain fs-h1 mb-2.5 mt-4 text-[var(--ink-900)]">
+                  Bygg en sida som säljer åt dig
+                </h3>
+                <p className="supply-body fs-body-lg m-0 text-[var(--ink-500)]">
+                  Bildgalleri, priser och tjänster — allt på en delbar länk. Recensionerna byggs upp bokning efter bokning.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-8">
+              {/* Small: inbox/requests mock */}
+              <div>
+                <div className="flex h-[200px] items-stretch overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] p-4">
+                  <div className="flex w-full flex-col gap-2 overflow-hidden rounded-[var(--radius-md)] bg-white p-3.5 shadow-[var(--shadow-soft-sm)]">
+                    <p className="supply-body text-[11px] font-bold uppercase tracking-widest text-[var(--ink-300)]">Förfrågningar</p>
+                    {[
+                      { name: 'Sara M.', event: 'Bröllop · 21 sep', status: 'Ny' },
+                      { name: 'Erik L.', event: 'Företagsfest · 4 okt', status: 'Svarad' },
+                      { name: 'Anna K.', event: 'Födelsedag · 12 okt', status: 'Ny' },
+                    ].map(r => (
+                      <div key={r.name} className="flex items-center justify-between rounded-[var(--radius-sm)] bg-[#f5f5f5] px-2.5 py-2">
+                        <div>
+                          <p className="supply-body m-0 text-[12px] font-bold text-[var(--ink-900)]">{r.name}</p>
+                          <p className="supply-body m-0 text-[11px] text-[var(--ink-500)]">{r.event}</p>
+                        </div>
+                        <span className={cn(
+                          'supply-body rounded-full px-2 py-0.5 text-[10px] font-bold',
+                          r.status === 'Ny' ? 'bg-[#111] text-white' : 'bg-[#ebebeb] text-[var(--ink-500)]'
+                        )}>{r.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <span className="supply-badge">FÖRFRÅGNINGAR</span>
+                  <h3 className="supply-display supply-display-plain fs-h2 mb-2 mt-3.5 text-[var(--ink-900)]">
+                    Allt på ett ställe
+                  </h3>
+                  <p className="supply-body fs-body m-0 text-[var(--ink-500)]">
+                    Förfrågningar, chatt och offert — samlat i en vy. Inget som studsar mellan mejl och SMS.
+                  </p>
+                </div>
+              </div>
+              {/* Small: chat/offer mock */}
+              <div>
+                <div className="flex h-[200px] items-stretch overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] p-4">
+                  <div className="flex w-full flex-col gap-2 overflow-hidden rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-soft-sm)]">
+                    <div className="flex justify-start">
+                      <div className="max-w-[75%] rounded-[var(--radius-md)] rounded-tl-none bg-[#f0f0f0] px-3 py-2">
+                        <p className="supply-body m-0 text-[12px] text-[var(--ink-700)]">Hej! Är du ledig 21 sep?</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <div className="max-w-[75%] rounded-[var(--radius-md)] rounded-tr-none bg-[#111] px-3 py-2">
+                        <p className="supply-body m-0 text-[12px] text-white">Ja! Skickar offert nu.</p>
+                      </div>
+                    </div>
+                    <div className="mt-1 flex items-center justify-between rounded-[var(--radius-sm)] bg-[#f0f0f0] px-3 py-2">
+                      <span className="supply-body text-[11px] text-[var(--ink-700)]">Offert</span>
+                      <span className="supply-display supply-display-plain text-[13px] font-bold text-[var(--ink-900)]">3 500 kr</span>
+                    </div>
+                    <div className="rounded-[var(--radius-sm)] bg-[#111] py-1.5 text-center">
+                      <span className="supply-body text-[11px] font-bold text-white">Skicka offert</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5">
+                  <span className="supply-badge">CHATT & OFFERT</span>
+                  <h3 className="supply-display supply-display-plain fs-h2 mb-2 mt-3.5 text-[var(--ink-900)]">
+                    Skicka offert direkt i chatten
+                  </h3>
+                  <p className="supply-body fs-body m-0 text-[var(--ink-500)]">
+                    Svara på förfrågningar och skicka ett pris i samma konversation — direkt till kunden.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+
+        <ScrollReveal className="pb-6 text-center">
+          <SupplyCtaButton />
+        </ScrollReveal>
+
         {/* Categories — padding 56×40; margin 56 0; tags gap 14 */}
         <ScrollReveal className="my-14 rounded-[var(--radius-xl)] bg-[#f5f5f5] px-6 py-14 text-center sm:px-10">
           <h2 className="supply-display fs-h1 mb-2 text-[var(--ink-900)]">Oavsett vad du erbjuder</h2>
