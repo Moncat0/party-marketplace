@@ -1,131 +1,144 @@
-'use client'
-
-import { useEffect, useState, type ReactNode } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
-import MarketplaceHeader from '@/components/MarketplaceHeader'
-import BrowseSearch from '@/components/navbar/BrowseSearch'
+import JoinScrollHeader from '@/components/marketing/join/JoinScrollHeader'
 import ScrollReveal from '@/components/marketing/supply/ScrollReveal'
 import SupplyCtaButton from '@/components/marketing/supply/SupplyCtaButton'
 import SupplyHeroPhotos from '@/components/marketing/supply/SupplyHeroPhotos'
-import {
-  SUPPLY_BENEFITS,
-  SUPPLY_CATEGORY_LABELS,
-  SUPPLY_FAQS,
-  SUPPLY_STEPS,
-} from '@/components/marketing/supply/content'
+import { SUPPLY_FAQS } from '@/components/marketing/supply/content'
 import { CATEGORIES } from '@/lib/categories'
-import { cn } from '@/lib/utils'
+import SiteFooter from '@/components/shared/SiteFooter'
 import '@/components/marketing/supply/supply-landing.css'
+
+const PAYMENTS_LIVE = false
 
 const HERO_WORDS_LINE1 = ['GÖR', 'DET', 'DU', 'ÄLSKAR.']
 const HERO_WORDS_LINE2 = ['FÅ', 'BETALT', 'FÖR', 'DET.']
 
-function BenefitIcon({ kind }: { kind: (typeof SUPPLY_BENEFITS)[number]['icon'] }) {
-  const props = {
-    width: 22,
-    height: 22,
-    viewBox: '0 0 24 24',
-    fill: 'none',
-    stroke: '#111',
-    strokeWidth: 2,
-    'aria-hidden': true as const,
-  }
-  switch (kind) {
-    case 'portfolio':
-      return (
-        <svg {...props}>
-          <rect x="3" y="4" width="18" height="16" rx="2" />
-          <circle cx="8.5" cy="9.5" r="1.5" />
-          <path d="M21 15l-5-5-9 9" />
-        </svg>
-      )
-    case 'star':
-      return (
-        <svg {...props}>
-          <path d="M12 3l2.6 6.2L21 10l-5 4.4L17.4 21 12 17.3 6.6 21 8 14.4 3 10l6.4-.8z" />
-        </svg>
-      )
-    case 'link':
-      return (
-        <svg {...props}>
-          <path d="M9 12a4 4 0 004 4h1a4 4 0 000-8h-1" />
-          <path d="M15 12a4 4 0 00-4-4H10a4 4 0 000 8h1" />
-        </svg>
-      )
-    case 'free':
-      return (
-        <svg {...props}>
-          <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
-          <line x1="7" y1="7" x2="7.01" y2="7" strokeLinecap="round" strokeWidth="3" />
-        </svg>
-      )
-  }
+const WHY_CARDS = [
+  {
+    title: 'Vi hjälper dig att få jobb',
+    description:
+      'Vi marknadsför dig mot arrangörer som redan söker din typ av tjänst. Du slipper knacka dörr.',
+    icon: 'leads' as const,
+  },
+  {
+    title: 'Få betalt, varje gång',
+    description:
+      'Betalning och faktura sköter sig via appen. Du fakturerar inte, du jobbar.',
+    icon: 'payment' as const,
+  },
+  {
+    title: 'Dina priser, dina villkor',
+    description:
+      'Du sätter ditt pris, dina villkor och din tillgänglighet. Gigtorget tar inga jobb du inte vill ha.',
+    icon: 'control' as const,
+  },
+] as const
+
+const BASE_STEPS = [
+  {
+    n: 1,
+    badge: 'STEG 1',
+    title: 'Bygg din sida',
+    description:
+      'Lägg till bilder av ditt arbete, beskriv dina tjänster och sätt dina priser. Det tar under tio minuter.',
+    file: 'profile.webp',
+  },
+  {
+    n: 2,
+    badge: 'STEG 2',
+    title: 'Ta emot förfrågningar',
+    description:
+      'Kunder skickar förfrågningar direkt till dig. Du väljer själv vilka du svarar på — inget krångel.',
+    file: 'requests.webp',
+  },
+  {
+    n: 3,
+    badge: 'STEG 3',
+    title: 'Skicka en offert',
+    description:
+      'Svara i chatten och skicka ett pris direkt — inget krångel med separata mejl.',
+    file: 'chat-offer.webp',
+  },
+]
+
+const STEP_4 = {
+  n: 4,
+  badge: 'STEG 4',
+  title: 'Bli bokad',
+  description:
+    'Kunden bekräftar din offert och bokningen är klar. Pengarna betalas ut när jobbet är utfört.',
+  file: 'booking-paid.webp',
 }
 
-function StepMock({ kind }: { kind: (typeof SUPPLY_STEPS)[number]['mock'] }) {
-  if (kind === 'profile') {
+const JOIN_STEPS = PAYMENTS_LIVE ? [...BASE_STEPS, STEP_4] : BASE_STEPS
+
+const BONUSES = [
+  {
+    title: 'Recensioner som syns',
+    description:
+      'Varje bokning kan ge ett omdöme. Din sida blir bättre med varje jobb.',
+  },
+  {
+    title: 'En länk att dela överallt',
+    description:
+      'Lägg din Gigtorget-sida i Instagram-bion, i offerter eller i en DM.',
+  },
+  {
+    title: 'Du väljer själv',
+    description:
+      'Inga minimiuppdrag, inga tvingade priser. Acceptera det som passar dig.',
+  },
+] as const
+
+function WhyIcon({ kind }: { kind: (typeof WHY_CARDS)[number]['icon'] }) {
+  const base = {
+    width: 24,
+    height: 24,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: '#111111',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true as const,
+  }
+  if (kind === 'leads') {
     return (
-      <div className="h-full rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-soft-sm)]">
-        <div className="mb-3.5 h-14 rounded-[var(--radius-sm)] bg-[#ebebeb]" />
-        <p className="supply-body m-0 text-[15px] font-bold text-[var(--ink-900)]">Elin Lund</p>
-        <p className="mb-2.5 mt-0.5 text-xs text-[var(--ink-500)]">DJ · Stockholm</p>
-        <div className="mb-1.5 h-1.5 w-[90%] rounded-full bg-[var(--border-subtle)]" />
-        <div className="h-1.5 w-[70%] rounded-full bg-[var(--border-subtle)]" />
-      </div>
+      <svg {...base}>
+        <circle cx="8" cy="8" r="3" />
+        <circle cx="16" cy="8" r="3" />
+        <path d="M2 20c0-3.3 2.7-6 6-6h4" />
+        <path d="M18 14l3 3-3 3" />
+        <path d="M21 17h-7" />
+      </svg>
     )
   }
-  if (kind === 'requests') {
+  if (kind === 'payment') {
     return (
-      <div className="flex h-full flex-col gap-2 rounded-[var(--radius-md)] bg-white p-3.5 shadow-[var(--shadow-soft-sm)]">
-        {[
-          { title: 'Födelsedag', date: 'Lör 14 sep', tone: 'bg-[#d4d4d4]' },
-          { title: 'Bröllop', date: 'Lör 21 sep', tone: 'bg-[#e0e0e0]' },
-          { title: 'Företagsfest', date: 'Fre 4 okt', tone: 'bg-[#d4d4d4]' },
-        ].map(row => (
-          <div
-            key={row.title}
-            className="flex items-center gap-2.5 rounded-[var(--radius-sm)] bg-[#f0f0f0] px-2 py-2"
-          >
-            <div className={cn('h-[26px] w-[26px] shrink-0 rounded-full', row.tone)} />
-            <div>
-              <p className="supply-body m-0 text-xs font-bold text-[var(--ink-900)]">{row.title}</p>
-              <p className="m-0 text-[11px] text-[var(--ink-500)]">{row.date}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    )
-  }
-  if (kind === 'offer') {
-    return (
-      <div className="flex h-full flex-col gap-2 rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-soft-sm)]">
-        <p className="supply-body m-0 text-[13px] font-bold text-[var(--ink-900)]">Hej Sara,</p>
-        <div className="h-1.5 w-[95%] rounded-full bg-[var(--border-subtle)]" />
-        <div className="h-1.5 w-4/5 rounded-full bg-[var(--border-subtle)]" />
-        <div className="mt-1 flex items-center justify-between rounded-[var(--radius-sm)] bg-[#f0f0f0] px-2.5 py-2">
-          <span className="text-xs text-[var(--ink-700)]">Offert</span>
-          <span className="supply-display supply-display-plain text-[14px] leading-none text-[var(--ink-900)]">
-            3 500 kr
-          </span>
-        </div>
-        <div className="mt-auto rounded-[var(--radius-sm)] bg-[var(--ink-900)] py-2 text-center">
-          <span className="supply-body text-xs font-bold text-white">Skicka</span>
-        </div>
-      </div>
+      <svg {...base}>
+        <rect x="2" y="6" width="20" height="13" rx="2" />
+        <path d="M2 10h20" />
+        <path d="M6 15h4" />
+      </svg>
     )
   }
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-2.5 rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-soft-sm)]">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e8e8]">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2.5" aria-hidden>
-          <path d="M4 12l5 5L20 6" />
-        </svg>
-      </div>
-      <p className="supply-display supply-display-plain fs-h3 m-0 text-[var(--ink-900)]">
-        3 500 kr
-      </p>
-      <p className="m-0 text-xs text-[var(--ink-500)]">Betalning mottagen</p>
+    <svg {...base}>
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="18" x2="20" y2="18" />
+      <circle cx="8" cy="6" r="2" fill="#111111" stroke="none" />
+      <circle cx="16" cy="12" r="2" fill="#111111" stroke="none" />
+      <circle cx="10" cy="18" r="2" fill="#111111" stroke="none" />
+    </svg>
+  )
+}
+
+// Replace each placeholder with <Image src={`/images/join/${file}`} ...> when screenshots are ready
+function StepImage({ file }: { file: string }) {
+  return (
+    <div className="flex aspect-[4/3] items-center justify-center rounded-[var(--radius-xl)] bg-[#f0f0f0]">
+      <p className="supply-body text-sm text-[var(--ink-300)]">{file}</p>
     </div>
   )
 }
@@ -145,55 +158,12 @@ function HeroWord({ word, delayMs }: { word: string; delayMs: number }) {
 }
 
 export default function SupplyLanding() {
-  const [query, setQuery] = useState('')
-  const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const [locationId, setLocationId] = useState('')
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    let ticking = false
-    const onScroll = () => {
-      if (ticking) return
-      ticking = true
-      requestAnimationFrame(() => {
-        const y = window.scrollY
-        setScrolled(prev => {
-          if (!prev && y > 24) return true
-          if (prev && y < 8) return false
-          return prev
-        })
-        ticking = false
-      })
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
   return (
     <div className="min-h-screen">
-      <MarketplaceHeader
-        className="supply-header"
-        scrolled={scrolled}
-        currentMode="planner"
-        loginCta
-        center={
-          <BrowseSearch
-            query={query}
-            onQueryChange={setQuery}
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-            locationId={locationId}
-            onLocationChange={setLocationId}
-            scrolled={scrolled}
-            maxWidth={480}
-            emptyLocationLabel="Var ska festen vara?"
-            emptyServiceLabel="Vilken tjänst söker du?"
-          />
-        }
-      />
+      <JoinScrollHeader />
 
       <div className="supply-shell">
-        {/* Hero — gap 56px; extra top pad so pink photo offset clears the nav */}
+        {/* ── Hero ── */}
         <section className="grid items-center gap-10 pb-[88px] pt-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14 lg:pt-14">
           <div>
             <span className="supply-badge">För dig som jobbar med fest och event</span>
@@ -213,180 +183,133 @@ export default function SupplyLanding() {
               Skapa din sida och bli hittad av arrangörer som redan letar efter dig. Helt gratis.
             </p>
             <div
-              className="flex flex-wrap items-center gap-5"
               style={{
                 animation: 'supplyHeroWord 600ms var(--ease-standard) both',
                 animationDelay: '600ms',
               }}
             >
               <SupplyCtaButton />
-              <span className="supply-body inline-flex items-center gap-1.5 text-[var(--ink-700)] text-[14px]">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7v5l3 3" />
-                </svg>
-                Tar under 10 minuter
-              </span>
+              <p className="supply-body mt-3 text-[14px] text-[var(--ink-300)]">
+                Gratis · Tar under 10 minuter
+              </p>
             </div>
           </div>
           <SupplyHeroPhotos />
         </section>
+      </div>
 
-        {/* Benefits — padding 64px 0; title mb 48; gap 24; card pad 28×22 */}
-        <ScrollReveal className="py-16">
-          <h2 className="supply-display fs-display-md mb-12 text-center text-[var(--ink-900)]">
+      {/* ── Founding talent band ── */}
+      <div className="bg-[#111111] py-3 text-center">
+        <p className="supply-body text-[13px] font-medium text-white/80">
+          Vi lanserar 9 november.{' '}
+          <span className="font-semibold text-white">
+            Bli en av Gigtorgets första talanger.
+          </span>
+        </p>
+      </div>
+
+      <div className="supply-shell">
+        {/* ── Varfor Gigtorget ── */}
+        <ScrollReveal className="pb-20 pt-16">
+          <h2 className="supply-display fs-display-md mb-7 text-center text-[var(--ink-900)]">
             Varför Gigtorget?
           </h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {SUPPLY_BENEFITS.map((b, i) => (
-              <div key={b.title} className="supply-card px-[22px] py-7">
-                <div className="mb-[18px]">
-                  <BenefitIcon kind={b.icon} />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {WHY_CARDS.map(card => (
+              <div
+                key={card.title}
+                className="rounded-[var(--radius-lg)] border border-[#e8ddce] bg-white px-6 py-7"
+              >
+                <div className="mb-5">
+                  <WhyIcon kind={card.icon} />
                 </div>
-                <h3 className="supply-body fs-h3 mb-2 font-bold text-[var(--ink-900)]">{b.title}</h3>
-                <p className="supply-body fs-body-sm m-0 text-[var(--ink-500)]">{b.description}</p>
-              </div>
-            ))}
-          </div>
-        </ScrollReveal>
-
-        {/* How it works — padding 72px 0; gap 24 */}
-        <ScrollReveal className="py-[72px]">
-          <div className="mb-12 text-center">
-            <h2 className="supply-display fs-display-md m-0 text-[var(--ink-900)]">Så funkar det</h2>
-          </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {SUPPLY_STEPS.map(step => (
-              <div key={step.badge}>
-                <div className="mb-5 rounded-[var(--radius-lg)] bg-[#f5f5f5] p-4">
-                  <div className="h-40">
-                    <StepMock kind={step.mock} />
-                  </div>
-                </div>
-                <span className="supply-badge">{step.badge}</span>
-                <h3 className="supply-body fs-h3 mb-2 mt-3.5 font-bold text-[var(--ink-900)]">
-                  {step.title}
+                <h3 className="supply-body fs-h3 mb-2 font-bold text-[var(--ink-900)]">
+                  {card.title}
                 </h3>
-                <p className="supply-body fs-body-sm-relaxed m-0 text-[var(--ink-500)]">
-                  {step.description}
+                <p className="supply-body fs-body-sm m-0 text-[var(--ink-500)]">
+                  {card.description}
                 </p>
               </div>
             ))}
           </div>
         </ScrollReveal>
 
-        <ScrollReveal className="pb-6 text-center">
-          <SupplyCtaButton />
-        </ScrollReveal>
-
-        {/* All you need */}
-        <ScrollReveal className="py-[72px]">
-          <div className="mb-12 text-center">
-            <h2 className="supply-display fs-display-md m-0 text-[var(--ink-900)]">Allt du behöver</h2>
-            <p className="supply-body fs-body-lg mt-3 text-[var(--ink-500)]">
-              Från första bilden till bekräftad bokning.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_1fr]">
-            {/* Large: real service page screenshot */}
-            <div>
-              <div className="h-[280px] overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] lg:h-[420px]">
-                <Image
-                  src="/images/supply/feature-din-sida.webp"
-                  alt="Exempel på en tjänstesida på Gigtorget"
-                  width={800}
-                  height={600}
-                  className="h-full w-full object-cover object-top"
-                />
-              </div>
-              <div className="mt-6">
-                <span className="supply-badge">DIN SIDA</span>
-                <h3 className="supply-display supply-display-plain fs-h1 mb-2.5 mt-4 text-[var(--ink-900)]">
-                  Bygg en sida som säljer åt dig
-                </h3>
-                <p className="supply-body fs-body-lg m-0 text-[var(--ink-500)]">
-                  Bildgalleri, priser och tjänster — allt på en delbar länk. Recensionerna byggs upp bokning efter bokning.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-8">
-              {/* Small: inbox/requests mock */}
-              <div>
-                <div className="flex h-[200px] items-stretch overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] p-4">
-                  <div className="flex w-full flex-col gap-2 overflow-hidden rounded-[var(--radius-md)] bg-white p-3.5 shadow-[var(--shadow-soft-sm)]">
-                    <p className="supply-body text-[11px] font-bold uppercase tracking-widest text-[var(--ink-300)]">Förfrågningar</p>
-                    {[
-                      { name: 'Sara M.', event: 'Bröllop · 21 sep', status: 'Ny' },
-                      { name: 'Erik L.', event: 'Företagsfest · 4 okt', status: 'Svarad' },
-                      { name: 'Anna K.', event: 'Födelsedag · 12 okt', status: 'Ny' },
-                    ].map(r => (
-                      <div key={r.name} className="flex items-center justify-between rounded-[var(--radius-sm)] bg-[#f5f5f5] px-2.5 py-2">
-                        <div>
-                          <p className="supply-body m-0 text-[12px] font-bold text-[var(--ink-900)]">{r.name}</p>
-                          <p className="supply-body m-0 text-[11px] text-[var(--ink-500)]">{r.event}</p>
-                        </div>
-                        <span className={cn(
-                          'supply-body rounded-full px-2 py-0.5 text-[10px] font-bold',
-                          r.status === 'Ny' ? 'bg-[#111] text-white' : 'bg-[#ebebeb] text-[var(--ink-500)]'
-                        )}>{r.status}</span>
-                      </div>
-                    ))}
+        {/* ── Sa funkar det ── */}
+        <ScrollReveal className="pb-20">
+          <h2 className="supply-display fs-display-md mb-7 text-center text-[var(--ink-900)]">
+            Så funkar det
+          </h2>
+          <div className="flex flex-col gap-16 lg:gap-20">
+            {JOIN_STEPS.map((step, i) => {
+              const swap = i % 2 === 1
+              return (
+                <div
+                  key={step.badge}
+                  className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-14"
+                >
+                  <div className={swap ? 'lg:order-2' : ''}>
+                    <span className="supply-badge">{step.badge}</span>
+                    <h3 className="supply-display supply-display-plain fs-h1 mb-3 mt-4 text-[var(--ink-900)]">
+                      {step.title}
+                    </h3>
+                    <p className="supply-body fs-body-lg m-0 text-[var(--ink-500)]">
+                      {step.description}
+                    </p>
+                  </div>
+                  <div className={swap ? 'lg:order-1' : ''}>
+                    <StepImage file={step.file} />
                   </div>
                 </div>
-                <div className="mt-5">
-                  <span className="supply-badge">FÖRFRÅGNINGAR</span>
-                  <h3 className="supply-display supply-display-plain fs-h2 mb-2 mt-3.5 text-[var(--ink-900)]">
-                    Allt på ett ställe
-                  </h3>
-                  <p className="supply-body fs-body m-0 text-[var(--ink-500)]">
-                    Förfrågningar, chatt och offert — samlat i en vy. Inget som studsar mellan mejl och SMS.
-                  </p>
-                </div>
-              </div>
-              {/* Small: chat/offer mock */}
-              <div>
-                <div className="flex h-[200px] items-stretch overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] p-4">
-                  <div className="flex w-full flex-col gap-2 overflow-hidden rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-soft-sm)]">
-                    <div className="flex justify-start">
-                      <div className="max-w-[75%] rounded-[var(--radius-md)] rounded-tl-none bg-[#f0f0f0] px-3 py-2">
-                        <p className="supply-body m-0 text-[12px] text-[var(--ink-700)]">Hej! Är du ledig 21 sep?</p>
-                      </div>
-                    </div>
-                    <div className="flex justify-end">
-                      <div className="max-w-[75%] rounded-[var(--radius-md)] rounded-tr-none bg-[#111] px-3 py-2">
-                        <p className="supply-body m-0 text-[12px] text-white">Ja! Skickar offert nu.</p>
-                      </div>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between rounded-[var(--radius-sm)] bg-[#f0f0f0] px-3 py-2">
-                      <span className="supply-body text-[11px] text-[var(--ink-700)]">Offert</span>
-                      <span className="supply-display supply-display-plain text-[13px] font-bold text-[var(--ink-900)]">3 500 kr</span>
-                    </div>
-                    <div className="rounded-[var(--radius-sm)] bg-[#111] py-1.5 text-center">
-                      <span className="supply-body text-[11px] font-bold text-white">Skicka offert</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-5">
-                  <span className="supply-badge">CHATT & OFFERT</span>
-                  <h3 className="supply-display supply-display-plain fs-h2 mb-2 mt-3.5 text-[var(--ink-900)]">
-                    Skicka offert direkt i chatten
-                  </h3>
-                  <p className="supply-body fs-body m-0 text-[var(--ink-500)]">
-                    Svara på förfrågningar och skicka ett pris i samma konversation — direkt till kunden.
-                  </p>
-                </div>
-              </div>
-            </div>
+              )
+            })}
           </div>
         </ScrollReveal>
 
-        <ScrollReveal className="pb-6 text-center">
+        <ScrollReveal className="pb-10 text-center">
           <SupplyCtaButton />
         </ScrollReveal>
 
-        {/* Categories — padding 56×40; margin 56 0; tags gap 14 */}
-        <ScrollReveal className="my-14 rounded-[var(--radius-xl)] bg-[#f5f5f5] px-6 py-14 text-center sm:px-10">
-          <h2 className="supply-display fs-h1 mb-2 text-[var(--ink-900)]">Oavsett vad du erbjuder</h2>
+        {/* ── Dessutom ── */}
+        <ScrollReveal className="pb-20">
+          <h2 className="supply-display fs-h1 mb-7 text-center text-[var(--ink-900)]">
+            Dessutom
+          </h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            {BONUSES.map(b => (
+              <div key={b.title} className="flex gap-4">
+                <div className="mt-0.5 shrink-0">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#111111"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+                <div>
+                  <p className="supply-body fs-body font-bold text-[var(--ink-900)] mb-1">
+                    {b.title}
+                  </p>
+                  <p className="supply-body fs-body-sm m-0 text-[var(--ink-500)]">
+                    {b.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollReveal>
+
+        {/* ── Categories ── */}
+        <ScrollReveal className="mb-14 rounded-[var(--radius-xl)] border border-[#e8ddce] bg-white px-6 py-14 text-center sm:px-10">
+          <h2 className="supply-display fs-h1 mb-2 text-[var(--ink-900)]">
+            Oavsett vad du erbjuder
+          </h2>
           <p className="supply-body fs-body mb-8 text-[var(--ink-500)]">
             Gigtorget är öppet för alla typer av fest- och eventtjänster.
           </p>
@@ -395,7 +318,7 @@ export default function SupplyLanding() {
               <Link
                 key={cat.slug}
                 href={`/sok?category=${cat.slug}`}
-                className="supply-body fs-body-sm inline-flex h-10 items-center rounded-[var(--radius-pill)] border border-[var(--border-subtle)] bg-white px-4 font-semibold text-[var(--ink-900)] shadow-[var(--shadow-soft-sm)] transition-colors hover:border-[var(--pink-500)]"
+                className="supply-body fs-body-sm inline-flex h-10 items-center rounded-[var(--radius-pill)] border border-[#e8ddce] bg-white px-4 font-semibold text-[var(--ink-900)] shadow-[var(--shadow-soft-sm)] transition-colors hover:border-[var(--pink-500)]"
               >
                 {cat.label}
               </Link>
@@ -403,8 +326,8 @@ export default function SupplyLanding() {
           </div>
         </ScrollReveal>
 
-        {/* FAQ — padding 64; max 760; title mb 40; items gap 14 */}
-        <ScrollReveal className="mx-auto max-w-[760px] py-16">
+        {/* ── FAQ ── */}
+        <ScrollReveal className="mx-auto max-w-[760px] pb-20">
           <h2 className="supply-display fs-display-md mb-10 text-center text-[var(--ink-900)]">
             Vanliga frågor
           </h2>
@@ -426,80 +349,21 @@ export default function SupplyLanding() {
           </div>
         </ScrollReveal>
 
-        {/* Final CTA — margin 24 0 56; padding 56 48 */}
-        <ScrollReveal className="mb-14 mt-6 rounded-[var(--radius-xl)] bg-[var(--ink-900)] px-6 py-14 sm:px-12">
+        {/* ── Final CTA ── */}
+        <ScrollReveal className="mb-14 mt-6 rounded-[var(--radius-xl)] bg-[#111111] px-6 py-14 sm:px-12">
           <div className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
             <div>
               <h2 className="supply-display fs-display-md mb-2 text-white">Redo att börja?</h2>
               <p className="supply-body fs-body-lg m-0 text-white/65">
-                Skapa din sida gratis – det tar mindre än 10 minuter.
+                Skapa din sida gratis — det tar mindre än 10 minuter.
               </p>
             </div>
-            <SupplyCtaButton label="Skapa din sida – gratis" className="shrink-0" />
+            <SupplyCtaButton label="Skapa din sida — gratis" className="shrink-0" />
           </div>
         </ScrollReveal>
       </div>
 
-      <footer className="bg-[var(--ink-900)]">
-        <div className="supply-shell pb-8 pt-14">
-          <div className="mb-10 grid grid-cols-1 gap-10 md:grid-cols-[2fr_1fr_1fr]">
-            <div>
-              <Image
-                src="/images/supply/gigtorget-wordmark.svg"
-                alt="Gigtorget"
-                width={140}
-                height={28}
-                className="mb-3.5 h-7 w-auto brightness-0 invert"
-              />
-              <p className="supply-body fs-body-sm m-0 max-w-[320px] text-white/60">
-                Gigtorget kopplar ihop dig med de bästa leverantörerna. Så att du kan fokusera på
-                det som betyder något.
-              </p>
-            </div>
-            <div>
-              <p className="supply-body fs-caption mb-4 font-bold uppercase tracking-[1.5px] text-white/40">
-                Kategorier
-              </p>
-              <div className="flex flex-col gap-3">
-                {SUPPLY_CATEGORY_LABELS.map((label, i) => (
-                  <Link
-                    key={label}
-                    href={`/sok?category=${CATEGORIES[i]?.slug ?? ''}`}
-                    className="supply-body fs-body-sm text-white/65 transition-colors hover:text-white"
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="supply-body fs-caption mb-4 font-bold uppercase tracking-[1.5px] text-white/40">
-                Info
-              </p>
-              <div className="flex flex-col gap-3">
-                <FooterLink href="/sa-funkar-det">Så funkar det</FooterLink>
-                <FooterLink href="/hjalp">Hjälpcenter</FooterLink>
-                <FooterLink href="/privacy">Integritetspolicy</FooterLink>
-                <FooterLink href="/terms">Användarvillkor</FooterLink>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap justify-between gap-2.5 border-t border-white/10 pt-5">
-            <p className="supply-body fs-caption m-0 text-white/30">
-              © {new Date().getFullYear()} Gigtorget Stockholm
-            </p>
-            <p className="supply-body fs-caption m-0 text-white/30">Gjord för fest och kalas</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
-  )
-}
-
-function FooterLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <Link href={href} className="supply-body fs-body-sm text-white/65 transition-colors hover:text-white">
-      {children}
-    </Link>
   )
 }

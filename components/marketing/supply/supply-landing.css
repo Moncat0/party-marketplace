@@ -57,7 +57,7 @@
   --lh-snug: 1.15;
   --lh-normal: 1.5;
   --lh-relaxed: 1.65;
-  --tracking-display: 0.5px;
+  --tracking-display: 0.03em;
   --tracking-eyebrow: 1.5px;
 
   /* Semantic — match design system/tokens/colors.css */
@@ -95,20 +95,20 @@
   }
 }
 
-/* Content shell — HTML: max-width:1280px; padding:0 32px */
+/* Content shell */
 .supply-landing .supply-shell {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: 32px;
-  padding-right: 32px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
-@media (max-width: 639px) {
+@media (min-width: 768px) {
   .supply-landing .supply-shell {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 40px;
+    padding-right: 40px;
   }
 }
 
