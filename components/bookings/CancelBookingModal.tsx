@@ -126,16 +126,16 @@ export default function CancelBookingModal({
                 <>
                   <p>
                     Avbokning påverkar din tillförlitlighet på Gigtorget och kan synas för
-                    arrangörer som planerar framtida evenemang.
+                    kunder som planerar framtida evenemang.
                   </p>
                   {paidHeld && (
                     <p>
-                      Arrangören får full återbetalning ({formatSek(priceOre ?? 0)} kr) eftersom
-                      avbokningen sker från talangens sida.
+                      Kunden får full återbetalning ({formatSek(priceOre ?? 0)} kr) eftersom
+                      avbokningen sker från din sida.
                     </p>
                   )}
                   {!paidHeld && (
-                    <p>Arrangören meddelas om avbokningen i chatten.</p>
+                    <p>Kunden meddelas om avbokningen i chatten.</p>
                   )}
                 </>
               )}

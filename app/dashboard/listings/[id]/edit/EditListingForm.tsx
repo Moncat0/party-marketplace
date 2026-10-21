@@ -24,6 +24,7 @@ import {
   getLocationLabel,
   locationIdFromCity,
 } from '@/lib/locations'
+import CategoryIcon from '@/components/ui/CategoryIcon'
 type Service = {
   id: string
   title: string | null
@@ -189,7 +190,7 @@ export default function EditListingForm({ service, userId }: { service: Service;
                   service_description: e.target.value.slice(0, 500),
                 }))
               }
-              placeholder="Beskriv vad du erbjuder, din stil och vad arrangörer kan förvänta sig..."
+              placeholder="Beskriv vad du erbjuder, din stil och vad kunder kan förvänta sig..."
               rows={5}
               className="w-full bg-white text-[#222222] text-[16px] leading-[1.5] placeholder:text-[#929292] focus:outline-none resize-none"
               style={{
@@ -233,7 +234,7 @@ export default function EditListingForm({ service, userId }: { service: Service;
                         : 'border-[#dddddd] text-[#222222] hover:border-[#222222]'
                     )}
                   >
-                    <span aria-hidden>{cat.emoji}</span>
+                    <CategoryIcon slug={cat.slug as import('@/lib/categories').CategorySlug} size={18} />
                     <span>{cat.chipLabel ?? cat.label}</span>
                   </button>
                 )

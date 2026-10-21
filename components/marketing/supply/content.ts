@@ -93,7 +93,7 @@ export const SUPPLY_CATEGORY_LABELS = CATEGORIES.map(c => c.label)
 export const SUPPLY_FAQS = [
   {
     q: 'Kostar det något?',
-    a: `Nej, det är helt gratis att skapa din sida på Gigtorget. Ingen startavgift, ingen månadskostnad. Vi tar ${PLATFORM_FEE_PERCENT}% i serviceavgift per genomförd bokning — utan dolda kostnader.`,
+    a: 'Nej, det är helt gratis att skapa din sida på Gigtorget. Ingen startavgift, ingen månadskostnad. Vi tar en liten avgift på 90 kr per genomförd bokning — detta är endast för att kunna hålla tjänsten igång för dig.',
   },
   {
     q: 'Vem kan skapa en sida? Behöver jag ha erfarenhet?',
@@ -105,10 +105,10 @@ export const SUPPLY_FAQS = [
   },
   {
     q: 'Hur tar jag emot bokningar och får betalt?',
-    a: 'Arrangörer skickar förfrågningar direkt till dig i appen. Du väljer vilka du svarar på, skickar en offert i chatten — och om kunden accepterar är bokningen bekräftad. Betalning sköter ni direkt med varandra.',
+    a: 'Kunder skickar förfrågningar direkt till dig i appen. Du väljer vilka du svarar på, skickar en offert i chatten — och om kunden accepterar är bokningen bekräftad. Betalning sköter ni direkt med varandra.',
   },
   {
     q: 'Är Gigtorget bara för Stockholm?',
-    a: 'Nej. Du kan skapa din sida oavsett var du är. Just nu är det Stockholm där flest arrangörer söker, men vi växer vidare — och du vill helst redan vara på plats när vi gör det.',
+    a: 'Nej. Du kan skapa din sida oavsett var du är. Just nu är det Stockholm där flest kunder söker, men vi växer vidare — och du vill helst redan vara på plats när vi gör det.',
   },
 ] as const

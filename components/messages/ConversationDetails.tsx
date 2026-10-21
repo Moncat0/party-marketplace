@@ -132,7 +132,7 @@ export default function ConversationDetails({
 
   async function handleWithdrawQuote() {
     if (!pendingQuote || withdrawing) return
-    if (!window.confirm('Ta tillbaka offerten? Arrangören kan inte längre acceptera den.')) return
+    if (!window.confirm('Ta tillbaka offerten? Kunden kan inte längre acceptera den.')) return
     setWithdrawing(true)
     setWithdrawError(null)
     const res = await fetch(`/api/quotes/${pendingQuote.id}`, {
@@ -185,7 +185,7 @@ export default function ConversationDetails({
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-[14px] font-medium text-[#222222]">{personName}</p>
-                  <p className="text-[12px] text-[#6a6a6a]">Talang</p>
+                  <p className="text-[12px] text-[#6a6a6a]">Profil</p>
                 </div>
               </div>
               {side.serviceId ? (
@@ -219,7 +219,7 @@ export default function ConversationDetails({
             )}
             <div className="min-w-0">
               <p className="truncate text-[16px] font-semibold text-[#222222]">{personName}</p>
-              <p className="text-[13px] text-[#6a6a6a]">Arrangör</p>
+              <p className="text-[13px] text-[#6a6a6a]">Kund</p>
             </div>
           </div>
         )}
@@ -333,7 +333,7 @@ export default function ConversationDetails({
             )}
             {awaitingStripe && (
               <p className="text-[13px] text-[#6a6a6a]">
-                Väntar på att talangen kopplar betalning.
+                Väntar på att de kopplar betalning.
               </p>
             )}
           </div>

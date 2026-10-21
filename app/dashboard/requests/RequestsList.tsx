@@ -164,7 +164,7 @@ export default function RequestsList({ requests }: { requests: ProviderRequest[]
         <div className="min-w-[180px] flex-1 sm:max-w-xs">
           <SettingsInput
             id="request-search"
-            label="Sök arrangör"
+            label="Sök kund"
             value={search}
             onChange={setSearch}
             placeholder="Namn…"
@@ -249,7 +249,7 @@ export default function RequestsList({ requests }: { requests: ProviderRequest[]
             <table className="w-full min-w-[880px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-[#ebebeb] text-[12px] font-semibold uppercase tracking-wide text-[#6a6a6a]">
-                  <th className="pb-3 pr-4 font-semibold">Arrangör</th>
+                  <th className="pb-3 pr-4 font-semibold">Kund</th>
                   <th className="pb-3 pr-4 font-semibold">Event</th>
                   <th className="pb-3 pr-4 font-semibold">Datum</th>
                   <th className="pb-3 pr-4 font-semibold">Status</th>

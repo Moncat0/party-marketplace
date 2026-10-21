@@ -50,13 +50,18 @@ export default function SupplyHeroPhotos() {
         </span>
       </div>
       <div
-        className="supply-hero-note absolute -bottom-[22px] right-0 z-[2] flex items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-white px-5 py-3.5 shadow-[var(--shadow-soft-md)]"
+        className="supply-hero-note absolute -bottom-[22px] right-0 z-[2] flex items-center gap-2.5 rounded-[var(--radius-lg)] border border-[var(--border-subtle)] bg-white px-4 py-3 shadow-[var(--shadow-soft-md)]"
         style={{ animation: 'supplyPulseNote 4s ease-in-out infinite' }}
       >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" aria-hidden>
-          <path d="M12 3l2.6 6.2L21 10l-5 4.4L17.4 21 12 17.3 6.6 21 8 14.4 3 10l6.4-.8z" />
-        </svg>
-        <span className="supply-body text-[var(--ink-900)] font-semibold">Alltid en vibe</span>
+        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#1D9E75]/10">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div>
+          <p className="supply-body text-[13px] font-bold text-[var(--ink-900)] leading-none">Offert accepterad</p>
+          <p className="supply-body text-[12px] text-[var(--ink-400)] mt-0.5 leading-none">Bröllop · 17 000 kr</p>
+        </div>
       </div>
     </div>
   )

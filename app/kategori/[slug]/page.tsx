@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase-server'
 import { CATEGORIES, getCategoryBySlug } from '@/lib/categories'
+import CategoryIcon from '@/components/ui/CategoryIcon'
+import type { CategorySlug } from '@/lib/categories'
 import type { Metadata } from 'next'
 import Container from '@/components/Container'
 import ListingCard from '@/components/listings/ListingCard'
@@ -79,7 +81,7 @@ export default async function CategoryPage({ params }: Props) {
 
       <Container>
         <div className="pt-8 mb-6">
-          <p className="text-4xl mb-2">{category.emoji}</p>
+          <div className="mb-2 text-[#222222]"><CategoryIcon slug={category.slug as CategorySlug} size={36} /></div>
           <h1 className="text-3xl font-bold text-[#222222] mb-2">{category.label}</h1>
           <p className="text-sm text-neutral-500 leading-relaxed">{category.description}</p>
         </div>
@@ -95,7 +97,7 @@ export default async function CategoryPage({ params }: Props) {
                   : 'border border-[#DDDDDD] bg-white text-[#6A6A6A] hover:bg-[#F2F2F2]'
               }`}
             >
-              {c.emoji} {c.label}
+              {c.label}
             </Link>
           ))}
         </div>
@@ -105,16 +107,16 @@ export default async function CategoryPage({ params }: Props) {
             <div className="py-16 text-center">
               <p className="text-2xl mb-2">🎭</p>
               <p className="text-sm text-neutral-500 mb-4">
-                Inga talanger i den här kategorin ännu. Kom tillbaka snart!
+                Inga profiler i den här kategorin ännu. Kom tillbaka snart!
               </p>
               <Link href="/" className="text-sm font-medium text-[#FF2E8A] hover:underline">
-                Se alla talanger →
+                Se alla →
               </Link>
             </div>
           ) : (
             <>
               <p className="text-xs text-neutral-500 mb-4">
-                {enriched.length} {enriched.length === 1 ? 'talang' : 'talanger'}
+                {enriched.length} {enriched.length === 1 ? 'profil' : 'profiler'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-6 gap-y-10">
                 {enriched.map(p => (

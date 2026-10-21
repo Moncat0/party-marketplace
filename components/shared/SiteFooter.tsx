@@ -77,7 +77,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
               sminkartister och mer till ditt nästa kalas.
             </p>
             <p className="text-sm text-white/70 leading-relaxed mt-3 max-w-xs">
-              Har du en talang?{' '}
+              Jobbar du med fest och event?{' '}
               {isLoggedIn ? (
                 <Link
                   href="/onboarding"
@@ -163,7 +163,7 @@ export default function SiteFooter({ isLoggedIn = false }: Props) {
                   href="/for-talanger"
                   className="text-sm text-white/60 hover:text-white transition-colors"
                 >
-                  För talanger
+                  Erbjud din tjänst
                 </Link>
               </li>
               <li>

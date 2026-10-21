@@ -194,7 +194,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
               className="text-[32px] md:text-[44px] font-black text-[#111] mb-7 uppercase"
               style={displayStyle}
             >
-              Nya talanger i {locationLabel}
+              Nytt på Gigtorget
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {newest.map(p => (
@@ -246,7 +246,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
 
         {inLocation.length === 0 && (
           <div className="py-24 text-center">
-            <p className="text-lg font-semibold text-[#111] mb-2">Inga talanger här än.</p>
+            <p className="text-lg font-semibold text-[#111] mb-2">Inga profiler här än.</p>
             <p className="text-sm text-[#5c5c5c]">Kom tillbaka snart!</p>
           </div>
         )}
@@ -308,7 +308,7 @@ export default function HomeBrowse({ providers, isLoggedIn, plannerId, fontClass
           >
             Nästa fest väntar.
           </h2>
-          <p className="text-[16px] text-white/70 mb-8">Gå och hitta dina talanger.</p>
+          <p className="text-[16px] text-white/70 mb-8">Gå och hitta din festpersonal.</p>
           <a
             href="/sok"
             className="inline-block bg-[#FF2E8A] hover:bg-[#e01f74] text-white font-bold text-[16px] px-8 py-4 rounded-full transition-colors no-underline"

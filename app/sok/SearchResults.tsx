@@ -656,7 +656,7 @@ export default function SearchResults({
             <div className="flex flex-col gap-3">
               <h3 className="text-[18px] font-semibold text-foreground">Kan resa</h3>
               <p className="text-[14px] text-muted-foreground">
-                Visa bara talanger som kan resa till dig.
+                Visa bara de som kan resa till dig.
               </p>
               <button
                 type="button"
@@ -748,7 +748,7 @@ export default function SearchResults({
           <div className="space-y-12">
             {locationId && local.length === 0 && travelers.length > 0 ? (
               <p className="text-[14px] text-muted-foreground">
-                Inga lokala träffar i {locationLabel} — här är talanger som kan resa hit.
+                Inga lokala träffar i {locationLabel} — här är profiler från andra städer som kan komma hit.
               </p>
             ) : null}
 
@@ -774,7 +774,7 @@ export default function SearchResults({
                     Kan resa hit
                   </h2>
                   <p className="mt-1 text-[14px] text-muted-foreground">
-                    Talanger från andra städer som kan komma till {locationLabel}.
+                    Profiler från andra städer som kan komma till {locationLabel}.
                   </p>
                 </div>
                 <ResultsGrid

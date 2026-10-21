@@ -183,7 +183,7 @@ export default function MarketplaceHeader({
     }
     if (currentMode === 'planner') {
       return user.hasProviderProfile
-        ? ({ href: '/dashboard', label: 'Byt till talangläge' } as const)
+        ? ({ href: '/dashboard', label: 'Byt till proffsläge' } as const)
         : ({ href: '/onboarding', label: 'Erbjud din tjänst' } as const)
     }
     return { href: '/planner/dashboard', label: 'Byt till planerarläge' } as const

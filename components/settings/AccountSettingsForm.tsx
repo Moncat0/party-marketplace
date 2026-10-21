@@ -494,7 +494,7 @@ export default function AccountSettingsForm({
               href="/dashboard"
               className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
             >
-              Byt till talangläge
+              Byt till proffsläge
             </Link>
           </div>
         )}
@@ -575,7 +575,7 @@ export default function AccountSettingsForm({
                         style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
                       >
                         <p className="text-[16px] font-semibold leading-[1.25] text-[#222222]">
-                          Talangkonto
+                          Professionellt konto
                         </p>
                         <p className="mt-1 text-[14px] leading-[1.43] text-[#6a6a6a]">
                           Du erbjuder också tjänster på Gigtorget. Hantera din publika profil och
@@ -584,7 +584,7 @@ export default function AccountSettingsForm({
                             href="/dashboard"
                             className="font-medium text-[#222222] underline"
                           >
-                            talangläget
+                            det professionella läget
                           </Link>
                           .
                         </p>

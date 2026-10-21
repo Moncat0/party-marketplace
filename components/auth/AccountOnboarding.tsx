@@ -28,6 +28,7 @@ import FormErrorAlert from '@/components/auth/FormErrorAlert'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import CategoryIcon from '@/components/ui/CategoryIcon'
 
 type Props = {
   /** Where to go after the wizard finishes (soft gate) or fallback */
@@ -330,8 +331,8 @@ function NameStep({
       </h1>
       <p className="mt-3 text-[16px] leading-relaxed text-[#6a6a6a]">
         {discovery
-          ? 'Sedan hjälper vi dig hitta rätt talang till ditt kalas.'
-          : 'Så här syns du för talanger — till exempel när du skickar en bokningsförfrågan.'}
+          ? 'Sedan hjälper vi dig hitta rätt person till ditt kalas.'
+          : 'Så här syns du för dem — till exempel när du skickar en bokningsförfrågan.'}
       </p>
 
       <div className="mt-8 space-y-5">
@@ -434,7 +435,7 @@ function CategoryStep({
         Steg 3 av 4
       </p>
       <h1 className="mt-3 text-[26px] font-semibold tracking-[-0.02em] text-[#222222] leading-tight sm:text-[32px]">
-        Vilken typ av talang söker du?
+        Vad letar du efter?
       </h1>
       <p className="mt-3 text-[16px] leading-relaxed text-[#6a6a6a]">
         Välj det som passar ditt kalas bäst — du kan ändra filtret senare.
@@ -454,9 +455,7 @@ function CategoryStep({
                   : 'border border-[#dddddd] hover:border-[#222222]'
               )}
             >
-              <span className="text-[28px]" aria-hidden>
-                {cat.emoji}
-              </span>
+              <CategoryIcon slug={cat.slug as import('@/lib/categories').CategorySlug} size={24} />
               <span className="text-[14px] font-semibold text-[#222222]">
                 {cat.chipLabel ?? cat.label}
               </span>
@@ -484,7 +483,7 @@ function OccasionStep({
         Vilket tillfälle är det?
       </h1>
       <p className="mt-3 text-[16px] leading-relaxed text-[#6a6a6a]">
-        Vi visar talanger som passar just den typen av fest.
+        Vi visar rätt profiler för den typen av fest.
       </p>
       <div className="mt-8 grid grid-cols-2 gap-3">
         {OCCASIONS.map(o => {

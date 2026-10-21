@@ -64,9 +64,9 @@ export default function ListingInfo({
         )}
         <div>
           <div className="text-[16px] font-semibold text-[#222222]">
-            Erbjuds av {hostName ?? 'talang'}
+            Erbjuds av {hostName ?? 'okänd'}
           </div>
-          <div className="text-[14px] text-[#6a6a6a]">Talang på Gigtorget</div>
+          <div className="text-[14px] text-[#6a6a6a]">På Gigtorget</div>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export default function ListingInfo({
           </p>
           <p className="mt-0.5 text-[14px] leading-relaxed text-[#6a6a6a]">
             {canTravel
-              ? 'Talangen kan komma till dig utanför sin basstad.'
+              ? 'Kan komma till dig utanför sin basstad.'
               : city
                 ? `Erbjuds lokalt i ${city}.`
                 : 'Erbjuds lokalt i basstaden.'}

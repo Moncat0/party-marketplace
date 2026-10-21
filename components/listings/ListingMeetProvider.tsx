@@ -32,7 +32,7 @@ export default function ListingMeetProvider({
   reviewCount,
   avgRating,
 }: Props) {
-  const name = hostName ?? 'Talangen'
+  const name = hostName ?? 'Leverantören'
   const initial = name.charAt(0).toUpperCase()
   const tenure = yearsOnPlatform(memberSince)
 
@@ -65,7 +65,7 @@ export default function ListingMeetProvider({
                 <p className="mt-3 text-[22px] font-semibold text-[#222222] leading-tight">
                   {name}
                 </p>
-                <p className="text-[14px] text-[#6a6a6a] mt-0.5">Talang på Gigtorget</p>
+                <p className="text-[14px] text-[#6a6a6a] mt-0.5">På Gigtorget</p>
               </div>
 
               <div className="flex-1 w-full sm:border-l sm:border-[#ebebeb] sm:pl-6 space-y-3">
@@ -100,10 +100,10 @@ export default function ListingMeetProvider({
         <div className="flex flex-col gap-6">
           <div>
             <h3 className="text-[18px] font-semibold text-[#222222] mb-2">
-              {name} är talang på Gigtorget
+              {name} erbjuder sin tjänst på Gigtorget
             </h3>
             <p className="text-[16px] text-[#222222] leading-[1.5]">
-              Talanger på Gigtorget är lokala proffs — DJ:s, fotografer, sminkartister och mer —
+              Alla på Gigtorget är lokala proffs — DJ:s, fotografer, sminkartister och mer —
               som hjälper dig skapa oförglömliga fester i Stockholm.
             </p>
           </div>
@@ -122,7 +122,7 @@ export default function ListingMeetProvider({
                 <ShieldIcon />
               </span>
               För att skydda din betalning och kommunikation, använd alltid Gigtorget när du bokar
-              och pratar med talanger.
+              och pratar med folk.
             </p>
           </div>
         </div>

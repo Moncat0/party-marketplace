@@ -69,7 +69,7 @@ export default function DashboardShell({
               {name ?? 'Användare'}
             </p>
             <p className="mt-0.5 text-[12px]" style={{ color: t.colors.muted }}>
-              {role === 'provider' ? 'Talangläge' : 'Planerarläge'}
+              {role === 'provider' ? 'Proffsläge' : 'Planerarläge'}
             </p>
           </div>
         </div>
@@ -221,7 +221,7 @@ export default function DashboardShell({
             style={{ borderBottom: `1px solid ${t.colors.hairlineSoft}` }}
           >
             <p className="text-[14px] font-medium" style={{ color: t.colors.muted }}>
-              {role === 'provider' ? 'Talangläge' : 'Planerarläge'}
+              {role === 'provider' ? 'Proffsläge' : 'Planerarläge'}
             </p>
             {modeSwitcher && (
               <Button

@@ -30,7 +30,7 @@ export default function PaymentSuccessPage() {
           </div>
           <p className="text-[14px] leading-[1.43] text-[#6a6a6a] text-center">
             Tack! Beloppet hålls säkert av Gigtorget tills evenemanget är genomfört och du godkänner
-            utbetalning till talangen. Du får ett kvitto från Gigtorget på e-post när betalningen är
+            utbetalning till dem. Du får ett kvitto från Gigtorget på e-post när betalningen är
             bekräftad.
           </p>
         </SettingsSection>
@@ -41,7 +41,7 @@ export default function PaymentSuccessPage() {
           </Link>
           <Link href="/" className="block">
             <SettingsButton variant="secondary" className="w-full">
-              Hitta fler talanger
+              Hitta fler profiler
             </SettingsButton>
           </Link>
         </div>

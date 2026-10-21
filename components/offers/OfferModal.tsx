@@ -155,7 +155,7 @@ export default function OfferModal({
 
         <form onSubmit={handleSubmit} className="px-5 py-5">
           <p className="mb-4 text-[13px] leading-relaxed text-[#6a6a6a]">
-            Arrangören fyllde i datum och plats i förfrågan. Du anger pris och vad som ingår.
+            Kunden fyllde i datum och plats i förfrågan. Du anger pris och vad som ingår.
           </p>
 
           <div className="mb-4 space-y-3 rounded-xl border border-[#ebebeb] bg-[#f7f7f7] px-4 py-3">
@@ -185,12 +185,6 @@ export default function OfferModal({
                   kr
                 </span>
               </div>
-              {netPayout && (
-                <p className="mt-1 text-xs text-[#6a6a6a]">
-                  Du får:{' '}
-                  <span className="font-semibold text-[#1D9E75]">{netPayout} kr</span>
-                </p>
-              )}
             </div>
 
             <div>

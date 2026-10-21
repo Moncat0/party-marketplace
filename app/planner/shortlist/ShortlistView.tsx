@@ -146,9 +146,9 @@ export default function ShortlistView({
 
           {items.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-[16px] font-medium text-[#222] mb-2">Inga sparade talanger</p>
+              <p className="text-[16px] font-medium text-[#222] mb-2">Inga sparade profiler</p>
               <p className="text-[14px] text-[#6a6a6a] mb-6">
-                Spara talanger du gillar så dyker de upp här.
+                Spara profiler du gillar så dyker de upp här.
               </p>
               <Link
                 href="/"

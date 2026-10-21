@@ -119,8 +119,8 @@ export default function MessageThread({
   const backHref = isPlanner ? '/planner/messages' : '/dashboard/messages'
   const initial1 = otherName.charAt(0).toUpperCase()
   const showBack = showBackLink ?? !embedded
-  const otherRole = isPlanner ? 'Talang' : 'Arrangör'
-  const myRole = isPlanner ? 'Arrangör' : 'Talang'
+  const otherRole = isPlanner ? 'Profil' : 'Kund'
+  const myRole = isPlanner ? 'Kund' : 'Profil'
   const firstName = otherName.split(' ')[0] ?? otherName
 
   useEffect(() => {

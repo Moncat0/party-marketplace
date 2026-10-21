@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Gigtorget',
     short_name: 'Gigtorget',
-    description: 'Hitta och boka lokala talanger till ditt kalas i Stockholm.',
+    description: 'Hitta och boka lokala proffs till ditt kalas i Stockholm.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

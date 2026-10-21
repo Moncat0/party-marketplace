@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Anton, Caveat, Quicksand } from 'next/font/google'
+import { Anton, Plus_Jakarta_Sans } from 'next/font/google'
 import SupplyLanding from '@/components/marketing/supply/SupplyLanding'
 
 const anton = Anton({
@@ -9,30 +9,23 @@ const anton = Anton({
   display: 'swap',
 })
 
-const quicksand = Quicksand({
+const jakarta = Plus_Jakarta_Sans({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
   variable: '--font-supply-body',
   display: 'swap',
 })
 
-const caveat = Caveat({
-  weight: ['500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-supply-hand',
-  display: 'swap',
-})
-
 export const metadata: Metadata = {
-  title: 'För talanger — erbjud din tjänst',
+  title: 'Erbjud din tjänst på Gigtorget',
   description:
-    'Skapa din sida gratis och bli hittad av arrangörer i Stockholm. Få förfrågningar, skicka offerter och få betalt säkert.',
+    'Skapa din sida gratis och bli hittad av kunder i Stockholm. Få förfrågningar, skicka offerter och få betalt säkert.',
 }
 
-/** Provider (supply) marketing landing — visual fidelity to design handoff. */
+/** Provider (supply) marketing landing. */
 export default function ForTalangerPage() {
   return (
-    <div className={`supply-landing ${anton.variable} ${quicksand.variable} ${caveat.variable}`}>
+    <div className={`supply-landing ${anton.variable} ${jakarta.variable}`}>
       <SupplyLanding />
     </div>
   )

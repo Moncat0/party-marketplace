@@ -85,7 +85,7 @@ export default async function DashboardOverviewPage() {
 
   return (
     <ProviderHostShell>
-      <OverviewGreeting name={userData?.name} subtitle="Översikt för ditt talangkonto" />
+      <OverviewGreeting name={userData?.name} subtitle="Översikt för ditt konto" />
 
       <OverviewStatGrid
         stats={[

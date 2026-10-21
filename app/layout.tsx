@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     default: 'Gigtorget — Hitta underhållning till ditt kalas',
     template: '%s | Gigtorget',
   },
-  description: 'Hitta och boka lokala talanger till ditt nästa kalas i Stockholm.',
+  description: 'Hitta och boka lokala proffs till ditt nästa kalas i Stockholm.',
   metadataBase: new URL(siteUrl),
   openGraph: {
     siteName: 'Gigtorget',
