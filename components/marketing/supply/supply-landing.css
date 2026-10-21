@@ -292,7 +292,8 @@
   height: 26px;
   padding: 0 12px;
   border-radius: var(--radius-pill);
-  background: var(--pink-50);
+  background: transparent;
+  border: 1.5px solid rgba(17, 17, 17, 0.25);
   color: var(--ink-900);
   font-family: var(--font-supply-body), system-ui, sans-serif;
   font-size: 11px;

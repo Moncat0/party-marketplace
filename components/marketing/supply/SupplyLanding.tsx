@@ -12,7 +12,6 @@ import {
   SUPPLY_BENEFITS,
   SUPPLY_CATEGORY_LABELS,
   SUPPLY_FAQS,
-  SUPPLY_FEATURES,
   SUPPLY_STEPS,
 } from '@/components/marketing/supply/content'
 import { CATEGORIES } from '@/lib/categories'
@@ -57,7 +56,8 @@ function BenefitIcon({ kind }: { kind: (typeof SUPPLY_BENEFITS)[number]['icon'] 
     case 'free':
       return (
         <svg {...props}>
-          <circle cx="12" cy="12" r="8" />
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+          <line x1="7" y1="7" x2="7.01" y2="7" strokeLinecap="round" strokeWidth="3" />
         </svg>
       )
   }
@@ -67,7 +67,7 @@ function StepMock({ kind }: { kind: (typeof SUPPLY_STEPS)[number]['mock'] }) {
   if (kind === 'profile') {
     return (
       <div className="h-full rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-soft-sm)]">
-        <div className="mb-3.5 h-14 rounded-[var(--radius-sm)] bg-[var(--pink-50)]" />
+        <div className="mb-3.5 h-14 rounded-[var(--radius-sm)] bg-[#ebebeb]" />
         <p className="supply-body m-0 text-[15px] font-bold text-[var(--ink-900)]">Elin Lund</p>
         <p className="mb-2.5 mt-0.5 text-xs text-[var(--ink-500)]">DJ · Stockholm</p>
         <div className="mb-1.5 h-1.5 w-[90%] rounded-full bg-[var(--border-subtle)]" />
@@ -79,13 +79,13 @@ function StepMock({ kind }: { kind: (typeof SUPPLY_STEPS)[number]['mock'] }) {
     return (
       <div className="flex h-full flex-col gap-2 rounded-[var(--radius-md)] bg-white p-3.5 shadow-[var(--shadow-soft-sm)]">
         {[
-          { title: 'Födelsedag', date: 'Lör 14 sep', tone: 'bg-[var(--pink-100)]' },
-          { title: 'Bröllop', date: 'Lör 21 sep', tone: 'bg-[var(--orange-100)]' },
-          { title: 'Företagsfest', date: 'Fre 4 okt', tone: 'bg-[var(--pink-100)]' },
+          { title: 'Födelsedag', date: 'Lör 14 sep', tone: 'bg-[#d4d4d4]' },
+          { title: 'Bröllop', date: 'Lör 21 sep', tone: 'bg-[#e0e0e0]' },
+          { title: 'Företagsfest', date: 'Fre 4 okt', tone: 'bg-[#d4d4d4]' },
         ].map(row => (
           <div
             key={row.title}
-            className="flex items-center gap-2.5 rounded-[var(--radius-sm)] bg-[var(--cream-50)] px-2 py-2"
+            className="flex items-center gap-2.5 rounded-[var(--radius-sm)] bg-[#f0f0f0] px-2 py-2"
           >
             <div className={cn('h-[26px] w-[26px] shrink-0 rounded-full', row.tone)} />
             <div>
@@ -103,7 +103,7 @@ function StepMock({ kind }: { kind: (typeof SUPPLY_STEPS)[number]['mock'] }) {
         <p className="supply-body m-0 text-[13px] font-bold text-[var(--ink-900)]">Hej Sara,</p>
         <div className="h-1.5 w-[95%] rounded-full bg-[var(--border-subtle)]" />
         <div className="h-1.5 w-4/5 rounded-full bg-[var(--border-subtle)]" />
-        <div className="mt-1 flex items-center justify-between rounded-[var(--radius-sm)] bg-[var(--pink-50)] px-2.5 py-2">
+        <div className="mt-1 flex items-center justify-between rounded-[var(--radius-sm)] bg-[#f0f0f0] px-2.5 py-2">
           <span className="text-xs text-[var(--ink-700)]">Offert</span>
           <span className="supply-display supply-display-plain text-[14px] leading-none text-[var(--ink-900)]">
             3 500 kr
@@ -117,8 +117,8 @@ function StepMock({ kind }: { kind: (typeof SUPPLY_STEPS)[number]['mock'] }) {
   }
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2.5 rounded-[var(--radius-md)] bg-white p-4 shadow-[var(--shadow-soft-sm)]">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--orange-100)]">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange-600)" strokeWidth="2.5" aria-hidden>
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e8e8e8]">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2.5" aria-hidden>
           <path d="M4 12l5 5L20 6" />
         </svg>
       </div>
@@ -126,25 +126,6 @@ function StepMock({ kind }: { kind: (typeof SUPPLY_STEPS)[number]['mock'] }) {
         3 500 kr
       </p>
       <p className="m-0 text-xs text-[var(--ink-500)]">Betalning mottagen</p>
-    </div>
-  )
-}
-
-function FeatureSlot({
-  placeholder,
-  className,
-}: {
-  placeholder: string
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border-subtle)] bg-[var(--cream-100)] px-6 text-center',
-        className
-      )}
-    >
-      <p className="supply-body max-w-xs text-[13px] leading-relaxed text-[var(--ink-500)]">{placeholder}</p>
     </div>
   )
 }
@@ -194,6 +175,7 @@ export default function SupplyLanding() {
         className="supply-header"
         scrolled={scrolled}
         currentMode="planner"
+        loginCta
         center={
           <BrowseSearch
             query={query}
@@ -238,7 +220,7 @@ export default function SupplyLanding() {
               }}
             >
               <SupplyCtaButton />
-              <span className="supply-hand inline-flex items-center gap-1.5 text-[var(--ink-900)] -rotate-[3deg]">
+              <span className="supply-body inline-flex items-center gap-1.5 text-[var(--ink-700)] text-[14px]">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                   <circle cx="12" cy="12" r="9" />
                   <path d="M12 7v5l3 3" />
@@ -258,12 +240,7 @@ export default function SupplyLanding() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {SUPPLY_BENEFITS.map((b, i) => (
               <div key={b.title} className="supply-card px-[22px] py-7">
-                <div
-                  className={cn(
-                    'mb-[18px] flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)]',
-                    i % 2 === 0 ? 'bg-[var(--pink-50)]' : 'bg-[var(--orange-50)]'
-                  )}
-                >
+                <div className="mb-[18px]">
                   <BenefitIcon kind={b.icon} />
                 </div>
                 <h3 className="supply-body fs-h3 mb-2 font-bold text-[var(--ink-900)]">{b.title}</h3>
@@ -281,7 +258,7 @@ export default function SupplyLanding() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {SUPPLY_STEPS.map(step => (
               <div key={step.badge}>
-                <div className="mb-5 rounded-[var(--radius-lg)] bg-[var(--cream-50)] p-4">
+                <div className="mb-5 rounded-[var(--radius-lg)] bg-[#f5f5f5] p-4">
                   <div className="h-40">
                     <StepMock kind={step.mock} />
                   </div>
@@ -302,62 +279,8 @@ export default function SupplyLanding() {
           <SupplyCtaButton />
         </ScrollReveal>
 
-        {/* Features — padding 72px 0; gap 32; large slot 480; small 224 */}
-        <ScrollReveal className="py-[72px]">
-          <div className="mb-12 text-center">
-            <h2 className="supply-display fs-display-md m-0 text-[var(--ink-900)]">Allt du behöver</h2>
-            <p className="supply-body fs-body-lg mt-3 text-[var(--ink-500)]">
-              Från första bilden till betald bokning.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_1fr]">
-            <div>
-              <FeatureSlot
-                placeholder={SUPPLY_FEATURES[0].placeholder}
-                className="h-[280px] lg:h-[480px]"
-              />
-              <div className="mt-6">
-                <span className="supply-badge">{SUPPLY_FEATURES[0].badge}</span>
-                <h3 className="supply-display supply-display-plain fs-h1 mb-2.5 mt-4 text-[var(--ink-900)]">
-                  {SUPPLY_FEATURES[0].title}
-                </h3>
-                <p className="supply-body fs-body-lg m-0 text-[var(--ink-500)]">
-                  {SUPPLY_FEATURES[0].description}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-8">
-              {SUPPLY_FEATURES.slice(1).map(feat => (
-                <div key={feat.badge}>
-                  <FeatureSlot placeholder={feat.placeholder} className="h-[224px]" />
-                  <div className="mt-5">
-                    <span
-                      className={cn(
-                        'supply-badge',
-                        feat.badge.includes('KOMMUNIKATION') && 'supply-badge-orange'
-                      )}
-                    >
-                      {feat.badge}
-                    </span>
-                    <h3 className="supply-display supply-display-plain fs-h2 mb-2 mt-3.5 text-[var(--ink-900)]">
-                      {feat.title}
-                    </h3>
-                    <p className="supply-body fs-body m-0 text-[var(--ink-500)]">
-                      {feat.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </ScrollReveal>
-
-        <ScrollReveal className="pb-6 text-center">
-          <SupplyCtaButton />
-        </ScrollReveal>
-
         {/* Categories — padding 56×40; margin 56 0; tags gap 14 */}
-        <ScrollReveal className="my-14 rounded-[var(--radius-xl)] bg-[var(--cream-50)] px-6 py-14 text-center sm:px-10">
+        <ScrollReveal className="my-14 rounded-[var(--radius-xl)] bg-[#f5f5f5] px-6 py-14 text-center sm:px-10">
           <h2 className="supply-display fs-h1 mb-2 text-[var(--ink-900)]">Oavsett vad du erbjuder</h2>
           <p className="supply-body fs-body mb-8 text-[var(--ink-500)]">
             Gigtorget är öppet för alla typer av fest- och eventtjänster.
@@ -386,7 +309,7 @@ export default function SupplyLanding() {
                 <summary className="supply-body fs-body-lg flex cursor-pointer list-none items-center justify-between gap-4 text-left font-bold text-[var(--ink-900)]">
                   {faq.q}
                   <span
-                    className="supply-faq-chevron supply-display supply-display-plain shrink-0 text-[22px] leading-none text-[var(--pink-500)] transition-transform duration-150"
+                    className="supply-faq-chevron supply-display supply-display-plain shrink-0 text-[28px] leading-none text-[var(--ink-900)] transition-transform duration-150"
                     aria-hidden
                   >
                     +
@@ -404,10 +327,10 @@ export default function SupplyLanding() {
             <div>
               <h2 className="supply-display fs-display-md mb-2 text-white">Redo att börja?</h2>
               <p className="supply-body fs-body-lg m-0 text-white/65">
-                Skapa din annons gratis – det tar mindre än 10 minuter.
+                Skapa din sida gratis – det tar mindre än 10 minuter.
               </p>
             </div>
-            <SupplyCtaButton label="Skapa din annons – gratis" className="shrink-0" />
+            <SupplyCtaButton label="Skapa din sida – gratis" className="shrink-0" />
           </div>
         </ScrollReveal>
       </div>
@@ -424,8 +347,8 @@ export default function SupplyLanding() {
                 className="mb-3.5 h-7 w-auto brightness-0 invert"
               />
               <p className="supply-body fs-body-sm m-0 max-w-[320px] text-white/60">
-                Gigtorget kopplar ihop dig med de bästa leverantörerna och lokalerna. Så att du kan
-                fokusera på det som betyder något.
+                Gigtorget kopplar ihop dig med de bästa leverantörerna. Så att du kan fokusera på
+                det som betyder något.
               </p>
             </div>
             <div>

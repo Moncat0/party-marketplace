@@ -56,8 +56,8 @@ export const SUPPLY_STEPS = [
   },
   {
     badge: 'STEG 4',
-    title: 'Bli bokad, få betalt',
-    description: 'Kunden betalar via Gigtorget. Pengarna är dina så snart jobbet är klart.',
+    title: 'Bli bokad',
+    description: 'Kunden bekräftar din offert och bokningen är klar. Ni kommunicerar direkt i chatten — du sköter resten.',
     mock: 'paid' as const,
   },
 ] as const
@@ -90,39 +90,22 @@ export const SUPPLY_FEATURES = [
 
 export const SUPPLY_CATEGORY_LABELS = CATEGORIES.map(c => c.label)
 
-/** FAQ copy from supply handoff — fee wording matches `PLATFORM_FEE_PERCENT` (not the prototype’s 99 kr). */
 export const SUPPLY_FAQS = [
   {
-    q: 'Kostar det något att skapa min sida?',
-    a: `Nej, det är gratis att skapa din sida och bygga din profil på Gigtorget. Vi tar ${PLATFORM_FEE_PERCENT}% i serviceavgift per genomförd betalning — det är så vi kan hålla Gigtorget igång.`,
+    q: 'Kostar det något?',
+    a: `Nej, det är helt gratis att skapa din sida på Gigtorget. Ingen startavgift, ingen månadskostnad. Vi tar ${PLATFORM_FEE_PERCENT}% i serviceavgift per genomförd bokning — utan dolda kostnader.`,
   },
   {
-    q: 'Vem kan skapa en sida?',
-    a: 'Alla som erbjuder tjänster till fester och event — DJ:s, fotografer, kockar, makeupartister och mer. Just nu satsar vi extra på Stockholm, så det är där du märker av flest förfrågningar.',
-  },
-  {
-    q: 'Jag har ingen erfarenhet, kan jag ändå skapa en sida?',
-    a: 'Absolut. Gigtorget handlar inte om hur många år du jobbat — det handlar om vad du kan visa upp. Lägg upp dina bästa bilder, sätt dina priser och låt kunderna hitta dig.',
+    q: 'Vem kan skapa en sida? Behöver jag ha erfarenhet?',
+    a: 'Alla som erbjuder tjänster till fester och event — DJ:s, fotografer, kockar, makeupartister och mer. Det spelar ingen roll om du precis börjat eller jobbat i branschen länge. Det handlar om vad du kan visa upp.',
   },
   {
     q: 'Måste jag ha eget företag?',
     a: 'Vi rekommenderar det starkt — det gör bokföring och skatt betydligt enklare för dig. Men det är inget krav för att skapa en sida på Gigtorget, och vi tar inget ansvar för hur du hanterar din egen beskattning.',
   },
   {
-    q: 'Hur får jag betalt?',
-    a: `Kunden betalar när offerten accepteras. Beloppet hålls säkert tills tjänsten är levererad — sen betalas det ut till dig, minus vår serviceavgift på ${PLATFORM_FEE_PERCENT}%.`,
-  },
-  {
-    q: 'Hur fungerar avgiften?',
-    a: `Du sätter ditt pris som vanligt. När kunden bokar och betalar drar vi ${PLATFORM_FEE_PERCENT}% — resten går till dig. Inga dolda kostnader, inget du behöver hålla koll på själv.`,
-  },
-  {
-    q: 'Hur tar jag emot bokningar?',
-    a: 'Arrangörer skickar förfrågningar direkt till dig i appen. Du väljer själv vilka du vill acceptera.',
-  },
-  {
-    q: 'Kan jag erbjuda tjänster riktade mot barn, som kalas eller barnprogramledare?',
-    a: 'Inte just nu. Vi kan i dagsläget inte säkerställa utdrag ur belastningsregistret för dem som är aktiva på Gigtorget, och det är en förutsättning vi inte vill kompromissa med när det gäller barn. Vi jobbar på en lösning för det här, men tills den finns på plats kan vi inte stödja tjänster riktade specifikt mot barn.',
+    q: 'Hur tar jag emot bokningar och får betalt?',
+    a: 'Arrangörer skickar förfrågningar direkt till dig i appen. Du väljer vilka du svarar på, skickar en offert i chatten — och om kunden accepterar är bokningen bekräftad. Betalning sköter ni direkt med varandra.',
   },
   {
     q: 'Är Gigtorget bara för Stockholm?',

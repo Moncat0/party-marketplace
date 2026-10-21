@@ -54,6 +54,8 @@ type Props = {
   logo?: ReactNode
   className?: string
   scrolled?: boolean
+  /** Supply page: show "Logga in" instead of "Erbjud din tjänst" for non-logged-in users */
+  loginCta?: boolean
 }
 
 const menuItemClass =
@@ -72,6 +74,7 @@ export default function MarketplaceHeader({
   logo,
   className = '',
   scrolled = false,
+  loginCta = false,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [user, setUser] = useState<UserNav | null | undefined>(undefined) // undefined = loading
@@ -222,15 +225,28 @@ export default function MarketplaceHeader({
   const rightChrome = (
     <div className="flex items-center justify-end gap-1 sm:gap-2">
       {actions}
-      {switchCta.label === 'Erbjud din tjänst' && (
-        <Button
-          asChild
-          variant="ghost"
-          size="pill"
-          className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
-        >
-          <Link href={switchCta.href}>{switchCta.label}</Link>
-        </Button>
+      {loginCta ? (
+        !user && (
+          <Button
+            variant="ghost"
+            size="pill"
+            className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
+            onClick={() => openAuth()}
+          >
+            Logga in
+          </Button>
+        )
+      ) : (
+        switchCta.label === 'Erbjud din tjänst' && (
+          <Button
+            asChild
+            variant="ghost"
+            size="pill"
+            className="hidden h-auto sm:inline-flex px-4 py-2.5 text-sm font-medium text-foreground"
+          >
+            <Link href={switchCta.href}>{switchCta.label}</Link>
+          </Button>
+        )
       )}
       {menuButton}
     </div>

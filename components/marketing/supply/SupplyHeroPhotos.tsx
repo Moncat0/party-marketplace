@@ -21,7 +21,7 @@ export default function SupplyHeroPhotos() {
     /* Padding reserves space for the -18px pink offset so it never crowds the nav */
     <div className="relative mx-auto w-full max-w-md pt-[22px] pl-[22px] lg:max-w-none">
       <div
-        className="supply-hero-panel absolute left-0 top-0 z-0 h-[calc(100%-22px)] w-[calc(100%-22px)] rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[var(--pink-500)]"
+        className="supply-hero-panel absolute left-0 top-0 z-0 h-[calc(100%-22px)] w-[calc(100%-22px)] rounded-[var(--radius-xl)] border border-[var(--border-subtle)] bg-[#111]"
         style={{ animation: 'supplyFloatSlow 7s ease-in-out infinite' }}
         aria-hidden
       />
@@ -56,7 +56,7 @@ export default function SupplyHeroPhotos() {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111" strokeWidth="2" aria-hidden>
           <path d="M12 3l2.6 6.2L21 10l-5 4.4L17.4 21 12 17.3 6.6 21 8 14.4 3 10l6.4-.8z" />
         </svg>
-        <span className="supply-hand text-[var(--ink-900)]">Alltid en vibe</span>
+        <span className="supply-body text-[var(--ink-900)] font-semibold">Alltid en vibe</span>
       </div>
     </div>
   )
