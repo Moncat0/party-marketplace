@@ -288,29 +288,16 @@ export default function SupplyLanding() {
             </p>
           </div>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_1fr]">
-            {/* Large: profile page mock */}
+            {/* Large: real service page screenshot */}
             <div>
-              <div className="flex h-[280px] items-stretch overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] p-5 lg:h-[420px]">
-                <div className="flex w-full flex-col overflow-hidden rounded-[var(--radius-md)] bg-white shadow-[var(--shadow-soft-sm)]">
-                  <div className="h-28 shrink-0 bg-[#ebebeb] lg:h-40" />
-                  <div className="flex-1 overflow-hidden p-4">
-                    <div className="mb-1 flex items-center gap-2">
-                      <div className="-mt-8 h-14 w-14 shrink-0 rounded-full border-2 border-white bg-[#d4d4d4] lg:-mt-10 lg:h-16 lg:w-16" />
-                    </div>
-                    <p className="supply-body mt-1 text-[14px] font-bold text-[var(--ink-900)]">Elin Lund</p>
-                    <p className="supply-body text-[12px] text-[var(--ink-500)]">DJ · Stockholm</p>
-                    <div className="mt-3 flex gap-1.5">
-                      {['DJ', 'House', 'Pop'].map(t => (
-                        <span key={t} className="supply-body rounded-full border border-[var(--border-subtle)] px-2 py-0.5 text-[11px] text-[var(--ink-700)]">{t}</span>
-                      ))}
-                    </div>
-                    <div className="mt-3 flex items-center gap-1">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="#111" aria-hidden><path d="M12 3l2.6 6.2L21 10l-5 4.4L17.4 21 12 17.3 6.6 21 8 14.4 3 10l6.4-.8z"/></svg>
-                      <span className="supply-body text-[12px] font-semibold text-[var(--ink-900)]">4.9</span>
-                      <span className="supply-body text-[11px] text-[var(--ink-500)]">· 18 recensioner</span>
-                    </div>
-                  </div>
-                </div>
+              <div className="h-[280px] overflow-hidden rounded-[var(--radius-lg)] bg-[#f5f5f5] lg:h-[420px]">
+                <Image
+                  src="/images/supply/feature-din-sida.webp"
+                  alt="Exempel på en tjänstesida på Gigtorget"
+                  width={800}
+                  height={600}
+                  className="h-full w-full object-cover object-top"
+                />
               </div>
               <div className="mt-6">
                 <span className="supply-badge">DIN SIDA</span>
